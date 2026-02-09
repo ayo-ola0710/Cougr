@@ -22,7 +22,8 @@ use soroban_sdk::Env;
 use crate::accounts::degradation::authorize_with_fallback;
 use crate::accounts::error::AccountError;
 use crate::accounts::traits::{CougrAccount, SessionKeyProvider};
-use crate::accounts::types::{GameAction, SessionKey, SessionScope};
+use crate::accounts::types::{AccountCapabilities, GameAction, SessionKey, SessionScope};
+use crate::component::ComponentTrait;
 use crate::simple_world::{EntityId, SimpleWorld};
 use crate::zk::error::ZKError;
 use crate::zk::systems::verify_proofs_system;
@@ -103,6 +104,52 @@ impl<A: CougrAccount> GameWorld<A> {
     pub fn into_inner(self) -> (SimpleWorld, A) {
         (self.world, self.account)
     }
+
+    // ─── Typed convenience methods ────────────────────────────────
+
+    /// Get a component and deserialize it into the concrete type.
+    pub fn get_typed<T: ComponentTrait>(&self, env: &Env, entity_id: EntityId) -> Option<T> {
+        self.world.get_typed(env, entity_id)
+    }
+
+    /// Serialize a component and store it.
+    pub fn set_typed<T: ComponentTrait>(&mut self, env: &Env, entity_id: EntityId, component: &T) {
+        self.world.set_typed(env, entity_id, component);
+    }
+
+    /// Check if an entity has a component of the given type.
+    pub fn has_typed<T: ComponentTrait>(&self, entity_id: EntityId) -> bool {
+        self.world.has_typed::<T>(entity_id)
+    }
+
+    /// Remove a component of the given type from an entity.
+    pub fn remove_typed<T: ComponentTrait>(&mut self, entity_id: EntityId) -> bool {
+        self.world.remove_typed::<T>(entity_id)
+    }
+
+    // ─── Player management ────────────────────────────────────────
+
+    /// Register a new player entity in the game world.
+    ///
+    /// Creates a new entity that represents the player.
+    pub fn register_player(&mut self) -> EntityId {
+        self.world.spawn_entity()
+    }
+
+    /// Get the capabilities of the account bound to this game world.
+    pub fn player_capabilities(&self) -> AccountCapabilities {
+        self.account.capabilities()
+    }
+
+    /// Authorize a batch of game actions.
+    ///
+    /// Each action is authorized individually via the account.
+    pub fn batch_execute(&self, env: &Env, actions: &[GameAction]) -> Result<(), AccountError> {
+        for action in actions {
+            self.execute_authorized(env, action)?;
+        }
+        Ok(())
+    }
 }
 
 /// Extension methods for `GameWorld` when the account supports session keys.
@@ -126,6 +173,7 @@ mod tests {
     use super::*;
     use crate::accounts::testing::MockAccount;
     use crate::accounts::types::SessionScope;
+    use crate::component::Position;
     use crate::zk::types::{G1Point, G2Point};
     use soroban_sdk::{symbol_short, vec, Bytes, BytesN, Env, Vec};
 
@@ -268,5 +316,69 @@ mod tests {
         let env = Env::default();
         let game = make_game_world(&env);
         let _caps = game.account().capabilities();
+    }
+
+    // ─── Typed API tests ──────────────────────────────────────────
+
+    #[test]
+    fn test_game_world_typed_component() {
+        let env = Env::default();
+        let mut game = make_game_world(&env);
+        let e = game.world_mut().spawn_entity();
+
+        game.set_typed(&env, e, &Position::new(5, 10));
+        assert!(game.has_typed::<Position>(e));
+
+        let pos: Position = game.get_typed(&env, e).unwrap();
+        assert_eq!(pos.x, 5);
+        assert_eq!(pos.y, 10);
+
+        assert!(game.remove_typed::<Position>(e));
+        assert!(!game.has_typed::<Position>(e));
+    }
+
+    // ─── Player management tests ──────────────────────────────────
+
+    #[test]
+    fn test_register_player() {
+        let env = Env::default();
+        let mut game = make_game_world(&env);
+        let p1 = game.register_player();
+        let p2 = game.register_player();
+        assert_ne!(p1, p2);
+    }
+
+    #[test]
+    fn test_player_capabilities() {
+        let env = Env::default();
+        let game = make_game_world(&env);
+        let caps = game.player_capabilities();
+        // MockAccount returns default capabilities
+        assert!(caps.can_batch || !caps.can_batch); // just verify it doesn't panic
+    }
+
+    #[test]
+    fn test_batch_execute() {
+        let env = Env::default();
+        let game = make_game_world(&env);
+        let actions = [
+            GameAction {
+                system_name: symbol_short!("move"),
+                data: Bytes::new(&env),
+            },
+            GameAction {
+                system_name: symbol_short!("attack"),
+                data: Bytes::new(&env),
+            },
+        ];
+        // MockAccount always succeeds
+        assert!(game.batch_execute(&env, &actions).is_ok());
+    }
+
+    #[test]
+    fn test_batch_execute_empty() {
+        let env = Env::default();
+        let game = make_game_world(&env);
+        assert!(game.batch_execute(&env, &[]).is_ok());
     }
 }

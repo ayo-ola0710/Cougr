@@ -163,6 +163,95 @@ fn hash_pair(env: &Env, left: &[u8; 32], right: &[u8; 32]) -> [u8; 32] {
     env.crypto().sha256(&bytes).to_array()
 }
 
+// ─── Poseidon2-based Sparse Merkle Tree ─────────────────────────────
+
+/// Poseidon2-based sparse Merkle tree for ZK-friendly key-value state.
+///
+/// Requires the `hazmat-crypto` feature.
+#[cfg(feature = "hazmat-crypto")]
+pub struct PoseidonSparseMerkleTree {
+    root: soroban_sdk::U256,
+    nodes: BTreeMap<(u32, u32), soroban_sdk::U256>,
+    defaults: Vec<soroban_sdk::U256>,
+}
+
+#[cfg(feature = "hazmat-crypto")]
+impl PoseidonSparseMerkleTree {
+    /// Create a new empty Poseidon sparse Merkle tree.
+    pub fn new(env: &Env, params: &crate::zk::crypto::Poseidon2Params) -> Self {
+        let defaults = precompute_poseidon_defaults(env, params);
+        let root = defaults[SMT_DEPTH as usize].clone();
+
+        Self {
+            root,
+            nodes: BTreeMap::new(),
+            defaults,
+        }
+    }
+
+    /// Returns the root hash.
+    pub fn root(&self) -> soroban_sdk::U256 {
+        self.root.clone()
+    }
+
+    /// Insert or update a key-value pair and recompute the root.
+    pub fn insert(
+        &mut self,
+        env: &Env,
+        params: &crate::zk::crypto::Poseidon2Params,
+        key: &[u8; 32],
+        value: &soroban_sdk::U256,
+    ) -> Result<(), crate::zk::error::ZKError> {
+        let leaf_index = key_to_index(key);
+        let zero = soroban_sdk::U256::from_u32(env, 0);
+        let leaf_hash = crate::zk::crypto::poseidon2_hash(env, params, value, &zero);
+
+        self.nodes.insert((0, leaf_index), leaf_hash);
+
+        let mut idx = leaf_index;
+        for level in 0..SMT_DEPTH {
+            let sibling_idx = if idx % 2 == 0 { idx + 1 } else { idx - 1 };
+            let left_idx = if idx % 2 == 0 { idx } else { sibling_idx };
+            let right_idx = if idx % 2 == 0 { sibling_idx } else { idx };
+
+            let left = self.get_node(level, left_idx);
+            let right = self.get_node(level, right_idx);
+            let parent = crate::zk::crypto::poseidon2_hash(env, params, &left, &right);
+
+            idx /= 2;
+            self.nodes.insert((level + 1, idx), parent);
+        }
+
+        self.root = self.get_node(SMT_DEPTH, 0);
+        Ok(())
+    }
+
+    /// Get a node hash, falling back to the default for that level.
+    fn get_node(&self, level: u32, index: u32) -> soroban_sdk::U256 {
+        self.nodes
+            .get(&(level, index))
+            .cloned()
+            .unwrap_or_else(|| self.defaults[level as usize].clone())
+    }
+}
+
+/// Precompute default Poseidon hashes for each level of the sparse tree.
+#[cfg(feature = "hazmat-crypto")]
+fn precompute_poseidon_defaults(
+    env: &Env,
+    params: &crate::zk::crypto::Poseidon2Params,
+) -> Vec<soroban_sdk::U256> {
+    let mut defaults = Vec::with_capacity(SMT_DEPTH as usize + 1);
+    defaults.push(soroban_sdk::U256::from_u32(env, 0)); // level 0: empty leaf
+
+    for _ in 0..SMT_DEPTH {
+        let prev = defaults.last().unwrap();
+        defaults.push(crate::zk::crypto::poseidon2_hash(env, params, prev, prev));
+    }
+
+    defaults
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -48,6 +48,10 @@ pub use crypto::{poseidon2_hash, poseidon2_hash_single, Poseidon2Params};
 pub use error::ZKError;
 pub use groth16::verify_groth16;
 pub use merkle::{verify_inclusion, MerkleProof, MerkleTree, OnChainMerkleProof, SparseMerkleTree};
+#[cfg(feature = "hazmat-crypto")]
+pub use merkle::{
+    verify_poseidon_proof, PoseidonMerkleProof, PoseidonMerkleTree, PoseidonSparseMerkleTree,
+};
 pub use systems::{
     cleanup_verified_system, commit_reveal_deadline_system, encode_commit_reveal,
     encode_verified_marker, verify_proofs_system,

@@ -177,6 +177,154 @@ pub fn verify_proof(env: &Env, proof: &MerkleProof, expected_root: &[u8; 32]) ->
     current == *expected_root
 }
 
+// ─── Poseidon2-based Merkle tree ─────────────────────────────────────
+
+/// Poseidon2-based Merkle tree (runtime-only, NOT `#[contracttype]`).
+///
+/// Uses Poseidon2 hashing for ZK-friendly proofs (~300 constraints per
+/// hash vs ~28,000 for SHA256). Requires the `hazmat-crypto` feature.
+///
+/// Leaves and internal nodes are represented as `U256` field elements.
+#[cfg(feature = "hazmat-crypto")]
+pub struct PoseidonMerkleTree {
+    depth: u32,
+    leaf_count: u32,
+    layers: alloc::vec::Vec<alloc::vec::Vec<soroban_sdk::U256>>,
+}
+
+/// In-memory proof for Poseidon Merkle trees.
+#[cfg(feature = "hazmat-crypto")]
+pub struct PoseidonMerkleProof {
+    pub siblings: alloc::vec::Vec<soroban_sdk::U256>,
+    pub path_indices: alloc::vec::Vec<bool>,
+    pub leaf: soroban_sdk::U256,
+    pub leaf_index: u32,
+}
+
+#[cfg(feature = "hazmat-crypto")]
+impl PoseidonMerkleTree {
+    /// Build a Poseidon Merkle tree from leaf field elements.
+    ///
+    /// Leaves are padded to the next power of 2 with zero elements.
+    pub fn from_leaves(
+        env: &Env,
+        params: &crate::zk::crypto::Poseidon2Params,
+        leaves: &[soroban_sdk::U256],
+    ) -> Result<Self, ZKError> {
+        if leaves.is_empty() {
+            return Err(ZKError::EmptyTree);
+        }
+
+        let leaf_count = leaves.len() as u32;
+        let mut depth = 0u32;
+        let mut size = 1u32;
+        while size < leaf_count {
+            depth += 1;
+            size *= 2;
+        }
+
+        if depth > MAX_DEPTH {
+            return Err(ZKError::MaxDepthExceeded);
+        }
+
+        // Hash each leaf: H(leaf, 0) — domain-separated by zero second input
+        let zero = soroban_sdk::U256::from_u32(env, 0);
+        let mut current_layer: alloc::vec::Vec<soroban_sdk::U256> = alloc::vec::Vec::new();
+        for leaf in leaves {
+            current_layer.push(crate::zk::crypto::poseidon2_hash(env, params, leaf, &zero));
+        }
+        // Pad to next power of 2 with zero elements
+        while (current_layer.len() as u32) < size {
+            current_layer.push(zero.clone());
+        }
+
+        let mut layers = alloc::vec::Vec::new();
+        layers.push(current_layer.clone());
+
+        // Build layers from bottom up
+        while current_layer.len() > 1 {
+            let mut next_layer = alloc::vec::Vec::new();
+            for i in (0..current_layer.len()).step_by(2) {
+                let left = &current_layer[i];
+                let right = &current_layer[i + 1];
+                next_layer.push(crate::zk::crypto::poseidon2_hash(env, params, left, right));
+            }
+            layers.push(next_layer.clone());
+            current_layer = next_layer;
+        }
+
+        Ok(Self {
+            depth,
+            leaf_count,
+            layers,
+        })
+    }
+
+    /// Returns the root hash as a `U256` field element.
+    pub fn root(&self) -> soroban_sdk::U256 {
+        self.layers.last().unwrap()[0].clone()
+    }
+
+    /// Generate an inclusion proof for the leaf at `leaf_index`.
+    pub fn proof(&self, leaf_index: u32) -> Result<PoseidonMerkleProof, ZKError> {
+        if leaf_index >= self.leaf_count {
+            return Err(ZKError::LeafOutOfBounds);
+        }
+
+        let mut siblings = alloc::vec::Vec::new();
+        let mut path_indices = alloc::vec::Vec::new();
+        let mut idx = leaf_index as usize;
+
+        for layer_idx in 0..self.depth as usize {
+            let sibling_idx = if idx % 2 == 0 { idx + 1 } else { idx - 1 };
+            siblings.push(self.layers[layer_idx][sibling_idx].clone());
+            path_indices.push(idx % 2 != 0);
+            idx /= 2;
+        }
+
+        Ok(PoseidonMerkleProof {
+            siblings,
+            path_indices,
+            leaf: self.layers[0][leaf_index as usize].clone(),
+            leaf_index,
+        })
+    }
+
+    /// Returns the tree depth.
+    pub fn depth(&self) -> u32 {
+        self.depth
+    }
+
+    /// Returns the number of original leaves (before padding).
+    pub fn leaf_count(&self) -> u32 {
+        self.leaf_count
+    }
+}
+
+/// Verify a Poseidon Merkle proof against a known root.
+#[cfg(feature = "hazmat-crypto")]
+pub fn verify_poseidon_proof(
+    env: &Env,
+    params: &crate::zk::crypto::Poseidon2Params,
+    proof: &PoseidonMerkleProof,
+    expected_root: &soroban_sdk::U256,
+) -> bool {
+    let mut current = proof.leaf.clone();
+
+    for i in 0..proof.siblings.len() {
+        let sibling = &proof.siblings[i];
+        if proof.path_indices[i] {
+            // Current node is on the right
+            current = crate::zk::crypto::poseidon2_hash(env, params, sibling, &current);
+        } else {
+            // Current node is on the left
+            current = crate::zk::crypto::poseidon2_hash(env, params, &current, sibling);
+        }
+    }
+
+    current == *expected_root
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

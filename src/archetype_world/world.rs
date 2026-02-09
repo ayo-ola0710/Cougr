@@ -12,6 +12,7 @@
 //! - Best for: 50+ entities, multi-component queries, stable compositions
 
 use super::archetype::{Archetype, ArchetypeId};
+use crate::component::ComponentTrait;
 use crate::simple_world::{EntityId, SimpleWorld};
 use soroban_sdk::{contracttype, Bytes, Env, Map, Symbol, Vec};
 
@@ -223,6 +224,31 @@ impl ArchetypeWorld {
         results
     }
 
+    // ─── Typed convenience methods ────────────────────────────────
+
+    /// Get a component and deserialize it into the concrete type.
+    pub fn get_typed<T: ComponentTrait>(&self, env: &Env, entity_id: EntityId) -> Option<T> {
+        let bytes = self.get_component(entity_id, &T::component_type())?;
+        T::deserialize(env, &bytes)
+    }
+
+    /// Serialize a component and store it.
+    pub fn set_typed<T: ComponentTrait>(&mut self, env: &Env, entity_id: EntityId, component: &T) {
+        let symbol = T::component_type();
+        let data = component.serialize(env);
+        self.add_component(entity_id, symbol, data, env);
+    }
+
+    /// Check if an entity has a component of the given type.
+    pub fn has_typed<T: ComponentTrait>(&self, entity_id: EntityId) -> bool {
+        self.has_component(entity_id, &T::component_type())
+    }
+
+    /// Remove a component of the given type from an entity.
+    pub fn remove_typed<T: ComponentTrait>(&mut self, env: &Env, entity_id: EntityId) -> bool {
+        self.remove_component(entity_id, &T::component_type(), env)
+    }
+
     /// Returns the current version.
     pub fn version(&self) -> u64 {
         self.version
@@ -324,6 +350,7 @@ fn vec_from_slice(env: &Env, items: &[Symbol]) -> Vec<Symbol> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::component::Position;
     use soroban_sdk::{symbol_short, Env};
 
     #[test]
@@ -675,5 +702,44 @@ mod tests {
 
         let results = world.query(&[symbol_short!("pos"), symbol_short!("vel")], &env);
         assert_eq!(results.len(), 20);
+    }
+
+    // ─── Typed API tests ──────────────────────────────────────────
+
+    #[test]
+    fn test_set_and_get_typed() {
+        let env = Env::default();
+        let mut world = ArchetypeWorld::new(&env);
+        let e = world.spawn_entity();
+
+        world.set_typed(&env, e, &Position::new(10, 20));
+
+        let retrieved: Option<Position> = world.get_typed(&env, e);
+        assert!(retrieved.is_some());
+        let r = retrieved.unwrap();
+        assert_eq!(r.x, 10);
+        assert_eq!(r.y, 20);
+    }
+
+    #[test]
+    fn test_has_typed() {
+        let env = Env::default();
+        let mut world = ArchetypeWorld::new(&env);
+        let e = world.spawn_entity();
+
+        assert!(!world.has_typed::<Position>(e));
+        world.set_typed(&env, e, &Position::new(1, 2));
+        assert!(world.has_typed::<Position>(e));
+    }
+
+    #[test]
+    fn test_remove_typed() {
+        let env = Env::default();
+        let mut world = ArchetypeWorld::new(&env);
+        let e = world.spawn_entity();
+
+        world.set_typed(&env, e, &Position::new(1, 2));
+        assert!(world.remove_typed::<Position>(&env, e));
+        assert!(!world.has_typed::<Position>(e));
     }
 }

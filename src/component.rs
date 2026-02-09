@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 use soroban_sdk::{
-    contracttype, symbol_short, Bytes, Env, FromVal, IntoVal, Symbol, TryFromVal, Val,
+    contracttype, symbol_short, Bytes, BytesN, Env, FromVal, IntoVal, Symbol, TryFromVal, Val,
 };
 
 /// A unique identifier for a component type
@@ -196,10 +196,28 @@ impl Velocity {
 }
 impl_component!(Velocity, "velocity", Table, { x: i32, y: i32 });
 
+// ─── Test types for macro-generated components ────────────────
+
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct Health {
+    pub current: u128,
+    pub max: u128,
+}
+impl_component!(Health, "health", Table, { current: u128, max: u128 });
+
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct Token {
+    pub amount: u32,
+    pub hash: BytesN<32>,
+}
+impl_component!(Token, "token", Table, { amount: u32, hash: bytes32 });
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::Env;
+    use soroban_sdk::{BytesN, Env};
 
     #[test]
     fn test_component_id_creation() {
@@ -243,5 +261,59 @@ mod tests {
 
         assert_eq!(position.x, deserialized.x);
         assert_eq!(position.y, deserialized.y);
+    }
+
+    // ─── Extended macro type tests ────────────────────────────────
+
+    #[test]
+    fn test_u128_component() {
+        let env = Env::default();
+        let health = Health {
+            current: 999_999_999_999,
+            max: 1_000_000_000_000,
+        };
+        let data = health.serialize(&env);
+        assert_eq!(data.len(), 32); // 16 + 16 bytes
+        let deserialized = Health::deserialize(&env, &data).unwrap();
+        assert_eq!(deserialized.current, 999_999_999_999);
+        assert_eq!(deserialized.max, 1_000_000_000_000);
+    }
+
+    #[test]
+    fn test_bytes32_component() {
+        let env = Env::default();
+        let hash = BytesN::from_array(&env, &[0xABu8; 32]);
+        let token = Token {
+            amount: 42,
+            hash: hash.clone(),
+        };
+        let data = token.serialize(&env);
+        assert_eq!(data.len(), 36); // 4 + 32 bytes
+        let deserialized = Token::deserialize(&env, &data).unwrap();
+        assert_eq!(deserialized.amount, 42);
+        assert_eq!(deserialized.hash, hash);
+    }
+
+    #[test]
+    fn test_u128_zero() {
+        let env = Env::default();
+        let health = Health { current: 0, max: 0 };
+        let data = health.serialize(&env);
+        let deserialized = Health::deserialize(&env, &data).unwrap();
+        assert_eq!(deserialized.current, 0);
+        assert_eq!(deserialized.max, 0);
+    }
+
+    #[test]
+    fn test_u128_max() {
+        let env = Env::default();
+        let health = Health {
+            current: u128::MAX,
+            max: u128::MAX,
+        };
+        let data = health.serialize(&env);
+        let deserialized = Health::deserialize(&env, &data).unwrap();
+        assert_eq!(deserialized.current, u128::MAX);
+        assert_eq!(deserialized.max, u128::MAX);
     }
 }
