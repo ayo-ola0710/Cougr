@@ -26,6 +26,12 @@ macro_rules! __cougr_serialize_field {
             &[if $value { 1u8 } else { 0u8 }],
         ));
     };
+    ($bytes:ident, $env:ident, $value:expr, u128) => {
+        $bytes.append(&soroban_sdk::Bytes::from_slice($env, &$value.to_be_bytes()));
+    };
+    ($bytes:ident, $env:ident, $value:expr, bytes32) => {
+        $bytes.append(&soroban_sdk::Bytes::from_slice($env, &$value.to_array()));
+    };
 }
 
 /// Helper macro to get the byte size of a field type.
@@ -53,13 +59,19 @@ macro_rules! __cougr_field_size {
     (bool) => {
         1u32
     };
+    (u128) => {
+        16u32
+    };
+    (bytes32) => {
+        32u32
+    };
 }
 
 /// Helper macro to deserialize a single field from big-endian bytes.
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __cougr_deserialize_field {
-    ($data:ident, $offset:expr, i32) => {{
+    ($env:ident, $data:ident, $offset:expr, i32) => {{
         let val = i32::from_be_bytes([
             $data.get($offset)?,
             $data.get($offset + 1)?,
@@ -68,7 +80,7 @@ macro_rules! __cougr_deserialize_field {
         ]);
         val
     }};
-    ($data:ident, $offset:expr, u32) => {{
+    ($env:ident, $data:ident, $offset:expr, u32) => {{
         let val = u32::from_be_bytes([
             $data.get($offset)?,
             $data.get($offset + 1)?,
@@ -77,7 +89,7 @@ macro_rules! __cougr_deserialize_field {
         ]);
         val
     }};
-    ($data:ident, $offset:expr, i64) => {{
+    ($env:ident, $data:ident, $offset:expr, i64) => {{
         let val = i64::from_be_bytes([
             $data.get($offset)?,
             $data.get($offset + 1)?,
@@ -90,7 +102,7 @@ macro_rules! __cougr_deserialize_field {
         ]);
         val
     }};
-    ($data:ident, $offset:expr, u64) => {{
+    ($env:ident, $data:ident, $offset:expr, u64) => {{
         let val = u64::from_be_bytes([
             $data.get($offset)?,
             $data.get($offset + 1)?,
@@ -103,7 +115,7 @@ macro_rules! __cougr_deserialize_field {
         ]);
         val
     }};
-    ($data:ident, $offset:expr, i128) => {{
+    ($env:ident, $data:ident, $offset:expr, i128) => {{
         let val = i128::from_be_bytes([
             $data.get($offset)?,
             $data.get($offset + 1)?,
@@ -124,13 +136,43 @@ macro_rules! __cougr_deserialize_field {
         ]);
         val
     }};
-    ($data:ident, $offset:expr, u8) => {{
+    ($env:ident, $data:ident, $offset:expr, u8) => {{
         let val: u8 = $data.get($offset)?;
         val
     }};
-    ($data:ident, $offset:expr, bool) => {{
+    ($env:ident, $data:ident, $offset:expr, bool) => {{
         let val = $data.get($offset)? != 0;
         val
+    }};
+    ($env:ident, $data:ident, $offset:expr, u128) => {{
+        let val = u128::from_be_bytes([
+            $data.get($offset)?,
+            $data.get($offset + 1)?,
+            $data.get($offset + 2)?,
+            $data.get($offset + 3)?,
+            $data.get($offset + 4)?,
+            $data.get($offset + 5)?,
+            $data.get($offset + 6)?,
+            $data.get($offset + 7)?,
+            $data.get($offset + 8)?,
+            $data.get($offset + 9)?,
+            $data.get($offset + 10)?,
+            $data.get($offset + 11)?,
+            $data.get($offset + 12)?,
+            $data.get($offset + 13)?,
+            $data.get($offset + 14)?,
+            $data.get($offset + 15)?,
+        ]);
+        val
+    }};
+    ($env:ident, $data:ident, $offset:expr, bytes32) => {{
+        let mut arr = [0u8; 32];
+        let mut i = 0u32;
+        while i < 32 {
+            arr[i as usize] = $data.get($offset + i)?;
+            i += 1;
+        }
+        soroban_sdk::BytesN::from_array($env, &arr)
     }};
 }
 
@@ -140,7 +182,8 @@ macro_rules! __cougr_deserialize_field {
 ///
 /// # Supported field types
 /// `i32` (4 bytes), `u32` (4 bytes), `i64` (8 bytes), `u64` (8 bytes),
-/// `i128` (16 bytes), `u8` (1 byte), `bool` (1 byte)
+/// `i128` (16 bytes), `u128` (16 bytes), `u8` (1 byte), `bool` (1 byte),
+/// `bytes32` (32 bytes — use for `BytesN<32>` fields)
 ///
 /// # Note
 /// The symbol name must be at most 9 characters (Soroban `symbol_short!` limit).
@@ -176,7 +219,7 @@ macro_rules! impl_component {
                 }
                 let mut _offset: u32 = 0;
                 $(
-                    let $field = $crate::__cougr_deserialize_field!(data, _offset, $ftype);
+                    let $field = $crate::__cougr_deserialize_field!(_env, data, _offset, $ftype);
                     _offset += $crate::__cougr_field_size!($ftype);
                 )*
                 Some(Self { $( $field ),* })
@@ -260,7 +303,7 @@ macro_rules! impl_resource {
                 }
                 let mut _offset: u32 = 0;
                 $(
-                    let $field = $crate::__cougr_deserialize_field!(data, _offset, $ftype);
+                    let $field = $crate::__cougr_deserialize_field!(_env, data, _offset, $ftype);
                     _offset += $crate::__cougr_field_size!($ftype);
                 )*
                 Some(Self { $( $field ),* })

@@ -1,4 +1,4 @@
-use crate::component::ComponentStorage;
+use crate::component::{ComponentStorage, ComponentTrait};
 use soroban_sdk::{contracttype, Bytes, Env, Map, Symbol, Vec};
 
 /// Simple entity ID type for Soroban-optimized ECS.
@@ -218,6 +218,42 @@ impl SimpleWorld {
         entities
     }
 
+    // ─── Typed convenience methods ────────────────────────────────
+
+    /// Get a component and deserialize it into the concrete type.
+    ///
+    /// # Example
+    /// ```ignore
+    /// let pos: Option<Position> = world.get_typed::<Position>(&env, entity_id);
+    /// ```
+    pub fn get_typed<T: ComponentTrait>(&self, env: &Env, entity_id: EntityId) -> Option<T> {
+        let bytes = self.get_component(entity_id, &T::component_type())?;
+        T::deserialize(env, &bytes)
+    }
+
+    /// Serialize a component and store it, using the type's default storage kind.
+    ///
+    /// # Example
+    /// ```ignore
+    /// world.set_typed(&env, entity_id, &Position::new(10, 20));
+    /// ```
+    pub fn set_typed<T: ComponentTrait>(&mut self, env: &Env, entity_id: EntityId, component: &T) {
+        let symbol = T::component_type();
+        let data = component.serialize(env);
+        let storage = T::default_storage();
+        self.add_component_with_storage(entity_id, symbol, data, storage);
+    }
+
+    /// Check if an entity has a component of the given type.
+    pub fn has_typed<T: ComponentTrait>(&self, entity_id: EntityId) -> bool {
+        self.has_component(entity_id, &T::component_type())
+    }
+
+    /// Remove a component of the given type from an entity.
+    pub fn remove_typed<T: ComponentTrait>(&mut self, entity_id: EntityId) -> bool {
+        self.remove_component(entity_id, &T::component_type())
+    }
+
     pub fn despawn_entity(&mut self, entity_id: EntityId) {
         self.version += 1;
         // Remove all components from both maps
@@ -236,6 +272,7 @@ impl SimpleWorld {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::component::Position;
     use soroban_sdk::{symbol_short, Env};
 
     #[test]
@@ -461,5 +498,68 @@ mod tests {
 
         let retrieved = world.get_component(entity_id, &symbol_short!("test"));
         assert_eq!(retrieved, Some(data2));
+    }
+
+    // ─── Typed API tests ──────────────────────────────────────────
+
+    #[test]
+    fn test_set_and_get_typed() {
+        let env = Env::default();
+        let mut world = SimpleWorld::new(&env);
+        let e = world.spawn_entity();
+
+        let pos = Position::new(10, 20);
+        world.set_typed(&env, e, &pos);
+
+        let retrieved: Option<Position> = world.get_typed(&env, e);
+        assert!(retrieved.is_some());
+        let r = retrieved.unwrap();
+        assert_eq!(r.x, 10);
+        assert_eq!(r.y, 20);
+    }
+
+    #[test]
+    fn test_has_typed() {
+        let env = Env::default();
+        let mut world = SimpleWorld::new(&env);
+        let e = world.spawn_entity();
+
+        assert!(!world.has_typed::<Position>(e));
+        world.set_typed(&env, e, &Position::new(1, 2));
+        assert!(world.has_typed::<Position>(e));
+    }
+
+    #[test]
+    fn test_remove_typed() {
+        let env = Env::default();
+        let mut world = SimpleWorld::new(&env);
+        let e = world.spawn_entity();
+
+        world.set_typed(&env, e, &Position::new(1, 2));
+        assert!(world.remove_typed::<Position>(e));
+        assert!(!world.has_typed::<Position>(e));
+        assert!(!world.remove_typed::<Position>(e));
+    }
+
+    #[test]
+    fn test_get_typed_nonexistent() {
+        let env = Env::default();
+        let world = SimpleWorld::new(&env);
+        let result: Option<Position> = world.get_typed(&env, 999);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_set_typed_overwrites() {
+        let env = Env::default();
+        let mut world = SimpleWorld::new(&env);
+        let e = world.spawn_entity();
+
+        world.set_typed(&env, e, &Position::new(1, 2));
+        world.set_typed(&env, e, &Position::new(50, 60));
+
+        let pos: Position = world.get_typed(&env, e).unwrap();
+        assert_eq!(pos.x, 50);
+        assert_eq!(pos.y, 60);
     }
 }

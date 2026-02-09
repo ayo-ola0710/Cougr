@@ -130,6 +130,77 @@ pub fn poseidon2_permutation(
     )
 }
 
+/// Parameters for Poseidon2 sponge-mode hashing.
+///
+/// Pre-configure with your field's specific constants and reuse for all hash calls.
+/// See [Poseidon2 paper](https://eprint.iacr.org/2023/323) for parameter selection.
+#[cfg(feature = "hazmat-crypto")]
+pub struct Poseidon2Params {
+    /// Field identifier (e.g., `Symbol::new(env, "BN254")`).
+    pub field: soroban_sdk::Symbol,
+    /// State width (number of field elements in the permutation state).
+    pub t: u32,
+    /// S-box degree (typically 5 for BN254).
+    pub d: u32,
+    /// Number of full rounds (must be even).
+    pub rounds_f: u32,
+    /// Number of partial rounds.
+    pub rounds_p: u32,
+    /// Diagonal entries of the internal matrix minus identity.
+    pub mat_internal_diag_m_1: soroban_sdk::Vec<soroban_sdk::U256>,
+    /// Round constants for each round.
+    pub round_constants: soroban_sdk::Vec<soroban_sdk::Vec<soroban_sdk::U256>>,
+}
+
+/// Hash two field elements using Poseidon2 in sponge mode.
+///
+/// Requires the `hazmat-crypto` feature.
+///
+/// Applies the permutation to `[a, b, 0, ...]` (zero-padded to state width `t`)
+/// and returns the first output element.
+#[cfg(feature = "hazmat-crypto")]
+pub fn poseidon2_hash(
+    env: &Env,
+    params: &Poseidon2Params,
+    a: &soroban_sdk::U256,
+    b: &soroban_sdk::U256,
+) -> soroban_sdk::U256 {
+    let mut input = soroban_sdk::Vec::new(env);
+    input.push_back(a.clone());
+    input.push_back(b.clone());
+    let zero = soroban_sdk::U256::from_u32(env, 0);
+    for _ in 2..params.t {
+        input.push_back(zero.clone());
+    }
+    let output = poseidon2_permutation(
+        env,
+        &input,
+        params.field.clone(),
+        params.t,
+        params.d,
+        params.rounds_f,
+        params.rounds_p,
+        &params.mat_internal_diag_m_1,
+        &params.round_constants,
+    );
+    output.get(0).unwrap()
+}
+
+/// Hash a single field element using Poseidon2 in sponge mode.
+///
+/// Requires the `hazmat-crypto` feature.
+///
+/// Domain-separated from `poseidon2_hash` by using `[input, 0, ...]`.
+#[cfg(feature = "hazmat-crypto")]
+pub fn poseidon2_hash_single(
+    env: &Env,
+    params: &Poseidon2Params,
+    input: &soroban_sdk::U256,
+) -> soroban_sdk::U256 {
+    let zero = soroban_sdk::U256::from_u32(env, 0);
+    poseidon2_hash(env, params, input, &zero)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

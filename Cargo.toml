@@ -3,7 +3,7 @@ name = "cougr-core"
 version = "0.0.1"
 edition = "2021"
 description = "Cougr - A Soroban-compatible ECS framework for on-chain gaming on Stellar"
-license = "MIT OR Apache-2.0"
+license = "MIT"
 keywords = ["ecs", "game", "soroban", "blockchain", "stellar"]
 categories = ["game-engines", "data-structures", "wasm"]
 rust-version = "1.70.0"
@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
+debug = []
 hazmat-crypto = ["soroban-sdk/hazmat-crypto"]
 testutils = ["soroban-sdk/testutils"]
 
@@ -22,6 +23,10 @@ wee_alloc = "0.4.5"
 
 [dev-dependencies]
 soroban-sdk = { version = "25.1.0", features = ["testutils"] }
+
+[[bench]]
+name = "ecs_bench"
+harness = false
 
 [profile.release]
 lto = true

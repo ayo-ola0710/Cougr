@@ -48,6 +48,29 @@ pub struct VerificationKey {
     pub ic: Vec<G1Point>,
 }
 
+// ─── BLS12-381 Types ───────────────────────────────────────────
+
+/// A BLS12-381 G1 affine point (96 bytes serialized).
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct Bls12381G1Point {
+    pub bytes: BytesN<96>,
+}
+
+/// A BLS12-381 G2 affine point (192 bytes serialized).
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct Bls12381G2Point {
+    pub bytes: BytesN<192>,
+}
+
+/// A BLS12-381 Fr scalar field element (32 bytes).
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct Bls12381Scalar {
+    pub bytes: BytesN<32>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
