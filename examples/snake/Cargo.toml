@@ -9,7 +9,7 @@ description = "Snake on-chain game example using cougr-core ECS framework"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cougr-core = { path = "../../" }
+cougr-core = { branch = "main", git = "https://github.com/salazarsebas/Cougr.git" }
 soroban-sdk = "25.1.0"
 
 [dev-dependencies]
