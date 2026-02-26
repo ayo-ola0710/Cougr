@@ -150,59 +150,110 @@ fn test_contract_init_game() {
     let contract = BombermanContract;
 
     let result = contract.init_game(env);
-    assert_eq!(result, symbol_short!("initialized"));
+    assert_eq!(result, symbol_short!("init"));
 }
 
 #[test]
-fn test_contract_move_player() {
+fn test_contract_movement_and_collison() {
     let env = Env::default();
     let contract = BombermanContract;
+    contract.init_game(env.clone());
 
-    // Test valid directions
-    for direction in 0..=3 {
-        let result = contract.move_player(env.clone(), 1, direction);
-        assert_eq!(result, symbol_short!("moved"));
+    // Spawn player 1 at (1, 1)
+    contract.spawn_player(env.clone(), 1, 1, 1);
+
+    // Move player right
+    let result = contract.move_player(env.clone(), 1, 1);
+    assert_eq!(result, symbol_short!("moved"));
+
+    // Verify new position (2, 1) - (1+1, 1)
+    // Try to move into a wall at (2, 0)
+    let result = contract.move_player(env.clone(), 1, 0);
+    assert_eq!(result, symbol_short!("blocked"));
+}
+
+#[test]
+fn test_bomb_placement_and_limit() {
+    let env = Env::default();
+    let contract = BombermanContract;
+    contract.init_game(env.clone());
+
+    contract.spawn_player(env.clone(), 1, 1, 1);
+
+    // Place first bomb
+    let result = contract.place_bomb(env.clone(), 1);
+    assert_eq!(result, symbol_short!("bomb_plc"));
+
+    // Try to place second bomb (capacity is 1 initially)
+    let result = contract.place_bomb(env.clone(), 1);
+    assert_eq!(result, symbol_short!("cap_full"));
+}
+
+#[test]
+fn test_explosion_and_destruction() {
+    let env = Env::default();
+    let contract = BombermanContract;
+    contract.init_game(env.clone());
+
+    // Spawn player near a destructible block or empty space
+    contract.spawn_player(env.clone(), 1, 1, 1);
+    
+    // Force a bomb at (1, 1)
+    contract.place_bomb(env.clone(), 1);
+
+    // Tick 1
+    contract.update_tick(env.clone());
+    // Tick 2
+    contract.update_tick(env.clone());
+    // Tick 3 - Detonation (BOMB_TIMER = 3)
+    let result = contract.update_tick(env.clone());
+    assert_eq!(result, symbol_short!("tick_upd"));
+
+    // Check if explosions exist in world
+    // We can't query world easily from here without get_world, 
+    // but we can check if a player on (1,1) would lose a life in next tick
+    let lives = contract.get_lives(env.clone(), 1);
+    assert_eq!(lives, INITIAL_LIVES - 1);
+}
+
+#[test]
+fn test_game_win_condition() {
+    let env = Env::default();
+    let contract = BombermanContract;
+    contract.init_game(env.clone());
+
+    contract.spawn_player(env.clone(), 1, 1, 1);
+    contract.spawn_player(env.clone(), 2, 1, 2);
+
+    // Check game ongoing
+    assert_eq!(contract.check_game_over(env.clone()), symbol_short!("ongoing"));
+
+    // Simulate player 2 death
+    contract.place_bomb(env.clone(), 1); // Bomb at (1,1), player 2 is at (1,2)
+    
+    // Detonate bomb
+    for _ in 0..BOMB_TIMER {
+        contract.update_tick(env.clone());
     }
 
-    // Test invalid direction
-    let result = contract.move_player(env, 1, 4);
-    assert_eq!(result, symbol_short!("invalid_dir"));
-}
+    // Player 2 should have lost 1 life
+    let p2_lives = contract.get_lives(env.clone(), 2);
+    assert_eq!(p2_lives, INITIAL_LIVES - 1);
 
-#[test]
-fn test_contract_place_bomb() {
-    let env = Env::default();
-    let contract = BombermanContract;
+    // Continue until player 2 has 0 lives
+    for _ in 0..(INITIAL_LIVES - 1) {
+        contract.place_bomb(env.clone(), 1);
+        for _ in 0..BOMB_TIMER {
+            contract.update_tick(env.clone());
+        }
+    }
 
-    let result = contract.place_bomb(env, 1);
-    assert_eq!(result, symbol_short!("bomb_placed"));
-}
+    // Now player 2 should be at 0 lives
+    assert_eq!(contract.get_lives(env.clone(), 2), 0);
 
-#[test]
-fn test_contract_update_tick() {
-    let env = Env::default();
-    let contract = BombermanContract;
-
-    let result = contract.update_tick(env);
-    assert_eq!(result, symbol_short!("tick_updated"));
-}
-
-#[test]
-fn test_contract_get_score() {
-    let env = Env::default();
-    let contract = BombermanContract;
-
-    let score = contract.get_score(env, 1);
-    assert_eq!(score, 100); // placeholder value
-}
-
-#[test]
-fn test_contract_check_game_over() {
-    let env = Env::default();
-    let contract = BombermanContract;
-
-    let result = contract.check_game_over(env);
-    assert_eq!(result, symbol_short!("ongoing"));
+    // Check game over
+    let status = contract.check_game_over(env.clone());
+    assert_eq!(status, symbol_short!("winner"));
 }
 
 #[test]

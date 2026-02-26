@@ -3,12 +3,20 @@ use cougr_core::component::ComponentTrait;
 use cougr_core::*;
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Bytes, Env, Symbol, Vec};
 
+mod test;
+
 // Game constants
 const GRID_WIDTH: usize = 15;
 const GRID_HEIGHT: usize = 13;
 const INITIAL_LIVES: u32 = 3;
 const BOMB_TIMER: u32 = 3;
 const EXPLOSION_DURATION: u32 = 1;
+
+#[contracttype]
+#[derive(Clone)]
+pub enum DataKey {
+    World,
+}
 
 // Component definitions for Bomberman game
 #[contracttype]
@@ -445,72 +453,175 @@ impl BombermanContract {
     /// - Entity-Component queries for efficient game logic
     /// - Clean separation of game state concerns
     pub fn init_game(env: Env) -> Symbol {
-        // Create the game world using cougr-core's create_world() function
-        // This replaces manual storage management with an ECS World
-        let mut world = create_world();
+        let mut world = SimpleWorld::new(&env);
 
-        // Create grid component - cougr-core handles component lifecycle
-        // Instead of manual storage keys like "grid", we use typed components
+        // Spawn grid entity
         let grid = GridComponent::new(&env);
-        let grid_component = Component::new(
-            GridComponent::component_type(), // Component type registration
-            grid.serialize(&env),            // Automatic serialization via ComponentTrait
-        );
-
-        // Create game state component
-        let game_state = GameStateComponent::new();
-        let game_state_component = Component::new(
-            GameStateComponent::component_type(),
-            game_state.serialize(&env),
-        );
-
-        // Spawn grid entity - cougr-core manages entity IDs automatically
-        // No need to manually generate storage keys or track entity relationships
-        let grid_entity_id = spawn_entity(&mut world, Vec::from_array(&env, [grid_component]));
+        let grid_entity = world.spawn_entity();
+        world.set_typed(&env, grid_entity, &grid);
 
         // Spawn game state entity
-        let _game_state_entity_id =
-            spawn_entity(&mut world, Vec::from_array(&env, [game_state_component]));
+        let game_state = GameStateComponent::new();
+        let game_state_entity = world.spawn_entity();
+        world.set_typed(&env, game_state_entity, &game_state);
 
-        // In vanilla Soroban, you'd need:
-        // env.storage().persistent().set(&Symbol::new(&env, "grid"), &grid_data);
-        // env.storage().persistent().set(&Symbol::new(&env, "game_state"), &game_state_data);
-        // With cougr-core, the World manages all storage automatically
+        // Persist world
+        env.storage().instance().set(&DataKey::World, &world);
 
-        // Store the world in contract storage (simplified - in practice you'd serialize the world)
-        // For demonstration, we'll return success
         symbol_short!("init")
+    }
+
+    /// Spawn a new player at a given position
+    pub fn spawn_player(env: Env, player_id: u32, x: i32, y: i32) -> Symbol {
+        let mut world = Self::get_world(&env);
+        
+        // Check if player ID already exists
+        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        for entity_id in player_entities.iter() {
+            if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
+                if player.id == player_id {
+                    return symbol_short!("exists");
+                }
+            }
+        }
+        
+        let player = PlayerComponent::new(player_id, x, y);
+        let player_entity = world.spawn_entity();
+        world.set_typed(&env, player_entity, &player);
+        
+        env.storage().instance().set(&DataKey::World, &world);
+        symbol_short!("spawned")
     }
 
     /// Move a player in the specified direction
     /// Directions: 0=up, 1=right, 2=down, 3=left
     pub fn move_player(env: Env, player_id: u32, direction: u32) -> Symbol {
-        // Simplified implementation - in practice would use cougr-core to manage state
-        // This demonstrates the concept of player movement validation
+        let mut world = Self::get_world(&env);
 
-        // For demonstration, return success
-        // In full implementation, this would:
-        // 1. Load the game world from storage
-        // 2. Find the player entity
-        // 3. Validate the move against the grid
-        // 4. Update player position
-        // 5. Save the world back to storage
-
-        match direction {
-            0..=3 => symbol_short!("moved"),
-            _ => symbol_short!("inv_dir"),
+        // Find player entity
+        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        let mut player_entity_opt = None;
+        for entity_id in player_entities.iter() {
+            if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
+                if player.id == player_id {
+                    player_entity_opt = Some((entity_id, player));
+                    break;
+                }
+            }
         }
+
+        let (player_entity, mut player) = match player_entity_opt {
+            Some(p) => p,
+            None => return symbol_short!("no_player"),
+        };
+
+        // Find grid entity
+        let grid_entities = world.get_entities_with_component(&GridComponent::component_type(), &env);
+        let grid_entity = match grid_entities.get(0) {
+            Some(e) => e,
+            None => return symbol_short!("no_grid"),
+        };
+        let grid = world.get_typed::<GridComponent>(&env, grid_entity).unwrap();
+
+        // Calculate new position
+        let (mut next_x, mut next_y) = (player.x, player.y);
+        match direction {
+            0 => next_y -= 1, // Up
+            1 => next_x += 1, // Right
+            2 => next_y += 1, // Down
+            3 => next_x -= 1, // Left
+            _ => return symbol_short!("inv_dir"),
+        }
+
+        // Validate move
+        if !grid.is_walkable(next_x, next_y) {
+            return symbol_short!("blocked");
+        }
+
+        // Check for explosions at target position
+        let explosion_entities = world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
+        for e_id in explosion_entities.iter() {
+            if let Some(explosion) = world.get_typed::<ExplosionComponent>(&env, e_id) {
+                if explosion.x == next_x && explosion.y == next_y {
+                    // Player died
+                    if player.lives > 0 {
+                        player.lives -= 1;
+                    }
+                    // Reset position to safe spot (optional, but requested logic is "death")
+                    // For now, let's just decrement lives and stay put or move and lose life
+                }
+            }
+        }
+
+        player.x = next_x;
+        player.y = next_y;
+        world.set_typed(&env, player_entity, &player);
+
+        // Save world
+        env.storage().instance().set(&DataKey::World, &world);
+
+        symbol_short!("moved")
+    }
+
+    fn get_world(env: &Env) -> SimpleWorld {
+        env.storage()
+            .instance()
+            .get(&DataKey::World)
+            .expect("Game not initialized")
     }
 
     /// Place a bomb at the player's current position
     pub fn place_bomb(env: Env, player_id: u32) -> Symbol {
-        // This demonstrates bomb placement using cougr-core components
-        // In practice would:
-        // 1. Load game world
-        // 2. Find player position
-        // 3. Check bomb capacity
-        // 4. Create bomb entity with BombComponent
-        // 5. Save world
+        let mut world = Self::get_world(&env);
+
+        // Find player position
+        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        let mut player_opt = None;
+        for entity_id in player_entities.iter() {
+            if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
+                if player.id == player_id {
+                    player_opt = Some(player);
+                    break;
+                }
+            }
+        }
+
+        let player = match player_opt {
+            Some(p) => p,
+            None => return symbol_short!("no_player"),
+        };
+
+        // Check current bomb count for this player
+        let bomb_entities = world.get_entities_with_component(&BombComponent::component_type(), &env);
+        let mut owned_bombs = 0;
+        for b_id in bomb_entities.iter() {
+            if let Some(bomb) = world.get_typed::<BombComponent>(&env, b_id) {
+                if bomb.owner_id == player_id {
+                    owned_bombs += 1;
+                }
+            }
+        }
+
+        if owned_bombs >= player.bomb_capacity {
+            return symbol_short!("cap_full");
+        }
+
+        // Check if a bomb already exists at this position
+        for b_id in bomb_entities.iter() {
+            if let Some(bomb) = world.get_typed::<BombComponent>(&env, b_id) {
+                if bomb.x == player.x && bomb.y == player.y {
+                    return symbol_short!("exists");
+                }
+            }
+        }
+
+        // Create bomb entity
+        let bomb = BombComponent::new(player.x, player.y, player_id);
+        let bomb_entity = world.spawn_entity();
+        world.set_typed(&env, bomb_entity, &bomb);
+
+        // Save world
+        env.storage().instance().set(&DataKey::World, &world);
 
         symbol_short!("bomb_plc")
     }
@@ -518,34 +629,199 @@ impl BombermanContract {
     /// Advance the game tick - handle timers, explosions, collisions
     /// This is where cougr-core's ECS shines for complex game logic
     pub fn update_tick(env: Env) -> Symbol {
-        // This function would:
-        // 1. Load game world
-        // 2. Decrement all bomb timers
-        // 3. Create explosions for bombs that reached 0
-        // 4. Process explosions (destroy blocks, damage players)
-        // 5. Decrement explosion timers
-        // 6. Remove expired explosions
-        // 7. Check for game over conditions
-        // 8. Save world
+        let mut world = Self::get_world(&env);
 
-        // Using cougr-core makes this complex logic manageable through queries
-        // and component iteration
+        // Update game state tick
+        let state_entities = world.get_entities_with_component(&GameStateComponent::component_type(), &env);
+        let state_entity = state_entities.get(0).expect("No game state");
+        let mut game_state = world.get_typed::<GameStateComponent>(&env, state_entity).unwrap();
+        
+        if game_state.game_over {
+            return symbol_short!("game_over");
+        }
+        
+        game_state.current_tick += 1;
+
+        // Find grid
+        let grid_entities = world.get_entities_with_component(&GridComponent::component_type(), &env);
+        let grid_entity = grid_entities.get(0).expect("No grid");
+        let mut grid = world.get_typed::<GridComponent>(&env, grid_entity).unwrap();
+
+        // 1. Process explosion timers
+        let explosion_entities = world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
+        for e_id in explosion_entities.iter() {
+            if let Some(mut explosion) = world.get_typed::<ExplosionComponent>(&env, e_id) {
+                if explosion.timer > 0 {
+                    explosion.timer -= 1;
+                }
+                if explosion.timer == 0 {
+                    world.despawn_entity(e_id);
+                } else {
+                    world.set_typed(&env, e_id, &explosion);
+                }
+            }
+        }
+
+        // 2. Process bomb timers and trigger new explosions
+        let bomb_entities = world.get_entities_with_component(&BombComponent::component_type(), &env);
+        for b_id in bomb_entities.iter() {
+            if let Some(mut bomb) = world.get_typed::<BombComponent>(&env, b_id) {
+                if bomb.timer > 0 {
+                    bomb.timer -= 1;
+                }
+                if bomb.timer == 0 {
+                    // Detonate!
+                    Self::detonate_bomb(&env, &mut world, &mut grid, &bomb);
+                    world.despawn_entity(b_id);
+                } else {
+                    world.set_typed(&env, b_id, &bomb);
+                }
+            }
+        }
+
+        // 3. Check for player deaths (collision with explosions)
+        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        let active_explosions = world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
+        
+        for p_id in player_entities.iter() {
+            if let Some(mut player) = world.get_typed::<PlayerComponent>(&env, p_id) {
+                if player.lives == 0 { continue; }
+                
+                let mut hit = false;
+                for e_id in active_explosions.iter() {
+                    if let Some(explosion) = world.get_typed::<ExplosionComponent>(&env, e_id) {
+                        if explosion.x == player.x && explosion.y == player.y {
+                            hit = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if hit {
+                    player.lives -= 1;
+                    world.set_typed(&env, p_id, &player);
+                }
+            }
+        }
+
+        // 4. Update Grid and GameState
+        world.set_typed(&env, grid_entity, &grid);
+        
+        // Win/loss detection
+        let mut alive_players = 0;
+        let mut last_alive_id = 0;
+        for p_id in player_entities.iter() {
+            if let Some(player) = world.get_typed::<PlayerComponent>(&env, p_id) {
+                if player.lives > 0 {
+                    alive_players += 1;
+                    last_alive_id = player.id;
+                }
+            }
+        }
+
+        if alive_players <= 1 {
+            game_state.game_over = true;
+            if alive_players == 1 {
+                game_state.winner_id = Some(last_alive_id);
+            }
+        }
+
+        world.set_typed(&env, state_entity, &game_state);
+
+        // Save world
+        env.storage().instance().set(&DataKey::World, &world);
 
         symbol_short!("tick_upd")
     }
 
+    fn detonate_bomb(env: &Env, world: &mut SimpleWorld, grid: &mut GridComponent, bomb: &BombComponent) {
+        // Spawn center explosion
+        let center_exp = ExplosionComponent::new(bomb.x, bomb.y);
+        let center_id = world.spawn_entity();
+        world.set_typed(env, center_id, &center_exp);
+
+        // Propagate in 4 directions
+        let dirs = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+        for (dx, dy) in dirs {
+            for dist in 1..=bomb.power {
+                let x = bomb.x + dx * dist as i32;
+                let y = bomb.y + dy * dist as i32;
+                
+                if x < 0 || y < 0 || x >= GRID_WIDTH as i32 || y >= GRID_HEIGHT as i32 {
+                    break;
+                }
+                
+                let cell = grid.get_cell(x as usize, y as usize);
+                if cell == CellType::Wall {
+                    break;
+                }
+                
+                // Spawn explosion
+                let exp = ExplosionComponent::new(x, y);
+                let exp_id = world.spawn_entity();
+                world.set_typed(env, exp_id, &exp);
+                
+                if cell == CellType::Destructible {
+                    grid.set_cell(x as usize, y as usize, CellType::Empty);
+                    break; // Blocked by destructible but destroys it
+                }
+                
+                if cell == CellType::PowerUp {
+                    grid.set_cell(x as usize, y as usize, CellType::Empty);
+                    // Power-up destroyed by explosion
+                }
+            }
+        }
+    }
+
     /// Get the current score for a player
     pub fn get_score(env: Env, player_id: u32) -> u32 {
-        // In practice would query the player component from the world
-        // Demonstration of component querying with cougr-core
-        100 // placeholder score
+        let world = Self::get_world(&env);
+        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        
+        for entity_id in player_entities.iter() {
+            if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
+                if player.id == player_id {
+                    return player.score;
+                }
+            }
+        }
+        0
+    }
+
+    /// Get the current lives for a player
+    pub fn get_lives(env: Env, player_id: u32) -> u32 {
+        let world = Self::get_world(&env);
+        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        
+        for entity_id in player_entities.iter() {
+            if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
+                if player.id == player_id {
+                    return player.lives;
+                }
+            }
+        }
+        0
     }
 
     /// Check if the game is over and return winner if any
     pub fn check_game_over(env: Env) -> Symbol {
-        // Would query game state component and check conditions
-        // cougr-core enables efficient querying of game state
-        symbol_short!("ongoing")
+        let world = Self::get_world(&env);
+        let state_entities = world.get_entities_with_component(&GameStateComponent::component_type(), &env);
+        let state_entity = match state_entities.get(0) {
+            Some(e) => e,
+            None => return symbol_short!("no_state"),
+        };
+        let game_state = world.get_typed::<GameStateComponent>(&env, state_entity).unwrap();
+        
+        if game_state.game_over {
+            match game_state.winner_id {
+                Some(_) => symbol_short!("winner"),
+                None => symbol_short!("draw"),
+            }
+        } else {
+            symbol_short!("ongoing")
+        }
     }
 
     pub fn hello(env: Env, to: Symbol) -> Symbol {

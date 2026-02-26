@@ -9,7 +9,7 @@ categories = ["game-engines", "data-structures", "wasm"]
 rust-version = "1.70.0"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [features]
 default = []
