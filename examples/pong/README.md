@@ -25,7 +25,7 @@ Before you begin, ensure you have the following installed:
 
 - **Rust** (1.89.0 or newer): [Install Rust](https://www.rust-lang.org/tools/install)
 - **Cargo**: Comes with Rust
-- **WASM target**: `rustup target add wasm32-unknown-unknown`
+- **WASM target**: `rustup target add wasm32v1-none`
 - **Stellar CLI** (optional, for deployment): `cargo install stellar-cli`
 
 ## Installation
@@ -38,7 +38,7 @@ Before you begin, ensure you have the following installed:
 
 2. **Install WASM target** (if not already installed):
    ```bash
-   rustup target add wasm32-unknown-unknown
+   rustup target add wasm32v1-none
    ```
 
 ## Building
@@ -50,12 +50,12 @@ cargo build
 
 ### Build WASM Contract
 ```bash
-cargo build --target wasm32-unknown-unknown --release
+cargo build --target wasm32v1-none --release
 ```
 
 The compiled WASM file will be located at:
 ```
-target/wasm32-unknown-unknown/release/pong.wasm
+target/wasm32v1-none/release/pong.wasm
 ```
 
 ## Testing
@@ -158,7 +158,7 @@ pub struct GameState {
 2. **Deploy the contract**:
    ```bash
    stellar contract deploy \
-     --wasm target/wasm32-unknown-unknown/release/pong.wasm \
+     --wasm target/wasm32v1-none/release/pong.wasm \
      --source <your-secret-key> \
      --network testnet
    ```
@@ -348,7 +348,7 @@ examples/pong/
 
 **Error**: `can't find crate for 'core'`
 ```bash
-rustup target add wasm32-unknown-unknown
+rustup target add wasm32v1-none
 ```
 
 **Error**: `Rust version too old`

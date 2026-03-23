@@ -31,7 +31,7 @@ This example demonstrates how to build deterministic on-chain game logic with:
 | Tool | Installation |
 |------|--------------|
 | Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
-| WASM Target | `rustup target add wasm32-unknown-unknown` |
+| WASM Target | `rustup target add wasm32v1-none` |
 | Stellar CLI | `brew install stellar-cli` (macOS) |
 
 ---

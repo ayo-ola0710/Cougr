@@ -38,7 +38,6 @@ Following the Cougr-Core ECS pattern:
 
 4. **WASM Target**
    ```bash
-   rustup target add wasm32-unknown-unknown
    rustup target add wasm32v1-none
    ```
 
@@ -77,7 +76,7 @@ cargo build
 cargo build --release
 
 # WASM build
-cargo build --target wasm32-unknown-unknown --release
+cargo build --target wasm32v1-none --release
 
 # Stellar CLI build (recommended for deployment)
 stellar contract build
@@ -273,7 +272,6 @@ cargo build
 
 Ensure WASM targets are installed:
 ```bash
-rustup target add wasm32-unknown-unknown
 rustup target add wasm32v1-none
 ```
 

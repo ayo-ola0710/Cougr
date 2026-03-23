@@ -1,27 +1,32 @@
-name: Snake CI
+name: Core CI
 
 on:
   push:
     branches: [main, develop]
     paths:
-      - 'examples/snake/**'
-      - '.github/workflows/snake.yml'
+      - 'src/**'
+      - 'tests/**'
+      - 'benches/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/core.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'examples/snake/**'
-      - '.github/workflows/snake.yml'
+      - 'src/**'
+      - 'tests/**'
+      - 'benches/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/core.yml'
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  ci:
-    name: CI
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: examples/snake
+  core:
+    name: Library Validation
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -33,23 +38,15 @@ jobs:
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: examples/snake
 
       - name: Check formatting
         run: cargo fmt --check
 
-      - name: Clippy
+      - name: Run clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
-      - name: Build
-        run: cargo build
-
-      - name: Test
+      - name: Run tests
         run: cargo test
 
-      - name: Install Stellar CLI
-        run: brew install stellar-cli
-
-      - name: Stellar contract build
-        run: stellar contract build
+      - name: Build library
+        run: cargo build

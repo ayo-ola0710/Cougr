@@ -87,7 +87,7 @@ impl Bullet {
 |------|---------|--------------|
 | Rust | 1.70.0+ | [rustup.rs](https://rustup.rs) |
 | Stellar CLI | Latest | [Stellar Docs](https://developers.stellar.org/docs/tools/cli) |
-| WASM Target | - | `rustup target add wasm32-unknown-unknown` |
+| WASM Target | - | `rustup target add wasm32v1-none` |
 
 ### Build
 
@@ -203,7 +203,7 @@ stellar contract build
 
 # Deploy to testnet
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/space_invaders.wasm \
+  --wasm target/wasm32v1-none/release/space_invaders.wasm \
   --source deployer \
   --network testnet
 ```

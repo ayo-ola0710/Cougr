@@ -148,7 +148,7 @@ assert(current == merkle_root)
 ### Build
 ```bash
 cargo build
-cargo build --release --target wasm32-unknown-unknown
+cargo build --release --target wasm32v1-none
 ```
 
 ### Test
@@ -266,7 +266,7 @@ For a 10x10 board:
 # Deploy to testnet
 stellar keys generate battleship-deployer --network testnet --fund
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/battleship.wasm \
+  --wasm target/wasm32v1-none/release/battleship.wasm \
   --source battleship-deployer \
   --network testnet
 ```

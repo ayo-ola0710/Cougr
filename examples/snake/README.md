@@ -118,7 +118,7 @@ let component = Component::new(Position::component_type(), position.serialize(&e
 | Tool | Version | Installation |
 |------|---------|--------------|
 | Rust | Stable | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
-| WASM Target | - | `rustup target add wasm32-unknown-unknown` |
+| WASM Target | - | `rustup target add wasm32v1-none` |
 | Stellar CLI | Latest | `brew install stellar-cli` (macOS) |
 
 ### Verify Installation
@@ -223,7 +223,7 @@ stellar keys address alice
 
 # 3. Deploy contract
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/snake.wasm \
+  --wasm target/wasm32v1-none/release/snake.wasm \
   --source alice \
   --network testnet
 
@@ -338,7 +338,7 @@ impl MyComponent {
 | Issue | Solution |
 |-------|----------|
 | Rust version errors | `rustup update && rustup default stable` |
-| WASM target missing | `rustup target add wasm32-unknown-unknown` |
+| WASM target missing | `rustup target add wasm32v1-none` |
 | Stellar CLI not found | `brew install stellar-cli` (macOS) |
 | Dependency conflicts | `cargo update && cargo clean && cargo build` |
 | Test snapshots issues | Delete `test_snapshots/` directory |

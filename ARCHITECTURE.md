@@ -82,6 +82,6 @@ Key traits: `CougrAccount`, `SessionKeyProvider`, `RecoveryProvider`, `MultiDevi
 
 ## Build
 
-The contract compiles to ~14 KB WASM with LTO, `opt-level = "z"`, and `overflow-checks = true`.
+Release builds are configured with LTO, `opt-level = "z"`, and `overflow-checks = true` to keep artifacts optimized for constrained execution environments.
 
-Target: `wasm32v1-none` (stellar-cli) or `wasm32-unknown-unknown`.
+Primary target: `wasm32v1-none`.

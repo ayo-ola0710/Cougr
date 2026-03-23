@@ -95,7 +95,7 @@ git clone https://github.com/salazarsebas/Cougr.git
 cd Cougr/examples/angry_birds
 
 # Install Rust targets
-rustup target add wasm32-unknown-unknown wasm32v1-none
+rustup target add wasm32v1-none
 
 # Install Stellar CLI
 brew install stellar-cli  # macOS
@@ -144,7 +144,7 @@ stellar network testnet
 
 # Deploy contract
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/angry_birds.wasm \
+  --wasm target/wasm32v1-none/release/angry_birds.wasm \
   --source <your-account> \
   --network testnet
 

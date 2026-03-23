@@ -27,9 +27,9 @@ Before you begin, ensure you have the following installed:
 
 - **Rust** (1.70.0 or later): [Install Rust](https://www.rust-lang.org/tools/install)
 - **Stellar CLI**: [Install Stellar CLI](https://developers.stellar.org/docs/tools/cli/install)
-- **wasm32-unknown-unknown** target:
+- **wasm32v1-none** target:
   ```bash
-  rustup target add wasm32-unknown-unknown
+  rustup target add wasm32v1-none
   ```
 
 ## Project Structure
@@ -82,7 +82,7 @@ Game logic is organized into systems:
 
 ```bash
 cd examples/flappy_bird
-cargo build --target wasm32-unknown-unknown --release
+cargo build --target wasm32v1-none --release
 ```
 
 ### 2. Build with Stellar CLI
@@ -93,7 +93,7 @@ stellar contract build
 
 This will generate the WASM file at:
 ```
-target/wasm32-unknown-unknown/release/flappy_bird.wasm
+target/wasm32v1-none/release/flappy_bird.wasm
 ```
 
 ### 3. Optimize (Optional)
@@ -101,7 +101,7 @@ target/wasm32-unknown-unknown/release/flappy_bird.wasm
 For production, you can further optimize the WASM:
 
 ```bash
-stellar contract optimize --wasm target/wasm32-unknown-unknown/release/flappy_bird.wasm
+stellar contract optimize --wasm target/wasm32v1-none/release/flappy_bird.wasm
 ```
 
 ## Running Tests
@@ -146,7 +146,7 @@ curl "https://friendbot.stellar.org?addr=$(stellar keys address test-account)"
 
 ```bash
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/flappy_bird.wasm \
+  --wasm target/wasm32v1-none/release/flappy_bird.wasm \
   --source test-account \
   --network testnet
 ```
@@ -304,7 +304,7 @@ pub fn apply_gravity(world: &mut World, env: &Env) {
 
 **Issue**: `error: failed to compile`
 - **Solution**: Ensure you have the correct Rust version (1.70.0+) and wasm32 target installed
-- Run: `rustup update && rustup target add wasm32-unknown-unknown`
+- Run: `rustup update && rustup target add wasm32v1-none`
 
 **Issue**: `stellar: command not found`
 - **Solution**: Install Stellar CLI following the [official guide](https://developers.stellar.org/docs/tools/cli/install)

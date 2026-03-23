@@ -28,7 +28,7 @@ This example demonstrates how to build a fully functional game as a smart contra
 |------|---------|-------------|
 | Rust | 1.70.0+ | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` |
 | Stellar CLI | Latest | `cargo install --locked stellar-cli --features opt` |
-| WASM Target | - | `rustup target add wasm32-unknown-unknown` |
+| WASM Target | - | `rustup target add wasm32v1-none` |
 
 ### Build & Test
 ```bash
@@ -52,7 +52,7 @@ stellar contract build
 ```bash
 # Deploy to testnet
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/tetris.wasm \
+  --wasm target/wasm32v1-none/release/tetris.wasm \
   --source <YOUR_SECRET_KEY> \
   --network testnet
 ```

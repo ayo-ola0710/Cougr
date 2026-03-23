@@ -275,7 +275,7 @@ stellar contract build
 
 # Deploy
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/chess.wasm \
+  --wasm target/wasm32v1-none/release/chess.wasm \
   --source chess-deployer \
   --network testnet
 ```

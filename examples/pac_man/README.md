@@ -89,7 +89,7 @@ Legend:
 
 3. **WASM Target**
    ```bash
-   rustup target add wasm32-unknown-unknown
+   rustup target add wasm32v1-none
    ```
 
 ### Verify Installation
@@ -133,7 +133,7 @@ stellar contract build
 
 This generates the WASM file at:
 ```
-target/wasm32-unknown-unknown/release/pac_man.wasm
+target/wasm32v1-none/release/pac_man.wasm
 ```
 
 ## Testing
@@ -332,7 +332,7 @@ curl "https://friendbot.stellar.org?addr=$(stellar keys address pacman-deployer)
 
 ```bash
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/pac_man.wasm \
+  --wasm target/wasm32v1-none/release/pac_man.wasm \
   --source pacman-deployer \
   --network testnet
 ```
@@ -423,7 +423,7 @@ rustup default stable
 
 #### WASM Build Fails
 ```bash
-rustup target add wasm32-unknown-unknown
+rustup target add wasm32v1-none
 ```
 
 #### Dependency Resolution Issues
@@ -447,7 +447,7 @@ cargo install stellar-cli --locked
 
 2. **Check Contract Size**
    ```bash
-   ls -la target/wasm32-unknown-unknown/release/pac_man.wasm
+   ls -la target/wasm32v1-none/release/pac_man.wasm
    ```
    Should be under 64KB.
 

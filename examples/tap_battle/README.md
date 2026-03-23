@@ -156,7 +156,7 @@ Taps within **5 ledger sequences** of each other maintain a combo streak:
 |---|---|---|
 | Rust | 1.70.0+ | [rustup.rs](https://rustup.rs) |
 | Stellar CLI | Latest | [Stellar Docs](https://developers.stellar.org/docs/tools/cli) |
-| WASM Target | - | `rustup target add wasm32-unknown-unknown` |
+| WASM Target | - | `rustup target add wasm32v1-none` |
 
 ### Build
 

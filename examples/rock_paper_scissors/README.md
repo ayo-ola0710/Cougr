@@ -151,7 +151,7 @@ cargo install stellar-cli
 cargo build
 
 # Optimized WASM
-cargo build --release --target wasm32-unknown-unknown
+cargo build --release --target wasm32v1-none
 ```
 
 ### Test
@@ -281,11 +281,11 @@ All components implement `cougr_core::component::ComponentTrait` for type-safe s
 stellar keys generate rps-deployer --network testnet --fund
 
 # Build contract
-cargo build --release --target wasm32-unknown-unknown
+cargo build --release --target wasm32v1-none
 
 # Deploy
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/rock_paper_scissors.wasm \
+  --wasm target/wasm32v1-none/release/rock_paper_scissors.wasm \
   --source rps-deployer \
   --network testnet
 ```

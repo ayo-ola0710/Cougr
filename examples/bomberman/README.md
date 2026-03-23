@@ -89,7 +89,7 @@ This example demonstrates how cougr-core simplifies on-chain game development by
 2. Deploy the contract:
    ```bash
    stellar contract deploy \
-     --wasm target/wasm32-unknown-unknown/release/bomberman.wasm \
+     --wasm target/wasm32v1-none/release/bomberman.wasm \
      --source <your-secret-key> \
      --network testnet
    ```
@@ -198,7 +198,7 @@ cargo build --verbose
 stellar --version
 
 # Simulate contract deployment
-stellar contract deploy --wasm target/wasm32-unknown-unknown/release/bomberman.wasm --simulate
+stellar contract deploy --wasm target/wasm32v1-none/release/bomberman.wasm --simulate
 ```
 
 ## Architecture

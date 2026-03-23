@@ -99,7 +99,7 @@ Uses Cougr-Core ECS patterns:
 ## Prerequisites
 
 - Rust 1.89+
-- `rustup target add wasm32-unknown-unknown`
+- `rustup target add wasm32v1-none`
 - Stellar CLI (optional, for deployment)
 
 ## License
