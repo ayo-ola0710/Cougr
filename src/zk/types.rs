@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, BytesN, Env, Vec};
+use soroban_sdk::{contracttype, BytesN, Vec};
 
 /// A BN254 G1 affine point (compressed, 64 bytes serialized).
 ///

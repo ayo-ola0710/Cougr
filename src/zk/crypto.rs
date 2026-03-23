@@ -82,6 +82,7 @@ pub fn bn254_pairing_check(
 ///
 /// Returns the permuted state vector.
 #[cfg(feature = "hazmat-crypto")]
+#[allow(clippy::too_many_arguments)]
 pub fn poseidon_permutation(
     env: &Env,
     input: &soroban_sdk::Vec<soroban_sdk::U256>,
@@ -93,7 +94,7 @@ pub fn poseidon_permutation(
     mds: &soroban_sdk::Vec<soroban_sdk::Vec<soroban_sdk::U256>>,
     round_constants: &soroban_sdk::Vec<soroban_sdk::Vec<soroban_sdk::U256>>,
 ) -> soroban_sdk::Vec<soroban_sdk::U256> {
-    let hazmat = soroban_sdk::crypto::CryptoHazmat::new(env);
+    let hazmat = env.crypto_hazmat();
     hazmat.poseidon_permutation(input, field, t, d, rounds_f, rounds_p, mds, round_constants)
 }
 
@@ -106,6 +107,7 @@ pub fn poseidon_permutation(
 /// Parameters are the same as `poseidon_permutation` except:
 /// - `mat_internal_diag_m_1`: Diagonal entries of the internal matrix minus identity
 #[cfg(feature = "hazmat-crypto")]
+#[allow(clippy::too_many_arguments)]
 pub fn poseidon2_permutation(
     env: &Env,
     input: &soroban_sdk::Vec<soroban_sdk::U256>,
@@ -117,7 +119,7 @@ pub fn poseidon2_permutation(
     mat_internal_diag_m_1: &soroban_sdk::Vec<soroban_sdk::U256>,
     round_constants: &soroban_sdk::Vec<soroban_sdk::Vec<soroban_sdk::U256>>,
 ) -> soroban_sdk::Vec<soroban_sdk::U256> {
-    let hazmat = soroban_sdk::crypto::CryptoHazmat::new(env);
+    let hazmat = env.crypto_hazmat();
     hazmat.poseidon2_permutation(
         input,
         field,

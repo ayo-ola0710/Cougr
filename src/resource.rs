@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, symbol_short, Bytes, Env, Symbol};
+use soroban_sdk::{contracttype, Bytes, Env, Symbol};
 
 #[contracttype]
 #[derive(Debug, Clone)]
@@ -67,7 +67,7 @@ impl Default for GameState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::Env;
+    use soroban_sdk::{symbol_short, Env};
 
     #[test]
     fn test_resource_creation() {

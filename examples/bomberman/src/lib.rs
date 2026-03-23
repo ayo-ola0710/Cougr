@@ -254,7 +254,7 @@ impl ComponentTrait for ExplosionComponent {
 // Grid cell types
 #[contracttype]
 #[repr(u8)]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CellType {
     Empty = 0,
     Wall = 1,
@@ -408,7 +408,7 @@ impl ComponentTrait for GameStateComponent {
 
     #[allow(unused_variables)]
     fn deserialize(env: &Env, data: &Bytes) -> Option<Self> {
-        if data.len() < 9 {
+        if data.len() < 6 {
             return None;
         }
         let current_tick = u32::from_be_bytes([
@@ -419,7 +419,7 @@ impl ComponentTrait for GameStateComponent {
         ]);
         let game_over = data.get(4).unwrap() != 0;
         let has_winner = data.get(5).unwrap() != 0;
-        let winner_id = if has_winner && data.len() >= 13 {
+        let winner_id = if has_winner && data.len() >= 10 {
             Some(u32::from_be_bytes([
                 data.get(6).unwrap(),
                 data.get(7).unwrap(),
@@ -474,9 +474,10 @@ impl BombermanContract {
     /// Spawn a new player at a given position
     pub fn spawn_player(env: Env, player_id: u32, x: i32, y: i32) -> Symbol {
         let mut world = Self::get_world(&env);
-        
+
         // Check if player ID already exists
-        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        let player_entities =
+            world.get_entities_with_component(&PlayerComponent::component_type(), &env);
         for entity_id in player_entities.iter() {
             if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
                 if player.id == player_id {
@@ -484,11 +485,11 @@ impl BombermanContract {
                 }
             }
         }
-        
+
         let player = PlayerComponent::new(player_id, x, y);
         let player_entity = world.spawn_entity();
         world.set_typed(&env, player_entity, &player);
-        
+
         env.storage().instance().set(&DataKey::World, &world);
         symbol_short!("spawned")
     }
@@ -499,7 +500,8 @@ impl BombermanContract {
         let mut world = Self::get_world(&env);
 
         // Find player entity
-        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        let player_entities =
+            world.get_entities_with_component(&PlayerComponent::component_type(), &env);
         let mut player_entity_opt = None;
         for entity_id in player_entities.iter() {
             if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
@@ -516,7 +518,8 @@ impl BombermanContract {
         };
 
         // Find grid entity
-        let grid_entities = world.get_entities_with_component(&GridComponent::component_type(), &env);
+        let grid_entities =
+            world.get_entities_with_component(&GridComponent::component_type(), &env);
         let grid_entity = match grid_entities.get(0) {
             Some(e) => e,
             None => return symbol_short!("no_grid"),
@@ -539,7 +542,8 @@ impl BombermanContract {
         }
 
         // Check for explosions at target position
-        let explosion_entities = world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
+        let explosion_entities =
+            world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
         for e_id in explosion_entities.iter() {
             if let Some(explosion) = world.get_typed::<ExplosionComponent>(&env, e_id) {
                 if explosion.x == next_x && explosion.y == next_y {
@@ -575,7 +579,8 @@ impl BombermanContract {
         let mut world = Self::get_world(&env);
 
         // Find player position
-        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        let player_entities =
+            world.get_entities_with_component(&PlayerComponent::component_type(), &env);
         let mut player_opt = None;
         for entity_id in player_entities.iter() {
             if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
@@ -592,7 +597,8 @@ impl BombermanContract {
         };
 
         // Check current bomb count for this player
-        let bomb_entities = world.get_entities_with_component(&BombComponent::component_type(), &env);
+        let bomb_entities =
+            world.get_entities_with_component(&BombComponent::component_type(), &env);
         let mut owned_bombs = 0;
         for b_id in bomb_entities.iter() {
             if let Some(bomb) = world.get_typed::<BombComponent>(&env, b_id) {
@@ -632,23 +638,28 @@ impl BombermanContract {
         let mut world = Self::get_world(&env);
 
         // Update game state tick
-        let state_entities = world.get_entities_with_component(&GameStateComponent::component_type(), &env);
+        let state_entities =
+            world.get_entities_with_component(&GameStateComponent::component_type(), &env);
         let state_entity = state_entities.get(0).expect("No game state");
-        let mut game_state = world.get_typed::<GameStateComponent>(&env, state_entity).unwrap();
-        
+        let mut game_state = world
+            .get_typed::<GameStateComponent>(&env, state_entity)
+            .unwrap();
+
         if game_state.game_over {
             return symbol_short!("game_over");
         }
-        
+
         game_state.current_tick += 1;
 
         // Find grid
-        let grid_entities = world.get_entities_with_component(&GridComponent::component_type(), &env);
+        let grid_entities =
+            world.get_entities_with_component(&GridComponent::component_type(), &env);
         let grid_entity = grid_entities.get(0).expect("No grid");
         let mut grid = world.get_typed::<GridComponent>(&env, grid_entity).unwrap();
 
         // 1. Process explosion timers
-        let explosion_entities = world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
+        let explosion_entities =
+            world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
         for e_id in explosion_entities.iter() {
             if let Some(mut explosion) = world.get_typed::<ExplosionComponent>(&env, e_id) {
                 if explosion.timer > 0 {
@@ -663,7 +674,8 @@ impl BombermanContract {
         }
 
         // 2. Process bomb timers and trigger new explosions
-        let bomb_entities = world.get_entities_with_component(&BombComponent::component_type(), &env);
+        let bomb_entities =
+            world.get_entities_with_component(&BombComponent::component_type(), &env);
         for b_id in bomb_entities.iter() {
             if let Some(mut bomb) = world.get_typed::<BombComponent>(&env, b_id) {
                 if bomb.timer > 0 {
@@ -680,13 +692,17 @@ impl BombermanContract {
         }
 
         // 3. Check for player deaths (collision with explosions)
-        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
-        let active_explosions = world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
-        
+        let player_entities =
+            world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+        let active_explosions =
+            world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
+
         for p_id in player_entities.iter() {
             if let Some(mut player) = world.get_typed::<PlayerComponent>(&env, p_id) {
-                if player.lives == 0 { continue; }
-                
+                if player.lives == 0 {
+                    continue;
+                }
+
                 let mut hit = false;
                 for e_id in active_explosions.iter() {
                     if let Some(explosion) = world.get_typed::<ExplosionComponent>(&env, e_id) {
@@ -696,7 +712,7 @@ impl BombermanContract {
                         }
                     }
                 }
-                
+
                 if hit {
                     player.lives -= 1;
                     world.set_typed(&env, p_id, &player);
@@ -706,7 +722,7 @@ impl BombermanContract {
 
         // 4. Update Grid and GameState
         world.set_typed(&env, grid_entity, &grid);
-        
+
         // Win/loss detection
         let mut alive_players = 0;
         let mut last_alive_id = 0;
@@ -734,7 +750,12 @@ impl BombermanContract {
         symbol_short!("tick_upd")
     }
 
-    fn detonate_bomb(env: &Env, world: &mut SimpleWorld, grid: &mut GridComponent, bomb: &BombComponent) {
+    fn detonate_bomb(
+        env: &Env,
+        world: &mut SimpleWorld,
+        grid: &mut GridComponent,
+        bomb: &BombComponent,
+    ) {
         // Spawn center explosion
         let center_exp = ExplosionComponent::new(bomb.x, bomb.y);
         let center_id = world.spawn_entity();
@@ -746,26 +767,26 @@ impl BombermanContract {
             for dist in 1..=bomb.power {
                 let x = bomb.x + dx * dist as i32;
                 let y = bomb.y + dy * dist as i32;
-                
+
                 if x < 0 || y < 0 || x >= GRID_WIDTH as i32 || y >= GRID_HEIGHT as i32 {
                     break;
                 }
-                
+
                 let cell = grid.get_cell(x as usize, y as usize);
                 if cell == CellType::Wall {
                     break;
                 }
-                
+
                 // Spawn explosion
                 let exp = ExplosionComponent::new(x, y);
                 let exp_id = world.spawn_entity();
                 world.set_typed(env, exp_id, &exp);
-                
+
                 if cell == CellType::Destructible {
                     grid.set_cell(x as usize, y as usize, CellType::Empty);
                     break; // Blocked by destructible but destroys it
                 }
-                
+
                 if cell == CellType::PowerUp {
                     grid.set_cell(x as usize, y as usize, CellType::Empty);
                     // Power-up destroyed by explosion
@@ -777,8 +798,9 @@ impl BombermanContract {
     /// Get the current score for a player
     pub fn get_score(env: Env, player_id: u32) -> u32 {
         let world = Self::get_world(&env);
-        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
-        
+        let player_entities =
+            world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+
         for entity_id in player_entities.iter() {
             if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
                 if player.id == player_id {
@@ -792,8 +814,9 @@ impl BombermanContract {
     /// Get the current lives for a player
     pub fn get_lives(env: Env, player_id: u32) -> u32 {
         let world = Self::get_world(&env);
-        let player_entities = world.get_entities_with_component(&PlayerComponent::component_type(), &env);
-        
+        let player_entities =
+            world.get_entities_with_component(&PlayerComponent::component_type(), &env);
+
         for entity_id in player_entities.iter() {
             if let Some(player) = world.get_typed::<PlayerComponent>(&env, entity_id) {
                 if player.id == player_id {
@@ -807,13 +830,16 @@ impl BombermanContract {
     /// Check if the game is over and return winner if any
     pub fn check_game_over(env: Env) -> Symbol {
         let world = Self::get_world(&env);
-        let state_entities = world.get_entities_with_component(&GameStateComponent::component_type(), &env);
+        let state_entities =
+            world.get_entities_with_component(&GameStateComponent::component_type(), &env);
         let state_entity = match state_entities.get(0) {
             Some(e) => e,
             None => return symbol_short!("no_state"),
         };
-        let game_state = world.get_typed::<GameStateComponent>(&env, state_entity).unwrap();
-        
+        let game_state = world
+            .get_typed::<GameStateComponent>(&env, state_entity)
+            .unwrap();
+
         if game_state.game_over {
             match game_state.winner_id {
                 Some(_) => symbol_short!("winner"),

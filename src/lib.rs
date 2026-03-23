@@ -3,7 +3,7 @@
 
 extern crate alloc;
 
-use soroban_sdk::{symbol_short, Bytes, Symbol, Vec};
+use soroban_sdk::{Symbol, Vec};
 
 // Global allocator for WASM
 #[global_allocator]
@@ -91,8 +91,8 @@ pub fn get_component(
 }
 
 pub fn query_entities(
-    world: &World,
-    component_types: Vec<Symbol>,
+    _world: &World,
+    _component_types: Vec<Symbol>,
     env: &soroban_sdk::Env,
 ) -> Vec<EntityId> {
     // Since we can't easily convert Vec<Symbol> to &[Symbol] in Soroban,
@@ -117,7 +117,7 @@ pub mod prelude {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{testutils::Address as _, Env};
+    use soroban_sdk::Env;
 
     #[test]
     fn test_world_creation() {
@@ -130,7 +130,7 @@ mod tests {
     fn test_entity_spawn() {
         let _env = Env::default();
         let mut world = World::new();
-        let entity = world.spawn_empty();
+        let _entity = world.spawn_empty();
         assert_eq!(world.entity_count(), 1);
     }
 }

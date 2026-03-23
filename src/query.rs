@@ -1,7 +1,6 @@
 use crate::entity::EntityId;
-use crate::simple_world::{self, EntityId as SimpleEntityId};
+use crate::simple_world::EntityId as SimpleEntityId;
 use crate::world::World;
-use alloc::boxed::Box;
 use soroban_sdk::{Env, Symbol, Vec};
 
 /// A query for entities with specific components
@@ -300,6 +299,12 @@ impl AllFilters {
     }
 }
 
+impl Default for AllFilters {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl QueryFilter for AllFilters {
     fn matches(&self, world: &World, entity_id: EntityId) -> bool {
         if let Some(entity) = world.get_entity(entity_id) {
@@ -334,6 +339,12 @@ impl AnyFilter {
     pub fn add_filter(mut self, component_type: Symbol) -> Self {
         self.filters.push_back(component_type);
         self
+    }
+}
+
+impl Default for AnyFilter {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

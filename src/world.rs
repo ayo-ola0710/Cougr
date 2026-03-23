@@ -3,7 +3,7 @@ use crate::entity::{Entity, EntityId, EntityIterator, EntityIteratorMut, EntityM
 use crate::event::Event;
 use crate::resource::Resource;
 use crate::storage::Storage;
-use soroban_sdk::{contracttype, Symbol, Vec};
+use soroban_sdk::{Symbol, Vec};
 
 /// The main ECS world that contains all entities, components, and systems
 #[derive(Debug, Clone)]
@@ -42,7 +42,7 @@ impl World {
     /// Spawn a new entity with components
     pub fn spawn(&mut self, components: Vec<Component>) -> Entity {
         let entity_id = self.entities.spawn();
-        let mut entity = Entity::new(entity_id);
+        let entity = Entity::new(entity_id);
 
         // Add components to the entity and storage
         for component in components {
@@ -218,12 +218,12 @@ impl World {
     }
 
     /// Iterate over all entities
-    pub fn iter_entities(&self) -> EntityIterator {
+    pub fn iter_entities(&self) -> EntityIterator<'_> {
         self.entities.iter_entities()
     }
 
     /// Iterate over all entities mutably
-    pub fn iter_entities_mut(&mut self) -> EntityIteratorMut {
+    pub fn iter_entities_mut(&mut self) -> EntityIteratorMut<'_> {
         self.entities.iter_entities_mut()
     }
 
@@ -233,8 +233,7 @@ impl World {
         let mut results = Vec::new(&env);
         for entity in self.iter_entities() {
             let mut has_all_components = true;
-            for i in 0..component_types.len() {
-                let ctype = &component_types[i];
+            for ctype in component_types {
                 if !entity.has_component(ctype) {
                     has_all_components = false;
                     break;
@@ -276,7 +275,6 @@ impl Default for World {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{symbol_short, Env};
 
     #[test]
     fn test_world_creation() {

@@ -273,9 +273,7 @@ impl RecoveryProvider for RecoverableAccount {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{
-        contract, contractimpl, testutils::Address as _, testutils::Ledger as _, Env,
-    };
+    use soroban_sdk::{contract, contractimpl, testutils::Address as _, Env};
 
     #[contract]
     pub struct TestContract;

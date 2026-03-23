@@ -1,6 +1,6 @@
 use crate::component::Component;
 use crate::entity::EntityId;
-use soroban_sdk::{contracttype, Bytes, Env, Symbol, Vec};
+use soroban_sdk::{contracttype, Bytes, Symbol, Vec};
 
 #[contracttype]
 #[derive(Debug, Clone)]

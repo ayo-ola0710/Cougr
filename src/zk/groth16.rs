@@ -2,7 +2,7 @@ use soroban_sdk::Env;
 
 use super::crypto::{bn254_g1_add, bn254_g1_mul, bn254_pairing_check};
 use super::error::ZKError;
-use super::types::{G1Point, Groth16Proof, Scalar, VerificationKey};
+use super::types::{Groth16Proof, Scalar, VerificationKey};
 
 /// Verify a Groth16 proof against a verification key and public inputs.
 ///
@@ -77,6 +77,7 @@ pub fn verify_groth16(
 
 #[cfg(test)]
 mod tests {
+    use super::super::types::G1Point;
     use super::*;
     use soroban_sdk::{BytesN, Env, Vec};
 

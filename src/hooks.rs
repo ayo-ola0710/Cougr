@@ -1,6 +1,6 @@
 use crate::simple_world::{EntityId, SimpleWorld};
 use alloc::vec::Vec;
-use soroban_sdk::{Bytes, Env, Symbol};
+use soroban_sdk::{Bytes, Symbol};
 
 /// Callback invoked when a component is added to an entity.
 pub type OnAddHook = fn(entity_id: EntityId, component_type: &Symbol, data: &Bytes);

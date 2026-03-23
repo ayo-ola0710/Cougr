@@ -109,6 +109,12 @@ impl DirtyTracker {
     }
 }
 
+impl Default for DirtyTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

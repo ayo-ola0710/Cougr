@@ -95,7 +95,7 @@ impl DeviceStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{contract, contractimpl, symbol_short, testutils::Address as _, Env};
+    use soroban_sdk::{contract, contractimpl, testutils::Address as _, Env};
 
     #[contract]
     pub struct TestContract;

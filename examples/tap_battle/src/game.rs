@@ -35,8 +35,7 @@ pub fn process_tap(env: &Env, player: &Address) -> TapResult {
     // === COMBO SYSTEM ===
     // Check if this tap is within the combo window
     // Use count > 0 to detect non-first taps (ledger sequence can be 0)
-    if tap_state.count > 0
-        && current_ledger.wrapping_sub(tap_state.last_tap_ledger) <= COMBO_WINDOW
+    if tap_state.count > 0 && current_ledger.wrapping_sub(tap_state.last_tap_ledger) <= COMBO_WINDOW
     {
         // Combo continues
         tap_state.combo += 1;
@@ -119,9 +118,9 @@ pub fn activate_power_up(env: &Env, player: &Address, power_up_kind: u32) {
 
     // Apply power-up effect
     let bonus = match power_up_kind {
-        0 => DOUBLE_TAP_BONUS,  // DoubleTap
-        1 => 0,                  // Shield (defensive, no score bonus)
-        2 => BURST_BONUS,       // Burst
+        0 => DOUBLE_TAP_BONUS, // DoubleTap
+        1 => 0,                // Shield (defensive, no score bonus)
+        2 => BURST_BONUS,      // Burst
         _ => panic!("unknown power-up kind"),
     };
 

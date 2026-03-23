@@ -84,8 +84,10 @@ impl Default for SystemScheduler {
 /// scheduler.run_all(&mut world, &env);
 /// ```
 pub struct SimpleScheduler {
-    systems: Vec<(&'static str, fn(&mut SimpleWorld, &Env))>,
+    systems: Vec<SimpleSystemEntry>,
 }
+
+type SimpleSystemEntry = (&'static str, fn(&mut SimpleWorld, &Env));
 
 impl SimpleScheduler {
     /// Create an empty scheduler.

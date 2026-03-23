@@ -1,7 +1,6 @@
-use soroban_sdk::{BytesN, Env, Vec};
+use soroban_sdk::{BytesN, Env};
 
 use super::error::ZKError;
-use super::groth16::verify_groth16;
 use super::traits::{bytes32_to_scalar, i32_to_scalar, u32_to_scalar, GameCircuit};
 use super::types::{Groth16Proof, Scalar, VerificationKey};
 
@@ -266,7 +265,7 @@ impl CustomCircuitBuilder {
 mod tests {
     use super::super::traits;
     use super::*;
-    use soroban_sdk::{BytesN, Env};
+    use soroban_sdk::{BytesN, Env, Vec};
 
     use super::super::types::{G1Point, G2Point};
 

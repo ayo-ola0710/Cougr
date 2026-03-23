@@ -155,7 +155,7 @@ fn test_session_ops_decrement() {
     env.as_contract(&contract_id, || {
         // Initial ops: 100
         auth::validate_session(&env, &player);
-        
+
         let session: SessionState = env
             .storage()
             .persistent()
@@ -517,4 +517,3 @@ fn test_combo_breaks_outside_window() {
         assert_eq!(r3.multiplier, 1);
     });
 }
-

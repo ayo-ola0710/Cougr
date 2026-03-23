@@ -27,7 +27,7 @@ use crate::error::CougrError;
 use crate::simple_world::EntityId;
 use crate::simple_world::SimpleWorld;
 use alloc::vec::Vec;
-use soroban_sdk::{contracttype, Bytes, Env, Map, Symbol};
+use soroban_sdk::{contracttype, Bytes, Env, Symbol};
 
 /// Metadata stored as a single persistent entry.
 #[contracttype]

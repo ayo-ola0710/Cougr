@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address, Bytes, BytesN, Symbol, Vec};
+use soroban_sdk::{contracttype, Address, BytesN, Symbol, Vec};
 
 use super::types::{Groth16Proof, Scalar};
 
@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn test_verified_marker() {
-        let env = Env::default();
+        let _env = Env::default();
         let marker = VerifiedMarker {
             verified_at: 150,
             proof_type: symbol_short!("movement"),

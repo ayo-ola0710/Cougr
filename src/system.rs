@@ -1,5 +1,4 @@
-use crate::component::Component;
-use crate::entity::{Entity, EntityId};
+use crate::entity::EntityId;
 use crate::event::{DamageEvent, EventTrait};
 use crate::world::World;
 use soroban_sdk::{symbol_short, Symbol, Vec};
@@ -183,7 +182,7 @@ impl SystemParam for QueryParam {
     type Param = Self;
     type Fetch = Vec<EntityId>;
 
-    fn fetch(world: &World) -> Self::Fetch {
+    fn fetch(_world: &World) -> Self::Fetch {
         // This is a simplified implementation
         // In a real system, you'd have more sophisticated query execution
         let env = soroban_sdk::Env::default();
@@ -197,13 +196,15 @@ impl SystemParam for QueryParam {
 
 /// System parameter for accessing resources
 pub struct ResourceParam {
-    resource_type: Symbol,
+    _resource_type: Symbol,
 }
 
 impl ResourceParam {
     /// Create a new resource parameter
     pub fn new(resource_type: Symbol) -> Self {
-        Self { resource_type }
+        Self {
+            _resource_type: resource_type,
+        }
     }
 }
 
@@ -211,7 +212,7 @@ impl SystemParam for ResourceParam {
     type Param = Self;
     type Fetch = Option<crate::resource::Resource>;
 
-    fn fetch(world: &World) -> Self::Fetch {
+    fn fetch(_world: &World) -> Self::Fetch {
         // This is a simplified implementation
         // In a real system, you'd have access to the parameter instance
         None
@@ -236,7 +237,7 @@ impl System for MovementSystem {
             world.query_entities(&[symbol_short!("position"), symbol_short!("velocity")]);
 
         for i in 0..entities_with_movement.len() {
-            let entity_id = entities_with_movement.get(i).unwrap();
+            let _entity_id = entities_with_movement.get(i).unwrap();
             // In a real implementation, you'd:
             // 1. Get the position and velocity components
             // 2. Update the position based on velocity
@@ -289,7 +290,7 @@ impl System for HealthSystem {
         for i in 0..damage_events.len() {
             let event = damage_events.get(i).unwrap();
             if let Some(damage_event) = DamageEvent::deserialize(&env, event.data()) {
-                let target_entity = EntityId::new(damage_event.target_entity, 0);
+                let _target_entity = EntityId::new(damage_event.target_entity, 0);
                 // In a real implementation, you'd:
                 // 1. Get the health component from the target entity
                 // 2. Apply the damage
@@ -334,7 +335,7 @@ mod tests {
 
     #[test]
     fn test_function_system() {
-        let mut system = FunctionSystem::new(|world: &mut World, input: i32| {
+        let mut system = FunctionSystem::new(|_world: &mut World, input: i32| {
             // Simple system that just returns the input
             input
         });

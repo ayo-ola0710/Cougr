@@ -58,7 +58,7 @@ pub fn take_snapshot(world: &SimpleWorld, env: &Env) -> WorldSnapshot {
 }
 
 /// Compute the diff between two snapshots.
-pub fn diff_snapshots(before: &WorldSnapshot, after: &WorldSnapshot, env: &Env) -> WorldDiff {
+pub fn diff_snapshots(before: &WorldSnapshot, after: &WorldSnapshot, _env: &Env) -> WorldDiff {
     let mut added_entities = Vec::new();
     let mut removed_entities = Vec::new();
     let mut added_components = Vec::new();

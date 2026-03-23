@@ -68,19 +68,19 @@ fn test_spawn_50_despawn_25() {
     assert_eq!(before.len(), 50);
 
     // Despawn first 25
-    for i in 0..25 {
-        world.despawn_entity(ids[i]);
+    for entity_id in ids.iter().take(25) {
+        world.despawn_entity(*entity_id);
     }
 
     let after = world.get_entities_with_component(&symbol_short!("pos"), &env);
     assert_eq!(after.len(), 25);
 
     // Remaining entities are ids[25..50]
-    for i in 25..50 {
-        assert!(world.has_component(ids[i], &symbol_short!("pos")));
+    for entity_id in ids.iter().take(50).skip(25) {
+        assert!(world.has_component(*entity_id, &symbol_short!("pos")));
     }
-    for i in 0..25 {
-        assert!(!world.has_component(ids[i], &symbol_short!("pos")));
+    for entity_id in ids.iter().take(25) {
+        assert!(!world.has_component(*entity_id, &symbol_short!("pos")));
     }
 }
 
@@ -135,16 +135,16 @@ fn test_query_cache_under_rapid_mutation() {
         }
 
         let results = cache.execute(&world, &env);
-        let expected_after_add = (cycle * 5 + 10) as u32;
+        let expected_after_add = cycle * 5 + 10;
         assert_eq!(results.len(), expected_after_add);
 
         // Remove first 5 of what we just added
-        for i in 0..5 {
-            world.remove_component(added[i], &symbol_short!("pos"));
+        for entity_id in added.iter().take(5) {
+            world.remove_component(*entity_id, &symbol_short!("pos"));
         }
 
         let results = cache.execute(&world, &env);
-        let expected_after_remove = (cycle * 5 + 5) as u32;
+        let expected_after_remove = cycle * 5 + 5;
         assert_eq!(results.len(), expected_after_remove);
     }
 
@@ -252,7 +252,7 @@ fn test_mixed_storage_stress() {
         let e = world.spawn_entity();
         let data = Bytes::from_array(&env, &[(i as u8)]);
 
-        if i < 15 || i >= 20 {
+        if !(15..20).contains(&i) {
             world.add_component(e, symbol_short!("table"), data.clone());
         }
         if i >= 15 || i >= 20 {

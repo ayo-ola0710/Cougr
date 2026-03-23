@@ -44,7 +44,7 @@ pub struct WorldSummary {
 pub fn inspect_entity(
     world: &SimpleWorld,
     entity_id: EntityId,
-    env: &Env,
+    _env: &Env,
 ) -> Option<EntitySummary> {
     let types = world.entity_components.get(entity_id)?;
 
@@ -96,6 +96,7 @@ pub fn list_entities(world: &SimpleWorld, env: &Env) -> Vec<EntitySummary> {
 }
 
 /// Emit a world summary as a Soroban diagnostic event.
+#[allow(deprecated)]
 pub fn emit_world_summary(world: &SimpleWorld, env: &Env) {
     let summary = inspect_world(world, env);
     env.events().publish(

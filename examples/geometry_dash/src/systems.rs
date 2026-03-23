@@ -1,5 +1,5 @@
 use crate::components::*;
-use cougr_core::{SimpleWorld, ComponentTrait};
+use cougr_core::{ComponentTrait, SimpleWorld};
 use soroban_sdk::{symbol_short, Env};
 
 // Physics constants (scaled by 1000)
@@ -110,8 +110,13 @@ pub fn input_system(world: &mut SimpleWorld, env: &Env, is_jumping: bool) {
                         }
                         PlayerMode::Ball => {
                             // Switch gravity
-                            if vel.vy.abs() < 1000 { // Only switch if on ground/ceiling approx
-                                vel.vy = if vel.vy >= 0 { SWITCH_FORCE_BALL } else { -SWITCH_FORCE_BALL };
+                            if vel.vy.abs() < 1000 {
+                                // Only switch if on ground/ceiling approx
+                                vel.vy = if vel.vy >= 0 {
+                                    SWITCH_FORCE_BALL
+                                } else {
+                                    -SWITCH_FORCE_BALL
+                                };
                             }
                         }
                     }
@@ -130,8 +135,10 @@ pub fn input_system(world: &mut SimpleWorld, env: &Env, is_jumping: bool) {
 
 pub fn collision_system(world: &mut SimpleWorld, env: &Env) -> bool {
     let entities_with_pos = world.get_entities_with_component(&symbol_short!("position"), env);
-    if entities_with_pos.is_empty() { return false; }
-    
+    if entities_with_pos.is_empty() {
+        return false;
+    }
+
     let id = entities_with_pos.get(0).unwrap();
     let pos_data = world.get_component(id, &symbol_short!("position")).unwrap();
     let pos = Position::deserialize(env, &pos_data).unwrap();
@@ -149,10 +156,11 @@ pub fn collision_system(world: &mut SimpleWorld, env: &Env) -> bool {
             let obs = Obstacle::deserialize(env, &obs_data).unwrap();
 
             // Simple AABB collision
-            if (pos.x - obs_pos.x).abs() < 5000 && (pos.y - obs_pos.y).abs() < 5000 {
-                if obs.kind == ObstacleKind::Spike || obs.kind == ObstacleKind::Block {
-                    return true;
-                }
+            if (pos.x - obs_pos.x).abs() < 5000
+                && (pos.y - obs_pos.y).abs() < 5000
+                && (obs.kind == ObstacleKind::Spike || obs.kind == ObstacleKind::Block)
+            {
+                return true;
             }
         }
     }
@@ -183,8 +191,10 @@ pub fn progress_system(world: &mut SimpleWorld, env: &Env) {
 
 pub fn mode_system(world: &mut SimpleWorld, env: &Env) {
     let entities_with_pos = world.get_entities_with_component(&symbol_short!("position"), env);
-    if entities_with_pos.is_empty() { return; }
-    
+    if entities_with_pos.is_empty() {
+        return;
+    }
+
     let id = entities_with_pos.get(0).unwrap();
     let pos_data = world.get_component(id, &symbol_short!("position")).unwrap();
     let pos = Position::deserialize(env, &pos_data).unwrap();
@@ -207,11 +217,9 @@ pub fn mode_system(world: &mut SimpleWorld, env: &Env) {
                 (pos.y - obs_pos.y).abs() < 5000
             };
 
-            if x_match && y_match {
-                if obs.kind == ObstacleKind::Portal {
-                    if let Some(new_mode) = obs.trigger_mode {
-                        world.add_component(id, symbol_short!("mode"), new_mode.serialize(env));
-                    }
+            if x_match && y_match && obs.kind == ObstacleKind::Portal {
+                if let Some(new_mode) = obs.trigger_mode {
+                    world.add_component(id, symbol_short!("mode"), new_mode.serialize(env));
                 }
             }
         }

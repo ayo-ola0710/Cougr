@@ -270,7 +270,7 @@ mod tests {
 
     #[test]
     fn test_record_and_query_add() {
-        let env = Env::default();
+        let _env = Env::default();
         let mut tracker = ChangeTracker::new();
         tracker.record_add(1, symbol_short!("pos"));
 
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_record_and_query_remove() {
-        let env = Env::default();
+        let _env = Env::default();
         let mut tracker = ChangeTracker::new();
         tracker.record_remove(1, symbol_short!("pos"));
 
@@ -291,7 +291,7 @@ mod tests {
 
     #[test]
     fn test_record_and_query_modify() {
-        let env = Env::default();
+        let _env = Env::default();
         let mut tracker = ChangeTracker::new();
         tracker.record_modify(1, symbol_short!("pos"));
 
@@ -301,7 +301,7 @@ mod tests {
 
     #[test]
     fn test_entities_with_queries() {
-        let env = Env::default();
+        let _env = Env::default();
         let mut tracker = ChangeTracker::new();
         tracker.record_add(1, symbol_short!("pos"));
         tracker.record_add(2, symbol_short!("pos"));
@@ -315,7 +315,7 @@ mod tests {
 
     #[test]
     fn test_clear_resets() {
-        let env = Env::default();
+        let _env = Env::default();
         let mut tracker = ChangeTracker::new();
         tracker.record_add(1, symbol_short!("pos"));
         tracker.record_remove(2, symbol_short!("vel"));

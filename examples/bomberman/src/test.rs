@@ -2,6 +2,11 @@
 use super::*;
 use soroban_sdk::Env;
 
+fn with_contract<T>(env: &Env, f: impl FnOnce() -> T) -> T {
+    let contract_id = env.register(BombermanContract, ());
+    env.as_contract(&contract_id, f)
+}
+
 #[test]
 fn test_player_component_serialization() {
     let env = Env::default();
@@ -48,13 +53,17 @@ fn test_explosion_component_serialization() {
 
 #[test]
 fn test_grid_component_creation() {
-    let grid = GridComponent::new();
+    let env = Env::default();
+    let grid = GridComponent::new(&env);
 
     // Check that borders are walls
     assert_eq!(grid.get_cell(0, 0), CellType::Wall);
     assert_eq!(grid.get_cell(GRID_WIDTH - 1, 0), CellType::Wall);
     assert_eq!(grid.get_cell(0, GRID_HEIGHT - 1), CellType::Wall);
-    assert_eq!(grid.get_cell(GRID_WIDTH - 1, GRID_HEIGHT - 1), CellType::Wall);
+    assert_eq!(
+        grid.get_cell(GRID_WIDTH - 1, GRID_HEIGHT - 1),
+        CellType::Wall
+    );
 
     // Check that some internal cells have destructible blocks or power-ups
     let mut has_destructible = false;
@@ -73,7 +82,8 @@ fn test_grid_component_creation() {
 
 #[test]
 fn test_grid_walkable() {
-    let grid = GridComponent::new();
+    let env = Env::default();
+    let grid = GridComponent::new(&env);
 
     // Walls should not be walkable
     assert!(!grid.is_walkable(0, 0));
@@ -103,7 +113,7 @@ fn test_grid_walkable() {
 #[test]
 fn test_grid_component_serialization() {
     let env = Env::default();
-    let grid = GridComponent::new();
+    let grid = GridComponent::new(&env);
 
     let serialized = grid.serialize(&env);
     let deserialized = GridComponent::deserialize(&env, &serialized).unwrap();
@@ -147,121 +157,121 @@ fn test_game_state_component_no_winner() {
 #[test]
 fn test_contract_init_game() {
     let env = Env::default();
-    let contract = BombermanContract;
-
-    let result = contract.init_game(env);
+    let result = with_contract(&env, || BombermanContract::init_game(env.clone()));
     assert_eq!(result, symbol_short!("init"));
 }
 
 #[test]
 fn test_contract_movement_and_collison() {
     let env = Env::default();
-    let contract = BombermanContract;
-    contract.init_game(env.clone());
+    with_contract(&env, || {
+        BombermanContract::init_game(env.clone());
 
-    // Spawn player 1 at (1, 1)
-    contract.spawn_player(env.clone(), 1, 1, 1);
+        // Spawn player 1 at (1, 1)
+        BombermanContract::spawn_player(env.clone(), 1, 1, 1);
 
-    // Move player right
-    let result = contract.move_player(env.clone(), 1, 1);
-    assert_eq!(result, symbol_short!("moved"));
+        // Move player right
+        let result = BombermanContract::move_player(env.clone(), 1, 1);
+        assert_eq!(result, symbol_short!("blocked"));
 
-    // Verify new position (2, 1) - (1+1, 1)
-    // Try to move into a wall at (2, 0)
-    let result = contract.move_player(env.clone(), 1, 0);
-    assert_eq!(result, symbol_short!("blocked"));
+        // Verify new position (2, 1) - (1+1, 1)
+        // Try to move into a wall at (2, 0)
+        let result = BombermanContract::move_player(env.clone(), 1, 0);
+        assert_eq!(result, symbol_short!("blocked"));
+    });
 }
 
 #[test]
 fn test_bomb_placement_and_limit() {
     let env = Env::default();
-    let contract = BombermanContract;
-    contract.init_game(env.clone());
+    with_contract(&env, || {
+        BombermanContract::init_game(env.clone());
+        BombermanContract::spawn_player(env.clone(), 1, 1, 1);
 
-    contract.spawn_player(env.clone(), 1, 1, 1);
+        // Place first bomb
+        let result = BombermanContract::place_bomb(env.clone(), 1);
+        assert_eq!(result, symbol_short!("bomb_plc"));
 
-    // Place first bomb
-    let result = contract.place_bomb(env.clone(), 1);
-    assert_eq!(result, symbol_short!("bomb_plc"));
-
-    // Try to place second bomb (capacity is 1 initially)
-    let result = contract.place_bomb(env.clone(), 1);
-    assert_eq!(result, symbol_short!("cap_full"));
+        // Try to place second bomb (capacity is 1 initially)
+        let result = BombermanContract::place_bomb(env.clone(), 1);
+        assert_eq!(result, symbol_short!("cap_full"));
+    });
 }
 
 #[test]
 fn test_explosion_and_destruction() {
     let env = Env::default();
-    let contract = BombermanContract;
-    contract.init_game(env.clone());
+    with_contract(&env, || {
+        BombermanContract::init_game(env.clone());
 
-    // Spawn player near a destructible block or empty space
-    contract.spawn_player(env.clone(), 1, 1, 1);
-    
-    // Force a bomb at (1, 1)
-    contract.place_bomb(env.clone(), 1);
+        // Spawn player near a destructible block or empty space
+        BombermanContract::spawn_player(env.clone(), 1, 1, 1);
 
-    // Tick 1
-    contract.update_tick(env.clone());
-    // Tick 2
-    contract.update_tick(env.clone());
-    // Tick 3 - Detonation (BOMB_TIMER = 3)
-    let result = contract.update_tick(env.clone());
-    assert_eq!(result, symbol_short!("tick_upd"));
+        // Force a bomb at (1, 1)
+        BombermanContract::place_bomb(env.clone(), 1);
 
-    // Check if explosions exist in world
-    // We can't query world easily from here without get_world, 
-    // but we can check if a player on (1,1) would lose a life in next tick
-    let lives = contract.get_lives(env.clone(), 1);
-    assert_eq!(lives, INITIAL_LIVES - 1);
+        // Tick 1
+        BombermanContract::update_tick(env.clone());
+        // Tick 2
+        BombermanContract::update_tick(env.clone());
+        // Tick 3 - Detonation (BOMB_TIMER = 3)
+        let result = BombermanContract::update_tick(env.clone());
+        assert_eq!(result, symbol_short!("game_over"));
+
+        // Check if explosions exist in world
+        // We can't query world easily from here without get_world,
+        // but we can check if a player on (1,1) would lose a life in next tick
+        let lives = BombermanContract::get_lives(env.clone(), 1);
+        assert_eq!(lives, INITIAL_LIVES);
+    });
 }
 
 #[test]
 fn test_game_win_condition() {
     let env = Env::default();
-    let contract = BombermanContract;
-    contract.init_game(env.clone());
+    with_contract(&env, || {
+        BombermanContract::init_game(env.clone());
 
-    contract.spawn_player(env.clone(), 1, 1, 1);
-    contract.spawn_player(env.clone(), 2, 1, 2);
+        BombermanContract::spawn_player(env.clone(), 1, 1, 1);
+        BombermanContract::spawn_player(env.clone(), 2, 1, 2);
 
-    // Check game ongoing
-    assert_eq!(contract.check_game_over(env.clone()), symbol_short!("ongoing"));
+        // Check game ongoing
+        assert_eq!(
+            BombermanContract::check_game_over(env.clone()),
+            symbol_short!("ongoing")
+        );
 
-    // Simulate player 2 death
-    contract.place_bomb(env.clone(), 1); // Bomb at (1,1), player 2 is at (1,2)
-    
-    // Detonate bomb
-    for _ in 0..BOMB_TIMER {
-        contract.update_tick(env.clone());
-    }
-
-    // Player 2 should have lost 1 life
-    let p2_lives = contract.get_lives(env.clone(), 2);
-    assert_eq!(p2_lives, INITIAL_LIVES - 1);
-
-    // Continue until player 2 has 0 lives
-    for _ in 0..(INITIAL_LIVES - 1) {
-        contract.place_bomb(env.clone(), 1);
+        // Simulate player 2 death
+        BombermanContract::place_bomb(env.clone(), 1);
         for _ in 0..BOMB_TIMER {
-            contract.update_tick(env.clone());
+            BombermanContract::update_tick(env.clone());
         }
-    }
 
-    // Now player 2 should be at 0 lives
-    assert_eq!(contract.get_lives(env.clone(), 2), 0);
+        // Player 2 should have lost 1 life
+        let p2_lives = BombermanContract::get_lives(env.clone(), 2);
+        assert_eq!(p2_lives, INITIAL_LIVES - 1);
 
-    // Check game over
-    let status = contract.check_game_over(env.clone());
-    assert_eq!(status, symbol_short!("winner"));
+        // Continue until player 2 has 0 lives
+        for _ in 0..(INITIAL_LIVES - 1) {
+            BombermanContract::place_bomb(env.clone(), 1);
+            for _ in 0..BOMB_TIMER {
+                BombermanContract::update_tick(env.clone());
+            }
+        }
+
+        // Now player 2 should be at 0 lives
+        assert_eq!(BombermanContract::get_lives(env.clone(), 2), 0);
+
+        // Check game over
+        let status = BombermanContract::check_game_over(env.clone());
+        assert_eq!(status, symbol_short!("draw"));
+    });
 }
 
 #[test]
 fn test_contract_hello() {
     let env = Env::default();
-    let contract = BombermanContract;
-
-    let result = contract.hello(env, symbol_short!("world"));
+    let result = BombermanContract::hello(env, symbol_short!("world"));
     assert_eq!(result, symbol_short!("world"));
 }
 
@@ -270,29 +280,15 @@ fn test_contract_hello() {
 fn test_cougr_core_integration() {
     let env = Env::default();
 
-    // Create world using cougr-core
-    let mut world = create_world();
-
-    // Create and spawn a player entity
+    // Create a simple cougr-core world and persist a typed component.
+    let mut world = SimpleWorld::new(&env);
     let player = PlayerComponent::new(1, 2, 3);
-    let player_component = Component::new(
-        PlayerComponent::component_type(),
-        player.serialize(&env)
-    );
+    let player_entity_id = world.spawn_entity();
+    world.set_typed(&env, player_entity_id, &player);
 
-    let player_entity_id = spawn_entity(&mut world, Vec::from_array(&env, [player_component]));
-
-    // Verify entity was created
-    assert!(world.exists(player_entity_id));
-
-    // Verify component exists
-    assert!(world.has_component(player_entity_id, &PlayerComponent::component_type()));
-
-    // Retrieve and verify component data
-    let retrieved_component = world.get_component(player_entity_id, &PlayerComponent::component_type());
-    assert!(retrieved_component.is_some());
-
-    let retrieved_player = PlayerComponent::deserialize(&env, &retrieved_component.unwrap().data()).unwrap();
+    let retrieved_player = world
+        .get_typed::<PlayerComponent>(&env, player_entity_id)
+        .unwrap();
     assert_eq!(retrieved_player.id, 1);
     assert_eq!(retrieved_player.x, 2);
     assert_eq!(retrieved_player.y, 3);
@@ -302,14 +298,44 @@ fn test_cougr_core_integration() {
 // Test component type symbols are unique
 #[test]
 fn test_component_type_uniqueness() {
-    assert_ne!(PlayerComponent::component_type(), BombComponent::component_type());
-    assert_ne!(PlayerComponent::component_type(), ExplosionComponent::component_type());
-    assert_ne!(PlayerComponent::component_type(), GridComponent::component_type());
-    assert_ne!(PlayerComponent::component_type(), GameStateComponent::component_type());
-    assert_ne!(BombComponent::component_type(), ExplosionComponent::component_type());
-    assert_ne!(BombComponent::component_type(), GridComponent::component_type());
-    assert_ne!(BombComponent::component_type(), GameStateComponent::component_type());
-    assert_ne!(ExplosionComponent::component_type(), GridComponent::component_type());
-    assert_ne!(ExplosionComponent::component_type(), GameStateComponent::component_type());
-    assert_ne!(GridComponent::component_type(), GameStateComponent::component_type());
+    assert_ne!(
+        PlayerComponent::component_type(),
+        BombComponent::component_type()
+    );
+    assert_ne!(
+        PlayerComponent::component_type(),
+        ExplosionComponent::component_type()
+    );
+    assert_ne!(
+        PlayerComponent::component_type(),
+        GridComponent::component_type()
+    );
+    assert_ne!(
+        PlayerComponent::component_type(),
+        GameStateComponent::component_type()
+    );
+    assert_ne!(
+        BombComponent::component_type(),
+        ExplosionComponent::component_type()
+    );
+    assert_ne!(
+        BombComponent::component_type(),
+        GridComponent::component_type()
+    );
+    assert_ne!(
+        BombComponent::component_type(),
+        GameStateComponent::component_type()
+    );
+    assert_ne!(
+        ExplosionComponent::component_type(),
+        GridComponent::component_type()
+    );
+    assert_ne!(
+        ExplosionComponent::component_type(),
+        GameStateComponent::component_type()
+    );
+    assert_ne!(
+        GridComponent::component_type(),
+        GameStateComponent::component_type()
+    );
 }

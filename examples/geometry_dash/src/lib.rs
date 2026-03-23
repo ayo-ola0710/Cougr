@@ -6,9 +6,9 @@ mod systems;
 #[cfg(test)]
 mod test;
 
-use components::{GameStatus, PlayerMode, Position, Progress, Velocity, Obstacle, ObstacleKind};
-use cougr_core::{SimpleWorld, ComponentTrait};
-use soroban_sdk::{contract, contractimpl, symbol_short, Env, Address};
+use components::{GameStatus, Obstacle, ObstacleKind, PlayerMode, Position, Progress, Velocity};
+use cougr_core::{ComponentTrait, SimpleWorld};
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env};
 
 #[contract]
 pub struct GeometryDashContract;
@@ -21,10 +21,20 @@ impl GeometryDashContract {
 
         let id = world.spawn_entity();
 
-        let pos = Position { x: 0, y: systems::GROUND_Y };
-        let vel = Velocity { vx: systems::TICK_MOVEMENT_X, vy: 0 };
+        let pos = Position {
+            x: 0,
+            y: systems::GROUND_Y,
+        };
+        let vel = Velocity {
+            vx: systems::TICK_MOVEMENT_X,
+            vy: 0,
+        };
         let mode = PlayerMode::Cube;
-        let progress = Progress { distance: 0, score: 0, attempts: 1 };
+        let progress = Progress {
+            distance: 0,
+            score: 0,
+            attempts: 1,
+        };
         let status = GameStatus::Playing;
 
         world.add_component(id, symbol_short!("position"), pos.serialize(&env));
@@ -34,8 +44,22 @@ impl GeometryDashContract {
         world.add_component(id, symbol_short!("status"), status.serialize(&env));
 
         // Spawn some obstacles for testing
-        spawn_obstacle(&mut world, &env, 100_000, systems::GROUND_Y, ObstacleKind::Spike, None);
-        spawn_obstacle(&mut world, &env, 300_000, systems::GROUND_Y, ObstacleKind::Portal, Some(PlayerMode::Ship));
+        spawn_obstacle(
+            &mut world,
+            &env,
+            100_000,
+            systems::GROUND_Y,
+            ObstacleKind::Spike,
+            None,
+        );
+        spawn_obstacle(
+            &mut world,
+            &env,
+            300_000,
+            systems::GROUND_Y,
+            ObstacleKind::Portal,
+            Some(PlayerMode::Ship),
+        );
 
         storage_set_world(&env, &player, &world);
     }
@@ -44,7 +68,9 @@ impl GeometryDashContract {
     pub fn get_state(env: Env, player: Address) -> GameStatus {
         let world = storage_get_world(&env, &player);
         let entities = world.get_entities_with_component(&symbol_short!("status"), &env);
-        if entities.is_empty() { return GameStatus::Crashed; }
+        if entities.is_empty() {
+            return GameStatus::Crashed;
+        }
         let id = entities.get(0).unwrap();
         let data = world.get_component(id, &symbol_short!("status")).unwrap();
         GameStatus::deserialize(&env, &data).unwrap()
@@ -53,7 +79,7 @@ impl GeometryDashContract {
     /// Trigger player jump/action
     pub fn jump(env: Env, player: Address) {
         let mut world = storage_get_world(&env, &player);
-        
+
         // Process input
         systems::input_system(&mut world, &env, true);
 
@@ -77,13 +103,15 @@ impl GeometryDashContract {
 
         // Advance simulation
         systems::movement_system(&mut world, &env);
-        
+
         // Check collisions
-        if systems::collision_system(&mut world, &env) {
-            if !entities.is_empty() {
-                let id = entities.get(0).unwrap();
-                world.add_component(id, symbol_short!("status"), GameStatus::Crashed.serialize(&env));
-            }
+        if systems::collision_system(&mut world, &env) && !entities.is_empty() {
+            let id = entities.get(0).unwrap();
+            world.add_component(
+                id,
+                symbol_short!("status"),
+                GameStatus::Crashed.serialize(&env),
+            );
         }
 
         // Handle mode transitions
@@ -98,7 +126,9 @@ impl GeometryDashContract {
     pub fn get_pos(env: Env, player: Address) -> (i32, i32) {
         let world = storage_get_world(&env, &player);
         let entities = world.get_entities_with_component(&symbol_short!("position"), &env);
-        if entities.is_empty() { return (0, 0); }
+        if entities.is_empty() {
+            return (0, 0);
+        }
         let id = entities.get(0).unwrap();
         let data = world.get_component(id, &symbol_short!("position")).unwrap();
         let pos = Position::deserialize(&env, &data).unwrap();
@@ -109,7 +139,9 @@ impl GeometryDashContract {
     pub fn get_score(env: Env, player: Address) -> u32 {
         let world = storage_get_world(&env, &player);
         let entities = world.get_entities_with_component(&symbol_short!("progress"), &env);
-        if entities.is_empty() { return 0; }
+        if entities.is_empty() {
+            return 0;
+        }
         let id = entities.get(0).unwrap();
         let data = world.get_component(id, &symbol_short!("progress")).unwrap();
         let prog = Progress::deserialize(&env, &data).unwrap();
@@ -120,7 +152,9 @@ impl GeometryDashContract {
     pub fn get_mode(env: Env, player: Address) -> u32 {
         let world = storage_get_world(&env, &player);
         let entities = world.get_entities_with_component(&symbol_short!("mode"), &env);
-        if entities.is_empty() { return 0; }
+        if entities.is_empty() {
+            return 0;
+        }
         let id = entities.get(0).unwrap();
         let data = world.get_component(id, &symbol_short!("mode")).unwrap();
         let mode = PlayerMode::deserialize(&env, &data).unwrap();
@@ -133,7 +167,14 @@ impl GeometryDashContract {
     }
 }
 
-fn spawn_obstacle(world: &mut SimpleWorld, env: &Env, x: i32, y: i32, kind: ObstacleKind, trigger_mode: Option<PlayerMode>) {
+fn spawn_obstacle(
+    world: &mut SimpleWorld,
+    env: &Env,
+    x: i32,
+    y: i32,
+    kind: ObstacleKind,
+    trigger_mode: Option<PlayerMode>,
+) {
     let id = world.spawn_entity();
     let pos = Position { x, y };
     let obs = Obstacle { kind, trigger_mode };
@@ -142,7 +183,10 @@ fn spawn_obstacle(world: &mut SimpleWorld, env: &Env, x: i32, y: i32, kind: Obst
 }
 
 fn storage_get_world(env: &Env, player: &Address) -> SimpleWorld {
-    env.storage().persistent().get(player).expect("Game not initialized")
+    env.storage()
+        .persistent()
+        .get(player)
+        .expect("Game not initialized")
 }
 
 fn storage_set_world(env: &Env, player: &Address, world: &SimpleWorld) {

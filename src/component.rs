@@ -1,7 +1,5 @@
 use alloc::vec::Vec;
-use soroban_sdk::{
-    contracttype, symbol_short, Bytes, BytesN, Env, FromVal, IntoVal, Symbol, TryFromVal, Val,
-};
+use soroban_sdk::{contracttype, Bytes, BytesN, Env, IntoVal, Symbol, TryFromVal, Val};
 
 /// A unique identifier for a component type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -35,15 +33,11 @@ impl TryFromVal<Env, Val> for ComponentId {
 
 #[contracttype]
 #[repr(u32)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ComponentStorage {
+    #[default]
     Table = 0,
     Sparse = 1,
-}
-impl Default for ComponentStorage {
-    fn default() -> Self {
-        Self::Table
-    }
 }
 
 #[contracttype]
@@ -217,7 +211,7 @@ impl_component!(Token, "token", Table, { amount: u32, hash: bytes32 });
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{BytesN, Env};
+    use soroban_sdk::{symbol_short, BytesN, Env};
 
     #[test]
     fn test_component_id_creation() {

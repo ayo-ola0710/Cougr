@@ -368,8 +368,8 @@ fn test_multiple_spawns_produce_sequential_ids() {
 
     let ids: alloc::vec::Vec<u32> = (0..20).map(|_| world.spawn_entity()).collect();
 
-    for i in 0..20 {
-        assert_eq!(ids[i], (i as u32) + 1);
+    for (i, entity_id) in ids.iter().enumerate().take(20) {
+        assert_eq!(*entity_id, (i as u32) + 1);
     }
     assert_eq!(world.next_entity_id, 21);
 }

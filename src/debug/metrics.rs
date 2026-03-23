@@ -1,6 +1,6 @@
 //! Storage metrics and statistics.
 
-use crate::simple_world::{EntityId, SimpleWorld};
+use crate::simple_world::SimpleWorld;
 use alloc::vec::Vec;
 use soroban_sdk::{contracttype, Env, Symbol};
 
@@ -75,6 +75,7 @@ pub fn unique_component_types(world: &SimpleWorld, _env: &Env) -> Vec<Symbol> {
 }
 
 /// Emit storage metrics as a Soroban diagnostic event.
+#[allow(deprecated)]
 pub fn emit_metrics(world: &SimpleWorld, env: &Env) {
     let metrics = collect_metrics(world, env);
     env.events().publish(

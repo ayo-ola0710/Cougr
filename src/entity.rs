@@ -1,5 +1,4 @@
-use core::fmt;
-use soroban_sdk::{Env, FromVal, IntoVal, Symbol, TryFromVal, Val, Vec};
+use soroban_sdk::{Env, IntoVal, Symbol, TryFromVal, Val, Vec};
 
 /// A unique identifier for an entity in the ECS world
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -168,7 +167,7 @@ impl EntityManager {
 
     /// Spawn a new entity
     pub fn spawn(&mut self) -> EntityId {
-        let id = if self.free_list.len() > 0 {
+        let id = if !self.free_list.is_empty() {
             let last_idx = self.free_list.len() - 1;
             let freed_id = self.free_list.get(last_idx).unwrap_or(0);
             self.free_list.remove(last_idx);
@@ -236,7 +235,7 @@ impl EntityManager {
     }
 
     /// Iterate over all entities
-    pub fn iter_entities(&self) -> EntityIterator {
+    pub fn iter_entities(&self) -> EntityIterator<'_> {
         EntityIterator {
             entities: &self.entities,
             index: 0,
@@ -244,7 +243,7 @@ impl EntityManager {
     }
 
     /// Iterate over all entities mutably
-    pub fn iter_entities_mut(&mut self) -> EntityIteratorMut {
+    pub fn iter_entities_mut(&mut self) -> EntityIteratorMut<'_> {
         EntityIteratorMut {
             entities: &mut self.entities,
             index: 0,
@@ -334,7 +333,7 @@ mod tests {
 
     #[test]
     fn test_entity_creation() {
-        let env = Env::default();
+        let _env = Env::default();
         let entity_id = EntityId::new(1, 0);
         let entity = Entity::new(entity_id);
         assert_eq!(entity.id(), entity_id);

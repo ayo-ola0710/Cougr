@@ -1,5 +1,4 @@
-use alloc::string::String;
-use soroban_sdk::{contracttype, symbol_short, Bytes, Env, IntoVal, Symbol, TryFromVal, Val, Vec};
+use soroban_sdk::{contracttype, symbol_short, Bytes, Env, Symbol, TryFromVal, Val, Vec};
 
 #[contracttype]
 #[derive(Debug, Clone)]
@@ -109,10 +108,6 @@ impl CollisionEvent {
             collision_type,
         }
     }
-    fn to_string(&self) -> String {
-        let s = "collision"; // Simplified for now
-        String::from(s)
-    }
 }
 impl EventTrait for CollisionEvent {
     fn event_type() -> Symbol {
@@ -187,10 +182,6 @@ impl DamageEvent {
             damage_amount,
             damage_type,
         }
-    }
-    fn to_string(&self) -> String {
-        let s = "damage"; // Simplified for now
-        String::from(s)
     }
 }
 impl EventTrait for DamageEvent {

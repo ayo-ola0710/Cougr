@@ -3,7 +3,7 @@
 use crate::zk::error::ZKError;
 use soroban_sdk::{contracttype, BytesN, Env, Vec};
 
-use super::tree::{MerkleProof, MerkleTree};
+use super::tree::MerkleProof;
 
 /// On-chain proof representation (`#[contracttype]` for contract arguments).
 #[contracttype]
@@ -88,6 +88,7 @@ fn hash_pair_raw(env: &Env, left: &[u8; 32], right: &[u8; 32]) -> [u8; 32] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::zk::merkle::tree::MerkleTree;
 
     #[test]
     fn test_to_on_chain_proof_and_verify() {

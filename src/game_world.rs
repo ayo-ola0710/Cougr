@@ -352,9 +352,9 @@ mod tests {
     fn test_player_capabilities() {
         let env = Env::default();
         let game = make_game_world(&env);
-        let caps = game.player_capabilities();
+        let _caps = game.player_capabilities();
         // MockAccount returns default capabilities
-        assert!(caps.can_batch || !caps.can_batch); // just verify it doesn't panic
+        // Just verify the call succeeds without panicking.
     }
 
     #[test]

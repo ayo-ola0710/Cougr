@@ -237,7 +237,7 @@ mod tests {
 
     #[test]
     fn test_registry_register() {
-        let env = Env::default();
+        let _env = Env::default();
         let mut registry = ObserverRegistry::new();
         registry.on_add(symbol_short!("pos"), noop_observer);
         registry.on_remove(symbol_short!("pos"), noop_observer);
