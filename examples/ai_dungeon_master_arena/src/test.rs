@@ -1,8 +1,8 @@
 #![cfg(test)]
 
 use super::*;
+use cougr_core::zk::testing::{mock_proof, mock_scalar, mock_verification_key};
 use soroban_sdk::{testutils::Address as _, Address, Env, Vec};
-use cougr_core::zk::testing::{mock_proof, mock_verification_key, mock_scalar};
 
 #[test]
 fn test_arena_lifecycle() {
@@ -21,7 +21,7 @@ fn test_arena_lifecycle() {
     assert!(!state.encounter.is_empty());
     let encounter = state.encounter.get(0).unwrap();
     let initial_enemy_hp = encounter.enemy_health;
-    
+
     let mut state = client.submit_action(&player, &ActionInput::Attack);
     assert!(state.encounter.get(0).unwrap().enemy_health < initial_enemy_hp);
 
@@ -30,7 +30,7 @@ fn test_arena_lifecycle() {
     while !state.run_state.finished && !state.encounter.is_empty() {
         state = client.submit_action(&player, &ActionInput::Attack);
     }
-    
+
     assert_eq!(state.run_state.floor, 3);
 
     // 4. Test Proof Verification (Mocked)
@@ -58,7 +58,7 @@ fn test_premium_action_flow() {
     let client = AIDungeonMasterArenaContractClient::new(&env, &contract_id);
 
     client.init_run(&player);
-    
+
     // Simulate reaching a floor with premium action
     for _ in 0..10 {
         let state = client.get_state();
@@ -68,8 +68,8 @@ fn test_premium_action_flow() {
         if !state.encounter.is_empty() {
             client.submit_action(&player, &ActionInput::Attack);
         } else {
-             // If floor progressed without encounter generation (shouldn't happen in our loop)
-             break;
+            // If floor progressed without encounter generation (shouldn't happen in our loop)
+            break;
         }
     }
 

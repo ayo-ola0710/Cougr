@@ -4,11 +4,14 @@ extern crate alloc;
 use alloc::vec::Vec as RustVec;
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, Address, Env, Symbol, Vec, BytesN,
+    contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Symbol, Vec,
 };
 
 // Use cougr_core for component traits and ZK types (which align with stellar-zk)
-use cougr_core::zk::{groth16, types::{Groth16Proof, VerificationKey, Scalar}};
+use cougr_core::zk::{
+    groth16,
+    types::{Groth16Proof, Scalar, VerificationKey},
+};
 
 // --- Components ---
 
@@ -114,9 +117,7 @@ impl AIDungeonMasterArenaContract {
             verified_hash: BytesN::from_array(&env, &[0u8; 32]),
         };
 
-        let rewards = RewardComponent {
-            pending_rewards: 0,
-        };
+        let rewards = RewardComponent { pending_rewards: 0 };
 
         env.storage().persistent().set(&RUN_KEY, &run);
         env.storage().persistent().set(&PROOF_KEY, &proof);
@@ -129,13 +130,14 @@ impl AIDungeonMasterArenaContract {
     /// Submit a turn-based action.
     pub fn submit_action(env: Env, player: Address, action: ActionInput) -> GameState {
         player.require_auth();
-        
+
         let mut run: RunStateComponent = env.storage().persistent().get(&RUN_KEY).unwrap();
         if run.player != player || run.finished {
             panic!("Invalid or finished run");
         }
 
-        let mut encounter: EncounterComponent = env.storage().persistent().get(&ENCOUNTER_KEY).unwrap();
+        let mut encounter: EncounterComponent =
+            env.storage().persistent().get(&ENCOUNTER_KEY).unwrap();
 
         match action {
             ActionInput::Attack => {
@@ -152,11 +154,11 @@ impl AIDungeonMasterArenaContract {
             run.score += 10 * run.floor;
             run.floor += 1;
             env.storage().persistent().remove(&ENCOUNTER_KEY);
-            
+
             // Check for premium action hook (x402)
             if run.floor % 3 == 0 {
                 let premium = PremiumActionComponent {
-                    action_type: 1, // Reroll
+                    action_type: 1,   // Reroll
                     price: 1_000_000, // 0.1 XLM
                     active: true,
                 };
@@ -184,14 +186,15 @@ impl AIDungeonMasterArenaContract {
     pub fn purchase_premium_action(env: Env, player: Address, action_type: u32) -> GameState {
         player.require_auth();
 
-        let mut premium: PremiumActionComponent = env.storage().persistent().get(&PREMIUM_KEY).unwrap();
+        let mut premium: PremiumActionComponent =
+            env.storage().persistent().get(&PREMIUM_KEY).unwrap();
         if !premium.active || premium.action_type != action_type {
             panic!("Action not available");
         }
 
-        // Logic check: verify payment (in this example we skip actual token transfer for brevity, 
+        // Logic check: verify payment (in this example we skip actual token transfer for brevity,
         // but note that x402 usually happens before this call or as part of it).
-        
+
         premium.active = false;
         env.storage().persistent().set(&PREMIUM_KEY, &premium);
 
@@ -221,15 +224,12 @@ impl AIDungeonMasterArenaContract {
         }
 
         // Use stellar-zk compatible verification logic from cougr-core
-        let is_valid = groth16::verify_groth16(
-            &env,
-            &vk,
-            &proof_input.proof,
-            &rust_inputs,
-        ).unwrap_or(false);
+        let is_valid =
+            groth16::verify_groth16(&env, &vk, &proof_input.proof, &rust_inputs).unwrap_or(false);
 
         if is_valid {
-            let mut proof_state: ProofStateComponent = env.storage().persistent().get(&PROOF_KEY).unwrap();
+            let mut proof_state: ProofStateComponent =
+                env.storage().persistent().get(&PROOF_KEY).unwrap();
             proof_state.last_verified_floor = proof_input.floor;
             env.storage().persistent().set(&PROOF_KEY, &proof_state);
 
@@ -244,7 +244,7 @@ impl AIDungeonMasterArenaContract {
     /// Get current arena state.
     pub fn get_state(env: Env) -> GameState {
         let run_state: RunStateComponent = env.storage().persistent().get(&RUN_KEY).unwrap();
-        
+
         let mut encounter = Vec::new(&env);
         if let Some(e) = env.storage().persistent().get(&ENCOUNTER_KEY) {
             encounter.push_back(e);
