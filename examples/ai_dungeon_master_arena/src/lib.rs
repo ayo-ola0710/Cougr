@@ -156,7 +156,7 @@ impl AIDungeonMasterArenaContract {
             env.storage().persistent().remove(&ENCOUNTER_KEY);
 
             // Check for premium action hook (x402)
-            if run.floor % 3 == 0 {
+            if run.floor.is_multiple_of(3) {
                 let premium = PremiumActionComponent {
                     action_type: 1,   // Reroll
                     price: 1_000_000, // 0.1 XLM
