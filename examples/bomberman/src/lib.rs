@@ -28,6 +28,8 @@ pub struct PlayerComponent {
     pub lives: u32,
     pub bomb_capacity: u32,
     pub score: u32,
+    pub bomb_power: u32,
+    pub speed: u32,
 }
 
 impl PlayerComponent {
@@ -39,6 +41,8 @@ impl PlayerComponent {
             lives: INITIAL_LIVES,
             bomb_capacity: 1,
             score: 0,
+            bomb_power: 1,
+            speed: 1,
         }
     }
 }
@@ -56,12 +60,14 @@ impl ComponentTrait for PlayerComponent {
         bytes.append(&Bytes::from_array(env, &self.lives.to_be_bytes()));
         bytes.append(&Bytes::from_array(env, &self.bomb_capacity.to_be_bytes()));
         bytes.append(&Bytes::from_array(env, &self.score.to_be_bytes()));
+        bytes.append(&Bytes::from_array(env, &self.bomb_power.to_be_bytes()));
+        bytes.append(&Bytes::from_array(env, &self.speed.to_be_bytes()));
         bytes
     }
 
     #[allow(unused_variables)]
     fn deserialize(env: &Env, data: &Bytes) -> Option<Self> {
-        if data.len() != 24 {
+        if data.len() != 32 {
             return None;
         }
         let id = u32::from_be_bytes([
@@ -100,6 +106,18 @@ impl ComponentTrait for PlayerComponent {
             data.get(22).unwrap(),
             data.get(23).unwrap(),
         ]);
+        let bomb_power = u32::from_be_bytes([
+            data.get(24).unwrap(),
+            data.get(25).unwrap(),
+            data.get(26).unwrap(),
+            data.get(27).unwrap(),
+        ]);
+        let speed = u32::from_be_bytes([
+            data.get(28).unwrap(),
+            data.get(29).unwrap(),
+            data.get(30).unwrap(),
+            data.get(31).unwrap(),
+        ]);
         Some(Self {
             id,
             x,
@@ -107,6 +125,8 @@ impl ComponentTrait for PlayerComponent {
             lives,
             bomb_capacity,
             score,
+            bomb_power,
+            speed,
         })
     }
 }
@@ -251,6 +271,77 @@ impl ComponentTrait for ExplosionComponent {
     }
 }
 
+#[contracttype]
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum PowerUpType {
+    Capacity = 0,
+    Power = 1,
+    Speed = 2,
+}
+
+#[contracttype]
+#[derive(Clone)]
+pub struct PowerUpComponent {
+    pub x: i32,
+    pub y: i32,
+    pub power_up_type: PowerUpType,
+}
+
+impl PowerUpComponent {
+    pub fn new(x: i32, y: i32, power_up_type: PowerUpType) -> Self {
+        Self {
+            x,
+            y,
+            power_up_type,
+        }
+    }
+}
+
+impl ComponentTrait for PowerUpComponent {
+    fn component_type() -> Symbol {
+        symbol_short!("powerup")
+    }
+
+    fn serialize(&self, env: &Env) -> Bytes {
+        let mut bytes = Bytes::new(env);
+        bytes.append(&Bytes::from_array(env, &self.x.to_be_bytes()));
+        bytes.append(&Bytes::from_array(env, &self.y.to_be_bytes()));
+        bytes.append(&Bytes::from_array(env, &[self.power_up_type as u8]));
+        bytes
+    }
+
+    #[allow(unused_variables)]
+    fn deserialize(env: &Env, data: &Bytes) -> Option<Self> {
+        if data.len() != 9 {
+            return None;
+        }
+        let x = i32::from_be_bytes([
+            data.get(0).unwrap(),
+            data.get(1).unwrap(),
+            data.get(2).unwrap(),
+            data.get(3).unwrap(),
+        ]);
+        let y = i32::from_be_bytes([
+            data.get(4).unwrap(),
+            data.get(5).unwrap(),
+            data.get(6).unwrap(),
+            data.get(7).unwrap(),
+        ]);
+        let power_up_type = match data.get(8).unwrap() {
+            0 => PowerUpType::Capacity,
+            1 => PowerUpType::Power,
+            2 => PowerUpType::Speed,
+            _ => return None,
+        };
+        Some(Self {
+            x,
+            y,
+            power_up_type,
+        })
+    }
+}
+
 // Grid cell types
 #[contracttype]
 #[repr(u8)]
@@ -289,14 +380,12 @@ impl GridComponent {
             }
         }
 
-        // Add some destructible blocks and power-ups
+        // Add some destructible blocks
         for x in 1..GRID_WIDTH - 1 {
             for y in 1..GRID_HEIGHT - 1 {
                 let index = y * GRID_WIDTH + x;
                 if (x + y) % 3 == 0 && cells.get(index as u32).unwrap() == CellType::Empty {
                     cells.set(index as u32, CellType::Destructible);
-                } else if (x + y) % 7 == 0 && cells.get(index as u32).unwrap() == CellType::Empty {
-                    cells.set(index as u32, CellType::PowerUp);
                 }
             }
         }
@@ -465,6 +554,23 @@ impl BombermanContract {
         let game_state_entity = world.spawn_entity();
         world.set_typed(&env, game_state_entity, &game_state);
 
+        // PowerUpSpawnSystem (init): place power-up entities at deterministic positions.
+        // Using (x+y) % 7 == 0 on empty cells — mirrors the old grid pattern but as ECS entities.
+        for x in 1..GRID_WIDTH - 1 {
+            for y in 1..GRID_HEIGHT - 1 {
+                if (x + y) % 7 == 0 && grid.get_cell(x, y) == CellType::Empty {
+                    let pu_type = match (x + y) % 3 {
+                        0 => PowerUpType::Capacity,
+                        1 => PowerUpType::Power,
+                        _ => PowerUpType::Speed,
+                    };
+                    let pu = PowerUpComponent::new(x as i32, y as i32, pu_type);
+                    let pu_entity = world.spawn_entity();
+                    world.set_typed(&env, pu_entity, &pu);
+                }
+            }
+        }
+
         // Persist world
         env.storage().instance().set(&DataKey::World, &world);
 
@@ -559,6 +665,30 @@ impl BombermanContract {
 
         player.x = next_x;
         player.y = next_y;
+
+        // PickupSystem: check for a power-up at the new position
+        let powerup_entities =
+            world.get_entities_with_component(&PowerUpComponent::component_type(), &env);
+        let mut pickup_id_opt = None;
+        let mut pickup_type_opt = None;
+        for pu_id in powerup_entities.iter() {
+            if let Some(pu) = world.get_typed::<PowerUpComponent>(&env, pu_id) {
+                if pu.x == next_x && pu.y == next_y {
+                    pickup_id_opt = Some(pu_id);
+                    pickup_type_opt = Some(pu.power_up_type);
+                    break;
+                }
+            }
+        }
+        if let (Some(pu_id), Some(pu_type)) = (pickup_id_opt, pickup_type_opt) {
+            match pu_type {
+                PowerUpType::Capacity => player.bomb_capacity += 1,
+                PowerUpType::Power => player.bomb_power += 1,
+                PowerUpType::Speed => player.speed += 1,
+            }
+            world.despawn_entity(pu_id);
+        }
+
         world.set_typed(&env, player_entity, &player);
 
         // Save world
@@ -621,8 +751,9 @@ impl BombermanContract {
             }
         }
 
-        // Create bomb entity
-        let bomb = BombComponent::new(player.x, player.y, player_id);
+        // Create bomb entity, using player's current power stat
+        let mut bomb = BombComponent::new(player.x, player.y, player_id);
+        bomb.power = player.bomb_power;
         let bomb_entity = world.spawn_entity();
         world.set_typed(&env, bomb_entity, &bomb);
 
@@ -673,20 +804,62 @@ impl BombermanContract {
             }
         }
 
-        // 2. Process bomb timers and trigger new explosions
-        let bomb_entities =
-            world.get_entities_with_component(&BombComponent::component_type(), &env);
-        for b_id in bomb_entities.iter() {
-            if let Some(mut bomb) = world.get_typed::<BombComponent>(&env, b_id) {
-                if bomb.timer > 0 {
-                    bomb.timer -= 1;
+        // 2. BombTimerSystem: decrement timers and collect bombs that expire this tick.
+        // ChainReactionSystem: after each detonation, any bomb overlapping an explosion
+        // is immediately queued for detonation in the same tick.
+        {
+            // First pass: decrement timers and collect naturally-expiring bombs
+            let bomb_entities =
+                world.get_entities_with_component(&BombComponent::component_type(), &env);
+            let mut detonation_queue: Vec<BombComponent> = Vec::new(&env);
+
+            for b_id in bomb_entities.iter() {
+                if let Some(mut bomb) = world.get_typed::<BombComponent>(&env, b_id) {
+                    if bomb.timer > 0 {
+                        bomb.timer -= 1;
+                    }
+                    if bomb.timer == 0 {
+                        detonation_queue.push_back(bomb);
+                        world.despawn_entity(b_id);
+                    } else {
+                        world.set_typed(&env, b_id, &bomb);
+                    }
                 }
-                if bomb.timer == 0 {
-                    // Detonate!
-                    Self::detonate_bomb(&env, &mut world, &mut grid, &bomb);
-                    world.despawn_entity(b_id);
-                } else {
-                    world.set_typed(&env, b_id, &bomb);
+            }
+
+            // Iterative chain-reaction resolution: detonate a bomb, then check if
+            // its new explosions overlap any remaining live bombs.  Repeat until
+            // the queue is empty.  This models cascading detonations within one tick.
+            let mut head = 0u32;
+            while head < detonation_queue.len() {
+                let bomb = detonation_queue.get(head).unwrap();
+                head += 1;
+
+                Self::detonate_bomb(&env, &mut world, &mut grid, &bomb);
+
+                // Scan remaining live bombs for chain-reaction overlap
+                let remaining =
+                    world.get_entities_with_component(&BombComponent::component_type(), &env);
+                let active_expl =
+                    world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
+
+                for r_id in remaining.iter() {
+                    if let Some(remaining_bomb) = world.get_typed::<BombComponent>(&env, r_id) {
+                        // Check if any explosion cell hits this bomb's position
+                        let mut chain = false;
+                        for e_id in active_expl.iter() {
+                            if let Some(expl) = world.get_typed::<ExplosionComponent>(&env, e_id) {
+                                if expl.x == remaining_bomb.x && expl.y == remaining_bomb.y {
+                                    chain = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if chain {
+                            detonation_queue.push_back(remaining_bomb);
+                            world.despawn_entity(r_id);
+                        }
+                    }
                 }
             }
         }
@@ -784,12 +957,28 @@ impl BombermanContract {
 
                 if cell == CellType::Destructible {
                     grid.set_cell(x as usize, y as usize, CellType::Empty);
+
+                    // PowerUpSpawnSystem: deterministically drop a power-up from
+                    // destroyed blocks.  Using (x+y)%4==0 keeps ~25% drop rate.
+                    if (x + y) % 4 == 0 {
+                        let pu_type = match (x + y) % 3 {
+                            0 => PowerUpType::Capacity,
+                            1 => PowerUpType::Power,
+                            _ => PowerUpType::Speed,
+                        };
+                        let pu = PowerUpComponent::new(x, y, pu_type);
+                        let pu_entity = world.spawn_entity();
+                        world.set_typed(env, pu_entity, &pu);
+                    }
+
                     break; // Blocked by destructible but destroys it
                 }
 
                 if cell == CellType::PowerUp {
+                    // Legacy grid cell destroyed — already migrated to ECS entities.
+                    // The PowerUpComponent entity at this tile (if any) will be
+                    // despawned by the PickupSystem or explosion overlap checks.
                     grid.set_cell(x as usize, y as usize, CellType::Empty);
-                    // Power-up destroyed by explosion
                 }
             }
         }
