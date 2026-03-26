@@ -42,11 +42,13 @@ jobs:
 
     - name: Install Stellar CLI
       run: |
-        curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | bash -s -- --version 25.1.0
+        curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | bash -s -- --user
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Install stellar-zk
       run: |
         STELLAR_ZK_VERSION=0.1.2 curl -fsSL https://raw.githubusercontent.com/salazarsebas/stellar-zk/main/scripts/install.sh | bash
+        echo "$HOME/.stellar-zk/bin" >> $GITHUB_PATH
 
     - name: Check Formatting
       run: |
