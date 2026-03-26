@@ -42,11 +42,11 @@ jobs:
 
     - name: Install Stellar CLI
       run: |
-        cargo install --locked --force stellar-cli --version 25.1.0 --no-default-features
+        curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | bash -s -- --version 25.1.0
 
     - name: Install stellar-zk
       run: |
-        cargo install --locked stellar-zk --version 0.1.2
+        STELLAR_ZK_VERSION=0.1.2 curl -fsSL https://raw.githubusercontent.com/salazarsebas/stellar-zk/main/scripts/install.sh | bash
 
     - name: Check Formatting
       run: |
