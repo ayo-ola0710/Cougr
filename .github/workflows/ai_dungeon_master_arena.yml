@@ -37,7 +37,7 @@ jobs:
 
     - name: Install Stellar CLI and stellar-zk
       run: |
-        cargo install --locked stellar-cli --version 22.1.0 --no-default-features
+        cargo install --locked stellar-cli --version 25.1.0 --no-default-features
         cargo install --locked stellar-zk --version 0.1.2
 
     - name: Check Formatting
