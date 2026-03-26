@@ -35,6 +35,11 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-ai-dm-arena-${{ hashFiles('**/Cargo.toml') }}
 
+    - name: Install Stellar CLI and stellar-zk
+      run: |
+        cargo install --locked stellar-cli --version 22.1.0 --no-default-features
+        cargo install --locked stellar-zk --version 0.1.2
+
     - name: Check Formatting
       run: |
         cd examples/ai_dungeon_master_arena
@@ -50,7 +55,7 @@ jobs:
         cd examples/ai_dungeon_master_arena
         cargo test
 
-    - name: Build Contract
+    - name: Build Contract (Stellar CLI)
       run: |
         cd examples/ai_dungeon_master_arena
-        cargo build --target wasm32-unknown-unknown --release
+        stellar contract build
