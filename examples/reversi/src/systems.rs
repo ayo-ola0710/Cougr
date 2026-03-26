@@ -1,7 +1,7 @@
 use soroban_sdk::{Env, Vec};
 
 use crate::components::{
-    BoardComponent, GameStatusComponent, ScoreComponent, TurnComponent, BOARD_SIZE, BLACK, EMPTY,
+    BoardComponent, GameStatusComponent, ScoreComponent, TurnComponent, BLACK, BOARD_SIZE, EMPTY,
     STATUS_ACTIVE, STATUS_FINISHED, WHITE,
 };
 
@@ -166,11 +166,7 @@ pub(crate) fn flip_resolution_system(
 
 // ── TurnSystem ────────────────────────────────────────────────────────────────
 
-pub(crate) fn turn_system(
-    board: &BoardComponent,
-    current: u32,
-    opponent: u32,
-) -> TurnComponent {
+pub(crate) fn turn_system(board: &BoardComponent, current: u32, opponent: u32) -> TurnComponent {
     if has_legal_moves(board, opponent) {
         TurnComponent {
             current_player: opponent,

@@ -11,8 +11,8 @@ use components::{
 };
 use components::{BLACK, STATUS_ACTIVE, STATUS_FINISHED, WHITE};
 use systems::{
-    end_condition_system, flip_resolution_system, init_board, move_validation_system,
-    opponent_of, scoring_system, turn_system,
+    end_condition_system, flip_resolution_system, init_board, move_validation_system, opponent_of,
+    scoring_system, turn_system,
 };
 
 use soroban_sdk::{contract, contractimpl, Address, Env};
