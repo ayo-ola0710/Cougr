@@ -1,4 +1,5 @@
 use super::*;
+use crate::components::{BLACK, EMPTY, STATUS_ACTIVE, WHITE, WINNER_NONE};
 use soroban_sdk::{testutils::Address as _, Env};
 
 fn setup(env: &Env) -> (Address, Address, ReversiContractClient<'_>) {
