@@ -40,6 +40,7 @@ stellar contract build
 | `pac_man` | Maze action | Grid navigation and adversarial movement patterns |
 | `pokemon_mini` | Turn-based battle | Combat sequencing and match state transitions |
 | `pong` | Arcade | Minimal competitive loop and ECS fundamentals |
+| `proof_of_hunt` | Hidden-state exploration | stellar-zk style proof verification and x402 premium actions |
 | `rock_paper_scissors` | Commit-reveal | Hidden choices and reveal resolution |
 | `snake` | Arcade | Growth mechanics and collision rules |
 | `space_invaders` | Wave shooter | Formation movement and repeated tick systems |
