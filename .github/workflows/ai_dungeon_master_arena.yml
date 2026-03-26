@@ -1,0 +1,71 @@
+name: AI Dungeon Master Arena Example
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'examples/ai_dungeon_master_arena/**'
+      - 'src/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'examples/ai_dungeon_master_arena/**'
+      - 'src/**'
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+        targets: wasm32-unknown-unknown, wasm32v1-none
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libdbus-1-dev pkg-config
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-ai-dm-arena-${{ hashFiles('**/Cargo.toml') }}
+
+    - name: Install Stellar CLI
+      run: |
+        curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | bash -s -- --user
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install stellar-zk
+      run: |
+        STELLAR_ZK_VERSION=0.1.2 curl -fsSL https://raw.githubusercontent.com/salazarsebas/stellar-zk/main/scripts/install.sh | bash
+        echo "$HOME/.stellar-zk/bin" >> $GITHUB_PATH
+
+    - name: Check Formatting
+      run: |
+        cd examples/ai_dungeon_master_arena
+        cargo fmt --check
+
+    - name: Lint (Clippy)
+      run: |
+        cd examples/ai_dungeon_master_arena
+        cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Run Tests
+      run: |
+        cd examples/ai_dungeon_master_arena
+        cargo test
+
+    - name: Build Contract (Stellar CLI)
+      run: |
+        cd examples/ai_dungeon_master_arena
+        stellar contract build
