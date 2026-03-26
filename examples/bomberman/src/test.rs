@@ -424,7 +424,8 @@ fn test_powerup_pickup() {
         world.set_typed(&env, pu_entity, &pu);
 
         // Also ensure (1,2) is empty so player can reach (1,3)
-        let grid_entities = world.get_entities_with_component(&GridComponent::component_type(), &env);
+        let grid_entities =
+            world.get_entities_with_component(&GridComponent::component_type(), &env);
         let grid_id = grid_entities.get(0).unwrap();
         let mut grid = world.get_typed::<GridComponent>(&env, grid_id).unwrap();
         grid.set_cell(1, 2, CellType::Empty);
