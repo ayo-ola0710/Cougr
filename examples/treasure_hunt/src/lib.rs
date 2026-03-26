@@ -183,8 +183,7 @@ impl TreasureHuntContract {
             panic_with_error!(&env, TreasureHuntError::AlreadyExplored);
         }
 
-        let on_chain_proof =
-            make_on_chain_proof(&env, &proof, x, y, cell_value_u8, map_root.width);
+        let on_chain_proof = make_on_chain_proof(&env, &proof, x, y, cell_value_u8, map_root.width);
         let is_valid = verify_inclusion(&env, &on_chain_proof, &map_root.root)
             .unwrap_or_else(|_| panic_with_error!(&env, TreasureHuntError::InvalidProof));
         if !is_valid {
@@ -202,7 +201,11 @@ impl TreasureHuntContract {
         );
 
         explored_map.explored.set(idx, true);
-        let fog_root = recompute_fog_root(&env, &explored_map.explored, map_root.width * map_root.height);
+        let fog_root = recompute_fog_root(
+            &env,
+            &explored_map.explored,
+            map_root.width * map_root.height,
+        );
 
         env.storage()
             .instance()

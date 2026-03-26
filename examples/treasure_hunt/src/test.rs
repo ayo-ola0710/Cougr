@@ -47,10 +47,7 @@ fn build_test_map(env: &Env) -> OffchainMap {
     }
 
     let tree = MerkleTree::from_leaves(env, &leaves).unwrap();
-    OffchainMap {
-        cell_values,
-        tree,
-    }
+    OffchainMap { cell_values, tree }
 }
 
 fn idx(x: u32, y: u32) -> u32 {
