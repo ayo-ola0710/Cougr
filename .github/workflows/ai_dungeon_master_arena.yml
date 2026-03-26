@@ -24,6 +24,11 @@ jobs:
         toolchain: stable
         targets: wasm32-unknown-unknown
 
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libdbus-1-dev pkg-config
+
     - name: Cache dependencies
       uses: actions/cache@v3
       with:
@@ -35,9 +40,12 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-ai-dm-arena-${{ hashFiles('**/Cargo.toml') }}
 
-    - name: Install Stellar CLI and stellar-zk
+    - name: Install Stellar CLI
       run: |
         cargo install --locked stellar-cli --version 25.1.0 --no-default-features
+
+    - name: Install stellar-zk
+      run: |
         cargo install --locked stellar-zk --version 0.1.2
 
     - name: Check Formatting
