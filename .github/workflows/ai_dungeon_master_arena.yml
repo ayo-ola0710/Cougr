@@ -42,7 +42,7 @@ jobs:
 
     - name: Install Stellar CLI
       run: |
-        cargo install --locked stellar-cli --version 25.1.0 --no-default-features
+        cargo install --locked --force stellar-cli --version 25.1.0 --no-default-features
 
     - name: Install stellar-zk
       run: |
