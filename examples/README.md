@@ -46,6 +46,7 @@ stellar contract build
 | `space_invaders` | Wave shooter | Formation movement and repeated tick systems |
 | `tap_battle` | Casual competitive | Lightweight action resolution and progression |
 | `tetris` | Puzzle | Piece state, rotation, and board clearing |
+| `treasure_hunt` | Hidden-state exploration | Off-chain Merkle map commitments with on-chain proof-gated discovery and sparse fog-of-war |
 | `tic_tac_toe` | Board | Small-state deterministic turn handling |
 | `trading_card_game` | Card / strategy | Structured turns, card effects, and state composition |
 
