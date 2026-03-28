@@ -1,0 +1,22 @@
+[package]
+name = "guild_treasury_wars"
+version = "0.1.0"
+edition = "2021"
+description = "Guild Treasury Wars — DAO-governed factions with stellar-zk commitments using cougr-core"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+cougr-core = { branch = "main", git = "https://github.com/salazarsebas/Cougr.git" }
+soroban-sdk = "25.1.0"
+
+[dev-dependencies]
+soroban-sdk = { version = "25.1.0", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+lto = true
+codegen-units = 1
