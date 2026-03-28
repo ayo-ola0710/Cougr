@@ -18,6 +18,19 @@ Cougr is a Rust framework for building on-chain games on Stellar with an Entity 
 
 The repository includes the core library, a growing catalog of standalone game examples, and focused research notes for protocol and architecture work. The goal is to provide a practical foundation for teams building game logic that must remain structured, testable, and efficient under blockchain constraints.
 
+## Project Status
+
+Cougr is still pre-`1.0`. The library has strong test coverage, but not every subsystem should be treated as equally mature.
+
+Current maturity baseline:
+
+| Area | Current status |
+|---|---|
+| ECS runtime and storage | Beta |
+| Accounts and smart-account patterns | Beta |
+| Privacy primitives | Beta |
+| Advanced ZK verification and confidential abstractions | Experimental |
+
 ## What Cougr Provides
 
 | Area | What it includes |
@@ -119,6 +132,7 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 - [ARCHITECTURE.md](ARCHITECTURE.md) for the high-level organization of the framework
 - [examples/README.md](examples/README.md) for the example catalog and usage notes
 - [CONTRIBUTING.md](CONTRIBUTING.md) for contribution standards and workflow expectations
+- [SECURITY.md](SECURITY.md) for the current security posture and reporting guidance
 
 ## Compatibility
 
@@ -129,4 +143,3 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 | License | MIT |
 | Primary SDK | `soroban-sdk` 25.1.0 |
 | Targets | Soroban-compatible WASM targets |
-

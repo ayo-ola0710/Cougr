@@ -90,13 +90,22 @@ pub fn get_component(
     world.get_component(entity_id, &component_type)
 }
 
+/// Deprecated placeholder API.
+///
+/// This function does not currently execute a real query and always returns
+/// an empty result. It remains temporarily available for compatibility while
+/// Cougr's Phase 0 API cleanup is in progress.
+#[deprecated(
+    since = "0.0.1",
+    note = "query_entities is a placeholder and not part of Cougr's stable surface; use World::query_entities or SimpleWorld query APIs instead"
+)]
 pub fn query_entities(
     _world: &World,
     _component_types: Vec<Symbol>,
     env: &soroban_sdk::Env,
 ) -> Vec<EntityId> {
-    // Since we can't easily convert Vec<Symbol> to &[Symbol] in Soroban,
-    // we'll need to restructure this. For now, return empty result.
+    // This placeholder is intentionally retained only as a temporary
+    // compatibility shim while the public API is narrowed.
     Vec::new(env)
 }
 
