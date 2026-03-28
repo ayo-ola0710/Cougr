@@ -6,10 +6,12 @@ This example demonstrates how to implement a Bomberman game as a smart contract 
 
 This contract implements a simplified version of the classic Bomberman game where players can:
 - Initialize a game with a grid
-- Move players around the grid
-- Place bombs that explode after a timer
+- Spawn and move players around the grid
+- Place bombs that have individually configurable blast power
+- Trigger **chain reactions** — a bomb overlapped by an explosion detonates instantly in the same tick
+- Pick up **power-ups** that improve stats (blast radius, bomb capacity, movement speed)
 - Handle collisions and scoring
-- Check for game over conditions
+- Check for game-over conditions
 
 ## Setup
 
@@ -37,21 +39,69 @@ cargo build
 stellar contract build
 ```
 
-### Testing
+### Testing and Validation
 
 ```bash
+# Formatting check
+cargo fmt --check
+
+# Lint check
+cargo clippy --all-targets --all-features -- -D warnings
+
 # Run unit tests
 cargo test
+
+# Build WASM (target wasm32v1-none)
+stellar contract build
 ```
 
 ## Game Logic
 
-The game uses the following key structures:
+### ECS Components
 
-- **Grid**: 2D array representing the maze with walls, destructible blocks, power-ups
-- **Players**: Position, lives, bomb capacity
-- **Bombs**: Position, timer, explosion power
-- **Explosions**: Temporary areas that damage players and destroy blocks
+| Component | Fields | Notes |
+|---|---|---|
+| `PlayerComponent` | `id, x, y, lives, bomb_capacity, score, bomb_power, speed` | All player state |
+| `BombComponent` | `x, y, timer, power, owner_id` | Power set from `bomb_power` at placement time |
+| `ExplosionComponent` | `x, y, timer` | Despawned after `EXPLOSION_DURATION` ticks |
+| `GridComponent` | `cells: Vec<CellType>` | Walls, destructible blocks |
+| `GameStateComponent` | `current_tick, game_over, winner_id` | Global match state |
+| `PowerUpComponent` | `x, y, power_up_type` | `Capacity \| Power \| Speed` |
+
+### Power-ups
+
+Three power-up types are supported and modelled as first-class ECS entities:
+
+| Type | Effect |
+|---|---|
+| `Capacity` | `bomb_capacity += 1` — player may place one more active bomb |
+| `Power` | `bomb_power += 1` — new bombs have a larger blast radius |
+| `Speed` | `speed += 1` — reserved for future movement throttling |
+
+Power-ups are spawned at game start (deterministic grid positions) and when a
+bomb destroys a destructible block (~25% chance via `(x+y)%4==0`).
+Walking over a `PowerUpComponent` entity silently applies the buff and removes
+the entity from the world (**PickupSystem**).
+
+### Chain Reactions
+
+The **ChainReactionSystem** runs inside `update_tick`:
+1. Bombs whose timer hits `0` are placed in a `detonation_queue`.
+2. Each bomb is detonated in order — explosions are spawned immediately.
+3. After each detonation, every remaining live bomb is checked for overlap
+   with a fresh explosion cell.  A hit bomb is removed and pushed to the back
+   of the queue, so it detonates in the same tick — forming a cascade.
+4. The process repeats until the queue is empty.
+
+### Systems at a Glance
+
+| System | Where | What it does |
+|---|---|---|
+| `BombTimerSystem` | `update_tick` | Decrements bomb timers |
+| `ChainReactionSystem` | `update_tick` | Cascades detonations within one tick |
+| `ExplosionPropagationSystem` | `detonate_bomb` | Spawns explosion entities in 4 directions |
+| `PowerUpSpawnSystem` | `init_game` + `detonate_bomb` | Creates `PowerUpComponent` entities |
+| `PickupSystem` | `move_player` | Applies buff when player steps on a power-up |
 
 ### Contract Functions
 
@@ -203,4 +253,11 @@ stellar contract deploy --wasm target/wasm32v1-none/release/bomberman.wasm --sim
 
 ## Architecture
 
-The contract uses Soroban's storage system for persistence and cougr-core for game-specific logic. The game state is stored efficiently to minimize transaction costs while maintaining real-time gameplay mechanics.
+The contract uses the **cougr-core ECS (Entity–Component–System)** pattern for all game state:
+
+- **Entities**: Numeric IDs created by `world.spawn_entity()` / removed by `world.despawn_entity()`
+- **Components**: Plain structs implementing `ComponentTrait` (typed `serialize` / `deserialize`)
+- **Systems**: Free functions / inline blocks inside contract entry-points that compose over component queries
+
+All state is persisted in a single `SimpleWorld` under `DataKey::World`.
+The separation of components and systems makes it straightforward to add new mechanics without touching unrelated code.
