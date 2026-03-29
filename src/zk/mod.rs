@@ -29,7 +29,6 @@ pub mod error;
 pub mod groth16;
 pub mod merkle;
 pub mod systems;
-#[cfg(any(test, feature = "testutils"))]
 pub mod testing;
 pub mod traits;
 pub mod types;

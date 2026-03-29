@@ -28,7 +28,7 @@ pub fn process_tap(env: &Env, player: &Address) -> TapResult {
         .storage()
         .persistent()
         .get(&DataKey::TapState(player.clone()))
-        .unwrap_or(TapCounter::new());
+        .unwrap_or_default();
 
     let current_ledger = env.ledger().sequence() as u64;
 
@@ -60,12 +60,12 @@ pub fn process_tap(env: &Env, player: &Address) -> TapResult {
 
     // === POWER-UP CHARGING ===
     // Every COMBO_CHARGE_THRESHOLD combo taps, earn a power-up charge
-    if tap_state.combo > 0 && tap_state.combo % COMBO_CHARGE_THRESHOLD == 0 {
+    if tap_state.combo > 0 && tap_state.combo.is_multiple_of(COMBO_CHARGE_THRESHOLD) {
         let mut power_up: PowerUp = env
             .storage()
             .persistent()
             .get(&DataKey::PowerUpState(player.clone()))
-            .unwrap_or(PowerUp::new(PowerUpKind::DoubleTap as u32));
+            .unwrap_or_else(|| PowerUp::new(PowerUpKind::DoubleTap as u32));
         power_up.charges += 1;
         env.storage()
             .persistent()
@@ -241,7 +241,7 @@ pub fn get_profile(env: &Env, player: &Address) -> PlayerProfile {
     env.storage()
         .persistent()
         .get(&DataKey::Profile(player.clone()))
-        .unwrap_or(PlayerProfile::new())
+        .unwrap_or_default()
 }
 
 // ============================================================================
