@@ -536,7 +536,7 @@ impl CrossAssetRacingLeague {
         let mut boost_world = SimpleWorld::new(&env);
         let boost_entity = boost_world.spawn_entity();
 
-        let mut boost_component = BoostComponent {
+        let boost_component = BoostComponent {
             boost_type,
             status: 1,
             activation_height: env.ledger().sequence(),
