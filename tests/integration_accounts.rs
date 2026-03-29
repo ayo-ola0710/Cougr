@@ -40,6 +40,7 @@ fn test_session_key_lifecycle() {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
 
         // 2. Store
@@ -64,6 +65,7 @@ fn test_session_key_lifecycle() {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
         SessionStorage::store(&env, &addr, &key2);
 
@@ -102,6 +104,7 @@ fn test_session_storage_multiple_accounts() {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
         let key2 = SessionKey {
             key_id: BytesN::from_array(&env, &[2u8; 32]),
@@ -112,6 +115,7 @@ fn test_session_storage_multiple_accounts() {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
 
         // Store keys for different accounts

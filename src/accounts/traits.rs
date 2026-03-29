@@ -1,6 +1,7 @@
 use soroban_sdk::{Address, BytesN, Env};
 
 use super::error::AccountError;
+use super::intent::{AuthResult, SignedIntent};
 use super::types::{AccountCapabilities, GameAction, SessionKey, SessionScope};
 
 /// Core account trait for Cougr game accounts.
@@ -19,6 +20,15 @@ pub trait CougrAccount {
     /// For Classic accounts, this calls `address.require_auth()`.
     /// For Contract accounts, this may use session keys or custom logic.
     fn authorize(&self, env: &Env, action: &GameAction) -> Result<(), AccountError>;
+}
+
+/// Explicit intent-based authorization interface used by the account kernel.
+pub trait IntentAccount: CougrAccount {
+    fn authorize_intent(
+        &mut self,
+        env: &Env,
+        intent: &SignedIntent,
+    ) -> Result<AuthResult, AccountError>;
 }
 
 /// Session key management for contract accounts.

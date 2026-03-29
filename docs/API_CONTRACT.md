@@ -105,19 +105,8 @@ Current top-level helper functions:
 - `add_component`
 - `remove_component`
 - `get_component`
-- `query_entities`
 
 ## Compatibility Exceptions
-
-### `query_entities`
-
-Top-level `query_entities` in `src/lib.rs` is intentionally deprecated. It currently returns an empty result and is retained only as a compatibility shim while callers move to the underlying world and query APIs.
-
-Implications:
-
-- it is not part of the intended Cougr contract
-- callers should use `World::query_entities` or `SimpleWorld` query helpers instead
-- its continued presence should not be read as a product guarantee
 
 ### `zk::testing`
 
@@ -130,6 +119,7 @@ The main public API risks today are:
 - the crate exports more surface area than it can reasonably defend as stable
 - some internals-heavy modules are public before their long-term contract is clearly documented
 - some privacy and verification surfaces are easy to overread as production guarantees
+- accounts and privacy modules still include beta-grade behavior that is intentionally documented outside the stable story
 
 ## Direction
 

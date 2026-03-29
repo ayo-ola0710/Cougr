@@ -133,8 +133,11 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 - [examples/README.md](examples/README.md) for the example catalog and usage notes
 - [CONTRIBUTING.md](CONTRIBUTING.md) for contribution standards and workflow expectations
 - [SECURITY.md](SECURITY.md) for the current security posture and reporting guidance
+- [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for the current threat model and sensitive subsystem map
 - [docs/MATURITY_MODEL.md](docs/MATURITY_MODEL.md) for maturity tiers and promotion criteria
 - [docs/API_CONTRACT.md](docs/API_CONTRACT.md) for the current public API contract and compatibility boundaries
+- [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) for the phase 1 account-kernel model, intents, signers, and replay protection
+- [docs/PUBLIC_GAPS.md](docs/PUBLIC_GAPS.md) for public behaviors that remain outside the stable promise
 
 ## Compatibility
 
