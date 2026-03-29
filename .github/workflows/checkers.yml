@@ -53,7 +53,7 @@ jobs:
         run: cargo test
 
       - name: Install Stellar CLI
-        run: cargo install --locked stellar-cli --features opt
+        run: cargo install --locked stellar-cli
 
       - name: Build Soroban WASM contract
         run: stellar contract build
