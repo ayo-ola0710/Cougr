@@ -93,8 +93,8 @@ pub fn get_component(
 /// Deprecated placeholder API.
 ///
 /// This function does not currently execute a real query and always returns
-/// an empty result. It remains temporarily available for compatibility while
-/// Cougr's Phase 0 API cleanup is in progress.
+/// an empty result. It remains temporarily available as a compatibility shim
+/// while callers migrate to the underlying world/query APIs.
 #[deprecated(
     since = "0.0.1",
     note = "query_entities is a placeholder and not part of Cougr's stable surface; use World::query_entities or SimpleWorld query APIs instead"

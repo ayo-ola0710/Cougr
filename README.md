@@ -133,6 +133,8 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 - [examples/README.md](examples/README.md) for the example catalog and usage notes
 - [CONTRIBUTING.md](CONTRIBUTING.md) for contribution standards and workflow expectations
 - [SECURITY.md](SECURITY.md) for the current security posture and reporting guidance
+- [docs/MATURITY_MODEL.md](docs/MATURITY_MODEL.md) for maturity tiers and promotion criteria
+- [docs/API_CONTRACT.md](docs/API_CONTRACT.md) for the current public API contract and compatibility boundaries
 
 ## Compatibility
 
