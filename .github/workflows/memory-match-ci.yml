@@ -119,11 +119,11 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
     
-    - name: Install Soroban CLI
+    - name: Install Stellar CLI
       run: |
-        curl -L https://github.com/stellar/soroban/releases/latest/download/soroban-cli-linux-x86_64.tar.gz | tar xz
-        sudo mv soroban /usr/local/bin/
-        soroban version
+        curl -L https://github.com/stellar/stellar-cli/releases/latest/download/stellar-cli-linux-x86_64.tar.gz | tar xz
+        sudo mv stellar /usr/local/bin/
+        stellar version
     
     - name: Download WASM artifacts
       uses: actions/download-artifact@v4
@@ -134,14 +134,14 @@ jobs:
     - name: Run integration tests
       run: |
         # Start local network
-        soroban network standalone &
+        stellar network standalone &
         sleep 5
         
         # Deploy contract and run integration tests
         cargo test --release --target wasm32-unknown-unknown
         
         # Clean up
-        pkill soroban || true
+        pkill stellar || true
 
   docs:
     name: Documentation
