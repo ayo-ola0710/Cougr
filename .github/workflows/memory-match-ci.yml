@@ -121,6 +121,8 @@ jobs:
     
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+      with:
+        target: wasm32-unknown-unknown
     
     - name: Install Stellar CLI
       run: |
@@ -137,15 +139,8 @@ jobs:
     - name: Run integration tests
       run: |
         cd examples/memory_match
-        # Start local network
-        stellar network standalone &
-        sleep 5
-        
-        # Deploy contract and run integration tests
-        cargo test --release --target wasm32-unknown-unknown
-        
-        # Clean up
-        pkill stellar || true
+        # Run integration tests
+        cargo test --release
 
   docs:
     name: Documentation
