@@ -121,8 +121,8 @@ jobs:
     
     - name: Install Stellar CLI
       run: |
-        curl -L https://github.com/stellar/stellar-cli/releases/latest/download/stellar-cli-linux-x86_64.tar.gz | tar xz
-        sudo mv stellar /usr/local/bin/
+        curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
         stellar version
     
     - name: Download WASM artifacts
