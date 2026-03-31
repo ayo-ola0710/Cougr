@@ -57,6 +57,12 @@ jobs:
       with:
         target: wasm32-unknown-unknown
     
+    - name: Install Stellar CLI
+      run: |
+        curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        stellar version
+    
     - name: Cache dependencies
       uses: actions/cache@v4
       with:
@@ -72,12 +78,13 @@ jobs:
       run: |
         cd examples/memory_match
         cargo build --release --target wasm32-unknown-unknown
+        stellar contract build
     
     - name: Optimize WASM
       run: |
         cd examples/memory_match
         if command -v wasm-opt &> /dev/null; then
-          for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
+          for wasm in target/wasm32v1-none/release/*.wasm; do
             if [ -f "$wasm" ]; then
               wasm-opt -Oz "$wasm" -o "$wasm.optimized"
               mv "$wasm.optimized" "$wasm"
@@ -89,7 +96,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: wasm-contracts
-        path: examples/memory_match/target/wasm32-unknown-unknown/release/*.wasm
+        path: examples/memory_match/target/wasm32v1-none/release/*.wasm
         retention-days: 30
 
   security:
@@ -134,7 +141,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: wasm-contracts
-        path: examples/memory_match/target/wasm32-unknown-unknown/release/
+        path: examples/memory_match/target/wasm32v1-none/release/
     
     - name: Run integration tests
       run: |
