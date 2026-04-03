@@ -48,12 +48,9 @@ pub struct SessionPolicy;
 
 impl Policy<SessionContext<'_>> for SessionPolicy {
     fn evaluate(&self, env: &Env, context: &SessionContext<'_>) -> Result<(), AccountError> {
-        let session = SessionStorage::load(
-            env,
-            context.account,
-            &context.intent.signer.session_key_id,
-        )
-        .ok_or(AccountError::SessionRevoked)?;
+        let session =
+            SessionStorage::load(env, context.account, &context.intent.signer.session_key_id)
+                .ok_or(AccountError::SessionRevoked)?;
 
         if env.ledger().timestamp() >= session.scope.expires_at {
             return Err(AccountError::SessionExpired);

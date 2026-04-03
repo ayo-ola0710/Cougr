@@ -20,23 +20,33 @@ pub type EntityId = u32;
 /// Both maps are transparent to `get_component()`, `has_component()`, and `remove_component()`.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use cougr_core::component::ComponentStorage;
+/// use cougr_core::simple_world::SimpleWorld;
+/// use soroban_sdk::{symbol_short, Bytes, Env};
+///
+/// let env = Env::default();
 /// let mut world = SimpleWorld::new(&env);
 /// let entity_id = world.spawn_entity();
-/// world.add_component(entity_id, symbol_short!("position"), pos.serialize(&env));
-/// // Sparse components use a dedicated method:
-/// world.add_component_with_storage(entity_id, symbol_short!("marker"), data, ComponentStorage::Sparse);
+/// world.add_component(entity_id, symbol_short!("position"), Bytes::new(&env));
+/// world.add_component_with_storage(
+///     entity_id,
+///     symbol_short!("marker"),
+///     Bytes::new(&env),
+///     ComponentStorage::Sparse,
+/// );
+/// assert!(world.has_component(entity_id, &symbol_short!("position")));
 /// ```
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct SimpleWorld {
-    pub next_entity_id: EntityId,
+    pub next_entity_id: u32,
     /// Table component data keyed by (entity_id, component_type).
-    pub components: Map<(EntityId, Symbol), Bytes>,
+    pub components: Map<(u32, Symbol), Bytes>,
     /// Sparse component data keyed by (entity_id, component_type).
-    pub sparse_components: Map<(EntityId, Symbol), Bytes>,
+    pub sparse_components: Map<(u32, Symbol), Bytes>,
     /// Tracks which component types each entity has.
-    pub entity_components: Map<EntityId, Vec<Symbol>>,
+    pub entity_components: Map<u32, Vec<Symbol>>,
     /// Version counter incremented on structural changes (add/remove/despawn).
     /// Used for query cache invalidation.
     pub version: u64,
@@ -223,8 +233,17 @@ impl SimpleWorld {
     /// Get a component and deserialize it into the concrete type.
     ///
     /// # Example
-    /// ```ignore
+    /// ```
+    /// use cougr_core::component::Position;
+    /// use cougr_core::simple_world::SimpleWorld;
+    /// use soroban_sdk::Env;
+    ///
+    /// let env = Env::default();
+    /// let mut world = SimpleWorld::new(&env);
+    /// let entity_id = world.spawn_entity();
+    /// world.set_typed(&env, entity_id, &Position::new(10, 20));
     /// let pos: Option<Position> = world.get_typed::<Position>(&env, entity_id);
+    /// assert_eq!(pos.unwrap().x, 10);
     /// ```
     pub fn get_typed<T: ComponentTrait>(&self, env: &Env, entity_id: EntityId) -> Option<T> {
         let bytes = self.get_component(entity_id, &T::component_type())?;
@@ -234,8 +253,16 @@ impl SimpleWorld {
     /// Serialize a component and store it, using the type's default storage kind.
     ///
     /// # Example
-    /// ```ignore
+    /// ```
+    /// use cougr_core::component::Position;
+    /// use cougr_core::simple_world::SimpleWorld;
+    /// use soroban_sdk::Env;
+    ///
+    /// let env = Env::default();
+    /// let mut world = SimpleWorld::new(&env);
+    /// let entity_id = world.spawn_entity();
     /// world.set_typed(&env, entity_id, &Position::new(10, 20));
+    /// assert!(world.has_typed::<Position>(entity_id));
     /// ```
     pub fn set_typed<T: ComponentTrait>(&mut self, env: &Env, entity_id: EntityId, component: &T) {
         let symbol = T::component_type();

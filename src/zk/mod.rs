@@ -13,11 +13,23 @@
 //!
 //! ## Usage
 //!
-//! ```ignore
-//! use cougr_core::zk::{crypto, groth16, types::*};
+//! ```no_run
+//! use cougr_core::zk::{verify_groth16, G1Point, G2Point, Groth16Proof, Scalar, VerificationKey};
+//! use soroban_sdk::{BytesN, Env, Vec};
 //!
-//! // Verify a Groth16 proof on-chain
-//! let result = groth16::verify_groth16(&env, &vk, &proof, &public_inputs);
+//! let env = Env::default();
+//! let g1 = G1Point { bytes: BytesN::from_array(&env, &[0u8; 64]) };
+//! let g2 = G2Point { bytes: BytesN::from_array(&env, &[0u8; 128]) };
+//! let vk = VerificationKey {
+//!     alpha: g1.clone(),
+//!     beta: g2.clone(),
+//!     gamma: g2.clone(),
+//!     delta: g2,
+//!     ic: Vec::from_array(&env, [g1.clone()]),
+//! };
+//! let proof = Groth16Proof { a: g1.clone(), b: vk.beta.clone(), c: g1 };
+//! let public_inputs: [Scalar; 0] = [];
+//! let _result = verify_groth16(&env, &vk, &proof, &public_inputs);
 //! ```
 
 pub mod bls12_381;

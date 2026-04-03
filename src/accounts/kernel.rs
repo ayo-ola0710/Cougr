@@ -2,9 +2,7 @@ use soroban_sdk::{Address, Env};
 
 use super::error::AccountError;
 use super::intent::{AuthMethod, AuthResult, IntentSigner, SignedIntent};
-use super::policy::{
-    IntentContext, IntentExpiryPolicy, Policy, SessionContext, SessionPolicy,
-};
+use super::policy::{IntentContext, IntentExpiryPolicy, Policy, SessionContext, SessionPolicy};
 use super::replay::ReplayProtection;
 use super::signer::{AccountSigner, DirectAuthSigner, Secp256r1PasskeySigner, SessionAuthSigner};
 use super::storage::SessionStorage;
@@ -43,11 +41,8 @@ impl AccountKernel {
             },
         )?;
 
-        let consumed = ReplayProtection::verify_and_consume_account_nonce(
-            env,
-            &self.owner,
-            intent.nonce,
-        )?;
+        let consumed =
+            ReplayProtection::verify_and_consume_account_nonce(env, &self.owner, intent.nonce)?;
 
         Ok(AuthResult {
             method: AuthMethod::Direct,
@@ -77,8 +72,11 @@ impl AccountKernel {
             },
         )?;
 
-        let updated =
-            SessionStorage::consume_authorized_session(env, &self.owner, &intent.signer.session_key_id)?;
+        let updated = SessionStorage::consume_authorized_session(
+            env,
+            &self.owner,
+            &intent.signer.session_key_id,
+        )?;
 
         Ok(AuthResult {
             method: AuthMethod::Session,
@@ -108,11 +106,8 @@ impl AccountKernel {
             },
         )?;
 
-        let consumed = ReplayProtection::verify_and_consume_account_nonce(
-            env,
-            &self.owner,
-            intent.nonce,
-        )?;
+        let consumed =
+            ReplayProtection::verify_and_consume_account_nonce(env, &self.owner, intent.nonce)?;
 
         Ok(AuthResult {
             method: AuthMethod::Passkey,
@@ -122,11 +117,7 @@ impl AccountKernel {
         })
     }
 
-    pub fn authorize(
-        &self,
-        env: &Env,
-        intent: &SignedIntent,
-    ) -> Result<AuthResult, AccountError> {
+    pub fn authorize(&self, env: &Env, intent: &SignedIntent) -> Result<AuthResult, AccountError> {
         match intent.signer.kind {
             IntentSigner::Direct => self.authorize_direct(env, intent),
             IntentSigner::Session => self.authorize_session(env, intent),
@@ -158,7 +149,9 @@ mod tests {
     use super::*;
     use crate::accounts::intent::SignedIntent;
     use crate::accounts::multi_device::{DeviceManager, DevicePolicy, MultiDeviceProvider};
-    use crate::accounts::policy::{ActiveDevicePolicy, DeviceContext, GuardianPolicy, RecoveryContext};
+    use crate::accounts::policy::{
+        ActiveDevicePolicy, DeviceContext, GuardianPolicy, RecoveryContext,
+    };
     use crate::accounts::recovery::{RecoverableAccount, RecoveryConfig, RecoveryProvider};
     use crate::accounts::storage::SessionStorage;
     use crate::accounts::types::{GameAction, SessionKey, SessionScope};
@@ -194,7 +187,10 @@ mod tests {
 
             let result = kernel.authorize(&env, &intent).unwrap();
             assert_eq!(result.method, AuthMethod::Direct);
-            assert_eq!(ReplayProtection::next_account_nonce(&env, kernel.owner()), 1);
+            assert_eq!(
+                ReplayProtection::next_account_nonce(&env, kernel.owner()),
+                1
+            );
         });
     }
 
@@ -250,7 +246,10 @@ mod tests {
                 1,
                 99999,
             );
-            assert_eq!(kernel.authorize(&env, &replay), Err(AccountError::SessionBudgetExceeded));
+            assert_eq!(
+                kernel.authorize(&env, &replay),
+                Err(AccountError::SessionBudgetExceeded)
+            );
         });
     }
 
@@ -276,15 +275,12 @@ mod tests {
             };
             SessionStorage::store(&env, &owner, &session);
 
-            let wrong_nonce = SignedIntent::session(
-                &env,
-                owner,
-                &key_id,
-                make_action(&env, "move"),
-                1,
-                99999,
+            let wrong_nonce =
+                SignedIntent::session(&env, owner, &key_id, make_action(&env, "move"), 1, 99999);
+            assert_eq!(
+                kernel.authorize(&env, &wrong_nonce),
+                Err(AccountError::NonceMismatch)
             );
-            assert_eq!(kernel.authorize(&env, &wrong_nonce), Err(AccountError::NonceMismatch));
         });
     }
 

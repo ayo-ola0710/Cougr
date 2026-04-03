@@ -7,11 +7,15 @@
 //!
 //! # Usage
 //!
-//! ```ignore
+//! ```no_run
+//! use cougr_core::incremental::StorageWorld;
+//! use soroban_sdk::{symbol_short, Bytes, Env};
+//!
+//! let env = Env::default();
 //! let mut world = StorageWorld::load_metadata(&env);
-//! world.load_entity(&env, entity_id);
-//! world.add_component(&env, entity_id, sym, data);
-//! world.flush(&env); // only writes changed entries
+//! let entity_id = world.spawn_entity(&env);
+//! world.add_component(&env, entity_id, symbol_short!("hp"), Bytes::new(&env));
+//! world.flush(&env);
 //! ```
 //!
 //! # Trade-offs
@@ -34,13 +38,13 @@ use soroban_sdk::{contracttype, Bytes, Env, Symbol};
 #[derive(Clone, Debug)]
 pub struct WorldMetadata {
     /// Next entity ID to assign.
-    pub next_entity_id: EntityId,
+    pub next_entity_id: u32,
     /// Version counter for cache invalidation.
     pub version: u64,
     /// Total number of live entities.
     pub entity_count: u32,
     /// List of all live entity IDs.
-    pub entity_ids: soroban_sdk::Vec<EntityId>,
+    pub entity_ids: soroban_sdk::Vec<u32>,
 }
 
 /// Cached entity data loaded from persistent storage.

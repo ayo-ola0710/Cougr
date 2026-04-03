@@ -198,9 +198,15 @@ pub fn hash_intent(
     ));
     bytes.append(&Bytes::from_slice(env, &signer.session_key_id.to_array()));
     let label_bits: Val = signer.label.to_val();
-    bytes.append(&Bytes::from_slice(env, &label_bits.get_payload().to_be_bytes()));
+    bytes.append(&Bytes::from_slice(
+        env,
+        &label_bits.get_payload().to_be_bytes(),
+    ));
     let action_bits: Val = action.system_name.to_val();
-    bytes.append(&Bytes::from_slice(env, &action_bits.get_payload().to_be_bytes()));
+    bytes.append(&Bytes::from_slice(
+        env,
+        &action_bits.get_payload().to_be_bytes(),
+    ));
     bytes.append(&action.data);
     BytesN::from_array(env, &env.crypto().sha256(&bytes).to_array())
 }

@@ -9,7 +9,7 @@ use soroban_sdk::{contracttype, Env, Symbol};
 #[derive(Clone, Debug)]
 pub struct EntitySummary {
     /// The entity's ID.
-    pub entity_id: EntityId,
+    pub entity_id: u32,
     /// Total number of components (table + sparse).
     pub component_count: u32,
     /// List of component type symbols.
@@ -35,7 +35,7 @@ pub struct WorldSummary {
     /// Current world version.
     pub version: u64,
     /// Next entity ID that will be assigned.
-    pub next_entity_id: EntityId,
+    pub next_entity_id: u32,
 }
 
 /// Inspect a single entity, returning a summary of its components.

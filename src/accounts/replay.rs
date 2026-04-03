@@ -22,7 +22,9 @@ impl ReplayProtection {
         if nonce != expected {
             return Err(AccountError::NonceMismatch);
         }
-        env.storage().persistent().set(&Self::storage_key(env, account), &(expected + 1));
+        env.storage()
+            .persistent()
+            .set(&Self::storage_key(env, account), &(expected + 1));
         Ok(expected)
     }
 

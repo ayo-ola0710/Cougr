@@ -10,18 +10,21 @@ use soroban_sdk::{Bytes, Symbol};
 /// skip unchanged entities, improving performance.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use cougr_core::change_tracker::ChangeTracker;
+/// use soroban_sdk::symbol_short;
+///
+/// let entity_id = 1;
 /// let mut tracker = ChangeTracker::new();
 /// tracker.record_add(entity_id, symbol_short!("pos"));
 ///
-/// // Later, query what changed:
 /// if tracker.was_added(entity_id, &symbol_short!("pos")) {
-///     // handle newly added position
+///     assert_eq!(tracker.change_count(), 1);
 /// }
 ///
-/// // Clear at end of tick:
 /// tracker.clear();
 /// tracker.advance_tick();
+/// assert_eq!(tracker.tick(), 1);
 /// ```
 pub struct ChangeTracker {
     added: Vec<(EntityId, Symbol)>,
@@ -139,13 +142,17 @@ impl Default for ChangeTracker {
 /// in a `ChangeTracker` for later querying by systems.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use cougr_core::change_tracker::TrackedWorld;
+/// use cougr_core::simple_world::SimpleWorld;
+/// use soroban_sdk::{symbol_short, Bytes, Env};
+///
 /// let env = Env::default();
 /// let world = SimpleWorld::new(&env);
 /// let mut tracked = TrackedWorld::new(world);
 ///
 /// let e1 = tracked.spawn_entity();
-/// tracked.add_component(e1, symbol_short!("pos"), data);
+/// tracked.add_component(e1, symbol_short!("pos"), Bytes::new(&env));
 ///
 /// assert!(tracked.tracker().was_added(e1, &symbol_short!("pos")));
 /// ```

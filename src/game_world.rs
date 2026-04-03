@@ -5,16 +5,20 @@
 //! Follows the same wrapper pattern as `HookedWorld`, `TrackedWorld`, `ObservedWorld`.
 //!
 //! # Example
-//! ```ignore
+//! ```no_run
+//! use cougr_core::accounts::{ClassicAccount, GameAction};
+//! use cougr_core::game_world::GameWorld;
+//! use cougr_core::simple_world::SimpleWorld;
+//! use soroban_sdk::{symbol_short, testutils::Address as _, Address, Bytes, Env};
+//!
+//! let env = Env::default();
 //! let world = SimpleWorld::new(&env);
-//! let account = ClassicAccount::new(player_address);
-//! let mut game = GameWorld::new(world, account);
+//! let account = ClassicAccount::new(Address::generate(&env));
+//! let game = GameWorld::new(world, account);
 //!
-//! // Execute authorized actions
+//! let action = GameAction { system_name: symbol_short!("move"), data: Bytes::new(&env) };
 //! game.execute_authorized(&env, &action)?;
-//!
-//! // Submit and verify ZK proofs
-//! game.submit_proof(&env, entity_id, &vk, &proof, &public_inputs)?;
+//! # Ok::<(), cougr_core::accounts::AccountError>(())
 //! ```
 
 use soroban_sdk::Env;

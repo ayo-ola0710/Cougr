@@ -10,7 +10,12 @@ use soroban_sdk::{Env, Symbol};
 /// Each plugin gets access to a `PluginApp` builder during `build()`.
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
+/// # use cougr_core::plugin::{Plugin, PluginApp};
+/// # use cougr_core::simple_world::SimpleWorld;
+/// # use soroban_sdk::Env;
+/// # fn gravity_system(_world: &mut SimpleWorld, _env: &Env) {}
+/// # fn collision_system(_world: &mut SimpleWorld, _env: &Env) {}
 /// struct PhysicsPlugin;
 ///
 /// impl Plugin for PhysicsPlugin {
@@ -33,13 +38,29 @@ pub trait Plugin {
 /// and `HookRegistry` for modular game configuration.
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
+/// # use cougr_core::plugin::{Plugin, PluginApp};
+/// # use cougr_core::simple_world::SimpleWorld;
+/// # use soroban_sdk::Env;
+/// # struct PhysicsPlugin;
+/// # struct ScoringPlugin;
+/// # fn physics_system(_world: &mut SimpleWorld, _env: &Env) {}
+/// # fn scoring_system(_world: &mut SimpleWorld, _env: &Env) {}
+/// # impl Plugin for PhysicsPlugin {
+/// #     fn name(&self) -> &'static str { "physics" }
+/// #     fn build(&self, app: &mut PluginApp) { app.add_system("physics", physics_system); }
+/// # }
+/// # impl Plugin for ScoringPlugin {
+/// #     fn name(&self) -> &'static str { "scoring" }
+/// #     fn build(&self, app: &mut PluginApp) { app.add_system("scoring", scoring_system); }
+/// # }
 /// let env = Env::default();
 /// let mut app = PluginApp::new(&env);
 /// app.add_plugin(PhysicsPlugin);
 /// app.add_plugin(ScoringPlugin);
 /// app.run(&env);
 /// let world = app.into_world();
+/// assert_eq!(world.version(), 0);
 /// ```
 pub struct PluginApp {
     world: SimpleWorld,

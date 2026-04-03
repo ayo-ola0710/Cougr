@@ -12,11 +12,25 @@ use super::types::{Groth16Proof, Scalar, VerificationKey};
 /// method handles the common Groth16 verification flow.
 ///
 /// # Example
-/// ```ignore
-/// use cougr_core::zk::traits::GameCircuit;
+/// ```no_run
+/// use cougr_core::zk::{GameCircuit, G1Point, G2Point, Groth16Proof, MovementCircuit, Scalar, VerificationKey};
+/// use soroban_sdk::{BytesN, Env, Vec};
 ///
+/// let env = Env::default();
+/// let g1 = G1Point { bytes: BytesN::from_array(&env, &[0u8; 64]) };
+/// let g2 = G2Point { bytes: BytesN::from_array(&env, &[0u8; 128]) };
+/// let vk = VerificationKey {
+///     alpha: g1.clone(),
+///     beta: g2.clone(),
+///     gamma: g2.clone(),
+///     delta: g2,
+///     ic: Vec::from_array(&env, [g1.clone()]),
+/// };
+/// let proof = Groth16Proof { a: g1.clone(), b: vk.beta.clone(), c: g1 };
+/// let public_inputs: [Scalar; 0] = [];
 /// let circuit = MovementCircuit::new(vk, 10);
-/// let result = circuit.verify_with_inputs(&env, &proof, &public_inputs)?;
+/// let _result = circuit.verify_with_inputs(&env, &proof, &public_inputs)?;
+/// # Ok::<(), cougr_core::zk::ZKError>(())
 /// ```
 pub trait GameCircuit {
     /// Get the verification key for this circuit.

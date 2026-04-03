@@ -13,12 +13,28 @@ const SESSION_KEYS_PREFIX: &str = "sess_keys";
 /// contract invocations (unlike `ContractAccount`'s in-memory storage).
 ///
 /// # Example
-/// ```ignore
-/// // Store a session key
-/// SessionStorage::store(&env, &player_address, &session_key);
+/// ```no_run
+/// use cougr_core::accounts::{SessionKey, SessionScope, SessionStorage};
+/// use soroban_sdk::{symbol_short, testutils::Address as _, Address, BytesN, Env, Vec};
 ///
-/// // Load it back
-/// let key = SessionStorage::load(&env, &player_address, &key_id);
+/// let env = Env::default();
+/// let player_address = Address::generate(&env);
+/// let key_id = BytesN::from_array(&env, &[7u8; 32]);
+/// let session_key = SessionKey {
+///     key_id: key_id.clone(),
+///     scope: SessionScope {
+///         allowed_actions: Vec::from_array(&env, [symbol_short!("move")]),
+///         max_operations: 10,
+///         expires_at: 1_000,
+///     },
+///     created_at: 0,
+///     operations_used: 0,
+///     next_nonce: 0,
+/// };
+///
+/// SessionStorage::store(&env, &player_address, &session_key);
+/// let loaded = SessionStorage::load(&env, &player_address, &key_id);
+/// assert!(loaded.is_some());
 /// ```
 pub struct SessionStorage;
 

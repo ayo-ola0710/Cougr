@@ -25,15 +25,15 @@ use soroban_sdk::{contracttype, Bytes, Env, Map, Symbol, Vec};
 #[derive(Clone, Debug)]
 pub struct ArchetypeWorld {
     /// Next entity ID to assign.
-    pub next_entity_id: EntityId,
+    pub next_entity_id: u32,
     /// Next archetype ID to assign.
-    pub next_archetype_id: ArchetypeId,
+    pub next_archetype_id: u32,
     /// All archetypes, keyed by ID.
-    pub archetypes: Map<ArchetypeId, Archetype>,
+    pub archetypes: Map<u32, Archetype>,
     /// Maps sorted component type lists to archetype IDs.
-    pub archetype_index: Map<Vec<Symbol>, ArchetypeId>,
+    pub archetype_index: Map<Vec<Symbol>, u32>,
     /// Maps each entity to its current archetype.
-    pub entity_archetype: Map<EntityId, ArchetypeId>,
+    pub entity_archetype: Map<u32, u32>,
     /// Version counter for cache invalidation.
     pub version: u64,
 }

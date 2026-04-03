@@ -11,9 +11,28 @@ use super::types::{Groth16Proof, Scalar, VerificationKey};
 /// `[from_x, from_y, to_x, to_y, max_distance]`.
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
+/// use cougr_core::zk::{G1Point, G2Point, Groth16Proof, MovementCircuit, VerificationKey};
+/// use soroban_sdk::{BytesN, Env, Vec};
+///
+/// let env = Env::default();
+/// let g1 = G1Point { bytes: BytesN::from_array(&env, &[0u8; 64]) };
+/// let g2 = G2Point { bytes: BytesN::from_array(&env, &[0u8; 128]) };
+/// let mut ic = Vec::new(&env);
+/// for _ in 0..6 {
+///     ic.push_back(g1.clone());
+/// }
+/// let vk = VerificationKey {
+///     alpha: g1.clone(),
+///     beta: g2.clone(),
+///     gamma: g2.clone(),
+///     delta: g2,
+///     ic,
+/// };
+/// let proof = Groth16Proof { a: g1.clone(), b: vk.beta.clone(), c: g1 };
 /// let circuit = MovementCircuit::new(vk, 10);
-/// let valid = circuit.verify_move(&env, &proof, 0, 0, 3, 4)?;
+/// let _valid = circuit.verify_move(&env, &proof, 0, 0, 3, 4)?;
+/// # Ok::<(), cougr_core::zk::ZKError>(())
 /// ```
 pub struct MovementCircuit {
     pub vk: VerificationKey,
@@ -180,10 +199,30 @@ impl TurnSequenceCircuit {
 /// Use this when you have a custom circuit not covered by the pre-built ones.
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
+/// use cougr_core::zk::{bytes32_to_scalar, u32_to_scalar, CustomCircuit, G1Point, G2Point, GameCircuit, Groth16Proof, VerificationKey};
+/// use soroban_sdk::{BytesN, Env, Vec};
+///
+/// let env = Env::default();
+/// let g1 = G1Point { bytes: BytesN::from_array(&env, &[0u8; 64]) };
+/// let g2 = G2Point { bytes: BytesN::from_array(&env, &[0u8; 128]) };
+/// let mut ic = Vec::new(&env);
+/// for _ in 0..3 {
+///     ic.push_back(g1.clone());
+/// }
+/// let vk = VerificationKey {
+///     alpha: g1.clone(),
+///     beta: g2.clone(),
+///     gamma: g2.clone(),
+///     delta: g2,
+///     ic,
+/// };
+/// let root = BytesN::from_array(&env, &[9u8; 32]);
 /// let inputs = vec![u32_to_scalar(&env, 42), bytes32_to_scalar(&root)];
 /// let circuit = CustomCircuit::new(vk, inputs);
-/// let valid = circuit.verify_with_inputs(&env, &proof, &circuit.public_inputs())?;
+/// let proof = Groth16Proof { a: g1.clone(), b: circuit.verification_key().beta.clone(), c: g1 };
+/// let _valid = circuit.verify_with_inputs(&env, &proof, circuit.public_inputs())?;
+/// # Ok::<(), cougr_core::zk::ZKError>(())
 /// ```
 pub struct CustomCircuit {
     vk: VerificationKey,

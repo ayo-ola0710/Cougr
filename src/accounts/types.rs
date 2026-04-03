@@ -38,8 +38,7 @@ pub struct AccountCapabilities {
     pub has_passkey_auth: bool,
 }
 
-/// Authentication method variants.
-#[contracttype]
+/// Authentication method variants used by legacy account capability code.
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
 pub enum AuthMethod {

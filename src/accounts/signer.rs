@@ -6,7 +6,12 @@ use super::secp256r1_auth::{verify_secp256r1, Secp256r1Storage};
 
 /// Base signer verification interface for the account kernel.
 pub trait AccountSigner {
-    fn verify(&self, env: &Env, account: &Address, intent: &SignedIntent) -> Result<(), AccountError>;
+    fn verify(
+        &self,
+        env: &Env,
+        account: &Address,
+        intent: &SignedIntent,
+    ) -> Result<(), AccountError>;
 }
 
 /// Direct owner signer backed by Soroban `require_auth`.
