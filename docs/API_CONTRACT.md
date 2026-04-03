@@ -18,7 +18,7 @@ Cougr currently exposes a broad surface for a pre-`1.0` crate. That is acceptabl
 The current product story is:
 
 - `cougr-core` is primarily an ECS framework for Soroban-compatible applications
-- accounts and privacy capabilities are important differentiators, but they are not yet advertised as fully stable contract surfaces
+- accounts remain Beta, while privacy is split between a stable primitive subset and experimental proof systems
 - helper APIs that exist only for compatibility or transition should remain clearly demoted
 
 ## Recommended Public Contract
@@ -44,7 +44,17 @@ These surfaces are useful and implemented, but should continue to be presented a
 - `game_world`
 - higher-level query helpers
 - higher-level scheduler helpers
-- privacy primitives in `zk`
+- proof-submission helpers in `zk`
+
+### Stable privacy subset
+
+These privacy surfaces are intentionally narrower and can be presented as Stable:
+
+- commitments
+- commit-reveal
+- hidden-state codec interfaces
+- Merkle inclusion and sparse Merkle utilities
+- `zk::stable` / `zk::privacy`
 
 ### Non-contract surfaces
 
@@ -52,6 +62,7 @@ These surfaces are public today, but they must not be interpreted as stable comm
 
 - testing-only helpers such as `zk::testing`
 - advanced proof-verification APIs whose assumptions are still being hardened
+- `zk::experimental` / `zk::experimental_privacy`
 - compatibility shims retained for transition
 - internals-heavy modules whose invariants are not yet documented as stable guarantees
 

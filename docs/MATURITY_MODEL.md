@@ -60,7 +60,7 @@ Experimental is the default for features where:
 |---|---|---|
 | ECS runtime, worlds, storage, scheduling | Beta | Broadly usable, but the public surface still needs narrowing before `1.0` |
 | Accounts and smart-account flows | Beta | Valuable direction, but auth kernel and session enforcement still need redesign |
-| Commitments, commit-reveal, and Merkle utilities | Beta | Closer to defensible than advanced proof-verification flows |
+| Commitments, commit-reveal, hidden-state encoding, and Merkle utilities | Stable | Phase 2 defines explicit interfaces, malformed-input behavior, and narrower guarantees |
 | Advanced ZK verification and confidential abstractions | Experimental | Do not treat as stable production primitives yet |
 | Testing helpers | Non-stable support surface | Intended only for tests or explicit test utility consumers |
 

@@ -105,7 +105,7 @@ Primary risks:
 
 Current posture:
 
-- commitments, commit-reveal, and Merkle utilities are Beta
+- commitments, commit-reveal, hidden-state codecs, and Merkle utilities are the stable privacy subset
 - advanced ZK verification remains Experimental
 
 ## Required Review Areas Before Production Use

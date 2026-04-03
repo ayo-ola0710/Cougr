@@ -137,6 +137,7 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 - [docs/MATURITY_MODEL.md](docs/MATURITY_MODEL.md) for maturity tiers and promotion criteria
 - [docs/API_CONTRACT.md](docs/API_CONTRACT.md) for the current public API contract and compatibility boundaries
 - [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) for the phase 1 account-kernel model, intents, signers, and replay protection
+- [docs/PRIVACY_MODEL.md](docs/PRIVACY_MODEL.md) for the phase 2 privacy split, maturity table, and proof-verification contract
 - [docs/PUBLIC_GAPS.md](docs/PUBLIC_GAPS.md) for public behaviors that remain outside the stable promise
 
 ## Compatibility

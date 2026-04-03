@@ -5,11 +5,30 @@
 //!
 //! ## Architecture
 //!
-//! - **`types`**: Core ZK types (`G1Point`, `G2Point`, `Scalar`, `Groth16Proof`, `VerificationKey`)
-//! - **`crypto`**: Low-level BN254 and Poseidon wrappers
-//! - **`groth16`**: Groth16 proof verification
+//! - **`stable`**: stable privacy primitives and interfaces
+//! - **`experimental`**: advanced proof-verification flows and automation
+//! - **`types`**: core ZK types (`G1Point`, `G2Point`, `Scalar`, `Groth16Proof`, `VerificationKey`)
+//! - **`crypto`**: low-level BN254 and Poseidon wrappers
+//! - **`groth16`**: Groth16 proof verification contract (experimental implementation)
 //! - **`error`**: ZK-specific error types
 //! - **`testing`**: Mock types for unit testing without real proofs
+//!
+//! ## Maturity Split
+//!
+//! Stable privacy surface:
+//!
+//! - commitments
+//! - commit-reveal
+//! - hidden-state encoding
+//! - Merkle inclusion and sparse Merkle utilities
+//! - privacy interfaces such as `CommitmentScheme`, `MerkleProofVerifier`, and `HiddenStateCodec`
+//!
+//! Experimental privacy surface:
+//!
+//! - Groth16 verification flows
+//! - proof-submission execution helpers
+//! - prebuilt verification circuits
+//! - hazmat Poseidon-based privacy tooling
 //!
 //! ## Usage
 //!
@@ -38,35 +57,50 @@ pub mod commitment;
 pub mod components;
 pub mod crypto;
 pub mod error;
+pub mod experimental;
 pub mod groth16;
+pub mod interfaces;
 pub mod merkle;
+pub mod stable;
 pub mod systems;
 pub mod testing;
 pub mod traits;
 pub mod types;
 
 // Re-export commonly used items
+pub use experimental as experimental_privacy;
+pub use stable as privacy;
+
+// Stable privacy subset
 pub use bls12_381::{
     bls12_381_g1_add, bls12_381_g1_msm, bls12_381_g1_mul, bls12_381_pairing_check,
 };
+pub use commitment::{pedersen_commit, pedersen_verify, PedersenCommitment, PedersenParams};
+pub use components::{CommitReveal, HiddenState};
+pub use interfaces::{
+    Bytes32HiddenStateCodec, CommitmentScheme, HiddenStateCodec, MerkleProofVerifier,
+    PedersenCommitmentScheme, ProofVerifier, Sha256MerkleProofVerifier,
+};
+pub use merkle::{verify_inclusion, MerkleProof, MerkleTree, OnChainMerkleProof, SparseMerkleTree};
+
+// Experimental proof-verification surface kept for compatibility
 pub use circuits::{
     CombatCircuit, CustomCircuit, CustomCircuitBuilder, InventoryCircuit, MovementCircuit,
     TurnSequenceCircuit,
 };
-pub use commitment::{pedersen_commit, pedersen_verify, PedersenCommitment, PedersenParams};
-pub use components::{CommitReveal, HiddenState, ProofSubmission, VerifiedMarker};
+pub use components::{ProofSubmission, VerifiedMarker};
 #[cfg(feature = "hazmat-crypto")]
 pub use crypto::{poseidon2_hash, poseidon2_hash_single, Poseidon2Params};
 pub use error::ZKError;
-pub use groth16::verify_groth16;
-pub use merkle::{verify_inclusion, MerkleProof, MerkleTree, OnChainMerkleProof, SparseMerkleTree};
+pub use groth16::{validate_groth16_contract, verify_groth16};
+pub use interfaces::Groth16ProofVerifier;
 #[cfg(feature = "hazmat-crypto")]
 pub use merkle::{
     verify_poseidon_proof, PoseidonMerkleProof, PoseidonMerkleTree, PoseidonSparseMerkleTree,
 };
 pub use systems::{
     cleanup_verified_system, commit_reveal_deadline_system, encode_commit_reveal,
-    encode_verified_marker, verify_proofs_system,
+    encode_verified_marker, verify_proofs_system, verify_proofs_with,
 };
 pub use traits::{bytes32_to_scalar, i32_to_scalar, u32_to_scalar, GameCircuit};
 pub use types::{

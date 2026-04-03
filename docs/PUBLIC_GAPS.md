@@ -20,13 +20,13 @@ Remaining gaps:
 
 ### Privacy and ZK
 
-Status: Beta to Experimental
+Status: Stable subset plus Experimental extensions
 
 Remaining gaps:
 
-- commitments, commit-reveal, and Merkle utilities are usable but not yet promoted to Stable
+- stable privacy primitives are intentionally narrow and do not imply stable advanced proof verification
 - advanced proof-verification and confidential abstractions are explicitly Experimental
-- verification assumptions and malformed-input guarantees still need further hardening work
+- proof-submission orchestration remains Beta where it depends on experimental verification flows
 
 ### Broad Top-Level Crate Surface
 

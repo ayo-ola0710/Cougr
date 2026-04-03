@@ -2,7 +2,7 @@ use crate::simple_world::SimpleWorld;
 use soroban_sdk::{Bytes, BytesN, Env, Symbol};
 
 use super::components::{COMMIT_REVEAL_TYPE, VERIFIED_MARKER_TYPE};
-use super::groth16::verify_groth16;
+use super::interfaces::{Groth16ProofVerifier, ProofVerifier};
 use super::types::{Groth16Proof, Scalar, VerificationKey};
 
 /// Read a big-endian `u64` from `data` at byte offset `offset`.
@@ -54,6 +54,29 @@ pub fn encode_commit_reveal(
 /// verification, a `VerifiedMarker` component is added to the entity.
 ///
 /// Returns `true` if the proof was valid.
+pub fn verify_proofs_with<
+    V: ProofVerifier<VerificationKey = VerificationKey, Proof = Groth16Proof, PublicInput = Scalar>,
+>(
+    world: &mut SimpleWorld,
+    env: &Env,
+    entity_id: u32,
+    verifier: &V,
+    vk: &VerificationKey,
+    proof: &Groth16Proof,
+    public_inputs: &[Scalar],
+) -> Result<bool, super::error::ZKError> {
+    let verified_sym = Symbol::new(env, VERIFIED_MARKER_TYPE);
+    let is_valid = verifier.verify(env, vk, proof, public_inputs)?;
+
+    if is_valid {
+        let now = env.ledger().timestamp();
+        let marker_data = encode_verified_marker(env, now);
+        world.add_component(entity_id, verified_sym, marker_data);
+    }
+
+    Ok(is_valid)
+}
+
 pub fn verify_proofs_system(
     world: &mut SimpleWorld,
     env: &Env,
@@ -62,17 +85,16 @@ pub fn verify_proofs_system(
     proof: &Groth16Proof,
     public_inputs: &[Scalar],
 ) -> bool {
-    let verified_sym = Symbol::new(env, VERIFIED_MARKER_TYPE);
-
-    match verify_groth16(env, vk, proof, public_inputs) {
-        Ok(true) => {
-            let now = env.ledger().timestamp();
-            let marker_data = encode_verified_marker(env, now);
-            world.add_component(entity_id, verified_sym, marker_data);
-            true
-        }
-        _ => false,
-    }
+    verify_proofs_with(
+        world,
+        env,
+        entity_id,
+        &Groth16ProofVerifier,
+        vk,
+        proof,
+        public_inputs,
+    )
+    .unwrap_or(false)
 }
 
 /// Check for expired commit-reveal deadlines.
@@ -122,7 +144,26 @@ pub fn cleanup_verified_system(world: &mut SimpleWorld, env: &Env, max_age: u64)
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::zk::error::ZKError;
     use soroban_sdk::Env;
+
+    struct RejectingVerifier;
+
+    impl ProofVerifier for RejectingVerifier {
+        type VerificationKey = VerificationKey;
+        type Proof = Groth16Proof;
+        type PublicInput = Scalar;
+
+        fn verify(
+            &self,
+            _env: &Env,
+            _verification_key: &Self::VerificationKey,
+            _proof: &Self::Proof,
+            _public_inputs: &[Self::PublicInput],
+        ) -> Result<bool, ZKError> {
+            Ok(false)
+        }
+    }
 
     #[test]
     fn test_commit_reveal_deadline_keeps_non_expired() {
@@ -177,5 +218,44 @@ mod tests {
         // max_age is 1000, marker is at time 0, now is 0, age = 0 <= 1000
         cleanup_verified_system(&mut world, &env, 1000);
         assert!(world.has_component(e1, &verified_sym));
+    }
+
+    #[test]
+    fn test_verify_proofs_with_invalid_result_does_not_mark_entity() {
+        let env = Env::default();
+        let mut world = SimpleWorld::new(&env);
+        let entity_id = world.spawn_entity();
+        let verifier = RejectingVerifier;
+        let vk = VerificationKey {
+            alpha: super::super::types::G1Point {
+                bytes: BytesN::from_array(&env, &[0u8; 64]),
+            },
+            beta: super::super::types::G2Point {
+                bytes: BytesN::from_array(&env, &[0u8; 128]),
+            },
+            gamma: super::super::types::G2Point {
+                bytes: BytesN::from_array(&env, &[0u8; 128]),
+            },
+            delta: super::super::types::G2Point {
+                bytes: BytesN::from_array(&env, &[0u8; 128]),
+            },
+            ic: soroban_sdk::Vec::new(&env),
+        };
+        let proof = Groth16Proof {
+            a: super::super::types::G1Point {
+                bytes: BytesN::from_array(&env, &[0u8; 64]),
+            },
+            b: super::super::types::G2Point {
+                bytes: BytesN::from_array(&env, &[0u8; 128]),
+            },
+            c: super::super::types::G1Point {
+                bytes: BytesN::from_array(&env, &[0u8; 64]),
+            },
+        };
+
+        let result =
+            verify_proofs_with(&mut world, &env, entity_id, &verifier, &vk, &proof, &[]).unwrap();
+        assert!(!result);
+        assert!(!world.has_component(entity_id, &Symbol::new(&env, VERIFIED_MARKER_TYPE)));
     }
 }
