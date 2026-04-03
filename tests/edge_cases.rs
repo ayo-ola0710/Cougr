@@ -5,8 +5,7 @@
 
 use cougr_core::observers::ComponentEvent;
 use cougr_core::{
-    CommandQueue, ComponentStorage, ObservedWorld, Plugin, PluginApp, SimpleQueryCache,
-    SimpleWorld,
+    CommandQueue, ComponentStorage, ObservedWorld, Plugin, PluginApp, SimpleQueryCache, SimpleWorld,
 };
 use soroban_sdk::{symbol_short, Bytes, Env};
 

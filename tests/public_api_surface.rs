@@ -8,7 +8,8 @@ use cougr_core::accounts::{
     verify_secp256r1, ClassicAccount, GameAction, Secp256r1Key, Secp256r1Storage, SessionBuilder,
 };
 use cougr_core::zk::experimental::{
-    bytes32_to_scalar, u32_to_scalar, CustomCircuit, GameCircuit, MovementCircuit,
+    bytes32_to_scalar, open_state_channel, u32_to_scalar, CustomCircuit, FogOfWarSnapshot,
+    GameCircuit, MovementCircuit, RecursiveProofLayout,
 };
 use cougr_core::zk::stable::{encode_commit_reveal, CommitReveal, COMMIT_REVEAL_TYPE};
 use cougr_core::{Position, SimpleWorld};
@@ -69,6 +70,27 @@ fn experimental_zk_namespace_exposes_proof_helpers_explicitly() {
             bytes32_to_scalar(&BytesN::from_array(&env, &[1u8; 32])),
         ],
     );
+    let _fog = FogOfWarSnapshot {
+        map_root: BytesN::from_array(&env, &[2u8; 32]),
+        explored_root: BytesN::from_array(&env, &[3u8; 32]),
+        origin_x: 0,
+        origin_y: 0,
+        visibility_radius: 3,
+    };
+    let _channel = open_state_channel(
+        BytesN::from_array(&env, &[4u8; 32]),
+        BytesN::from_array(&env, &[5u8; 32]),
+        BytesN::from_array(&env, &[6u8; 32]),
+        10,
+    )
+    .unwrap();
+    let _layout = RecursiveProofLayout::from_step_roots(
+        &env,
+        BytesN::from_array(&env, &[7u8; 32]),
+        BytesN::from_array(&env, &[8u8; 32]),
+        &[BytesN::from_array(&env, &[9u8; 32])],
+    )
+    .unwrap();
 }
 
 #[test]
@@ -92,6 +114,10 @@ fn accounts_namespace_exposes_curated_beta_entrypoints() {
     let _storage_marker = core::mem::size_of::<Secp256r1Storage>();
     let _stored_key = key;
 
-    let _verify_fn: fn(&Env, &BytesN<65>, &Bytes, &BytesN<64>) -> Result<(), cougr_core::accounts::AccountError> =
-        verify_secp256r1;
+    let _verify_fn: fn(
+        &Env,
+        &BytesN<65>,
+        &Bytes,
+        &BytesN<64>,
+    ) -> Result<(), cougr_core::accounts::AccountError> = verify_secp256r1;
 }

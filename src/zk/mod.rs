@@ -52,6 +52,7 @@
 //! let _result = verify_groth16(&env, &vk, &proof, &public_inputs);
 //! ```
 
+pub(crate) mod advanced;
 pub(crate) mod bls12_381;
 pub(crate) mod circuits;
 pub(crate) mod commitment;
@@ -70,14 +71,14 @@ pub(crate) mod traits;
 pub(crate) mod types;
 
 // Stable-by-default root exports.
+pub use error::ZKError;
 pub use stable::{
     commit_reveal_deadline_system, encode_commit_reveal, pedersen_commit, pedersen_verify,
-    verify_inclusion, Bytes32HiddenStateCodec, CommitmentScheme, CommitReveal, HiddenState,
+    verify_inclusion, Bytes32HiddenStateCodec, CommitReveal, CommitmentScheme, HiddenState,
     HiddenStateCodec, MerkleProof, MerkleProofVerifier, MerkleTree, OnChainMerkleProof,
     PedersenCommitment, PedersenCommitmentScheme, PedersenParams, ProofVerifier,
     Sha256MerkleProofVerifier, SparseMerkleTree, COMMIT_REVEAL_TYPE, HIDDEN_STATE_TYPE,
 };
-pub use error::ZKError;
 pub use types::{
     Bls12381G1Point, Bls12381G2Point, Bls12381Scalar, G1Point, G2Point, Groth16Proof, Scalar,
     VerificationKey,

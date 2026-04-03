@@ -35,6 +35,9 @@ The following remain Experimental:
 - Groth16 proof verification flows
 - proof-submission execution helpers
 - prebuilt verification circuits
+- fog-of-war Merkle exploration orchestration
+- multiplayer ZK state-channel transition contracts
+- recursive proof-composition descriptors
 - advanced hidden-state automation
 - hazmat Poseidon-based privacy helpers
 - broader confidential-state abstractions

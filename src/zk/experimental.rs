@@ -2,6 +2,12 @@
 //!
 //! These exports remain intentionally outside Cougr's stable privacy promise.
 
+pub use super::advanced::{
+    apply_fog_of_war_transition, apply_state_channel_transition, close_state_channel,
+    compose_statement_roots, open_state_channel, FogOfWarCircuit, FogOfWarSnapshot,
+    FogOfWarTransition, RecursiveProofCircuit, RecursiveProofLayout, StateChannelCircuit,
+    StateChannelTransition, ZkStateChannel,
+};
 pub use super::bls12_381::{
     bls12_381_g1_add, bls12_381_g1_msm, bls12_381_g1_mul, bls12_381_pairing_check,
 };
@@ -23,8 +29,10 @@ pub use super::merkle::{
     verify_poseidon_proof, PoseidonMerkleProof, PoseidonMerkleTree, PoseidonSparseMerkleTree,
 };
 pub use super::systems::{
-    cleanup_verified_system, commit_reveal_deadline_system, encode_commit_reveal,
-    decode_verified_at, encode_verified_marker, verify_proofs_system, verify_proofs_with,
+    cleanup_verified_system, commit_reveal_deadline_system, decode_verified_at,
+    encode_commit_reveal, encode_verified_marker, verify_proofs_system, verify_proofs_with,
 };
-pub use super::traits::{bytes32_to_scalar, i32_to_scalar, u32_to_scalar, GameCircuit};
+pub use super::traits::{
+    bytes32_to_scalar, i32_to_scalar, u32_to_scalar, u64_to_scalar, GameCircuit,
+};
 pub use super::types::{Groth16Proof, VerificationKey};

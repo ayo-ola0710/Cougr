@@ -104,10 +104,10 @@ pub mod prelude {
 /// smallest onboarding surface.
 pub mod runtime {
     pub use super::{
-        ChangeTracker, Event, EventReader, EventWriter, HookRegistry, HookedWorld, ObservedWorld,
-        ObserverRegistry, Plugin, PluginApp, QueryState, SimpleQueryCache, SimpleScheduler,
-        resource::Resource,
-        StorageWorld, System, SystemParam, SystemScheduler, TrackedWorld,
+        resource::Resource, ChangeTracker, Event, EventReader, EventWriter, HookRegistry,
+        HookedWorld, ObservedWorld, ObserverRegistry, Plugin, PluginApp, QueryState,
+        SimpleQueryCache, SimpleScheduler, StorageWorld, System, SystemParam, SystemScheduler,
+        TrackedWorld,
     };
 }
 
