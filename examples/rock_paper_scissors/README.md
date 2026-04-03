@@ -216,7 +216,7 @@ This example uses SHA256 for simplicity and immediate usability. Poseidon2 is a 
 
 **For production ZK applications**, use Poseidon2:
 ```rust
-use cougr_core::zk::crypto::poseidon2_hash;
+use cougr_core::zk::experimental::poseidon2_hash;
 
 let hash = poseidon2_hash(&env, &params, &choice_u256, &salt_u256);
 ```

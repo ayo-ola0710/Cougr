@@ -3,12 +3,13 @@
 //! Tests ZK components lifecycle, commit-reveal flow, cleanup systems,
 //! and byte encoding round-trips.
 
-use cougr_core::simple_world::SimpleWorld;
-use cougr_core::zk::components::{COMMIT_REVEAL_TYPE, HIDDEN_STATE_TYPE, VERIFIED_MARKER_TYPE};
-use cougr_core::zk::systems::{
-    cleanup_verified_system, commit_reveal_deadline_system, encode_commit_reveal,
-    encode_verified_marker,
+use cougr_core::zk::experimental::{
+    cleanup_verified_system, encode_verified_marker, VERIFIED_MARKER_TYPE,
 };
+use cougr_core::zk::stable::{
+    commit_reveal_deadline_system, encode_commit_reveal, COMMIT_REVEAL_TYPE, HIDDEN_STATE_TYPE,
+};
+use cougr_core::SimpleWorld;
 use soroban_sdk::{symbol_short, Bytes, BytesN, Env, Symbol};
 
 // ---------------------------------------------------------------------------

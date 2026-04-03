@@ -38,14 +38,6 @@ pub struct AccountCapabilities {
     pub has_passkey_auth: bool,
 }
 
-/// Authentication method variants used by legacy account capability code.
-#[derive(Clone, Debug, Eq, PartialEq)]
-#[repr(u32)]
-pub enum AuthMethod {
-    Ed25519 = 0,
-    Secp256r1 = 1,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -83,11 +75,6 @@ mod tests {
         };
         assert!(caps.can_batch);
         assert!(!caps.has_session_keys);
-    }
-
-    #[test]
-    fn test_auth_method() {
-        assert_ne!(AuthMethod::Ed25519, AuthMethod::Secp256r1);
     }
 
     #[test]

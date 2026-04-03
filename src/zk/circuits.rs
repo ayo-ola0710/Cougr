@@ -12,7 +12,8 @@ use super::types::{Groth16Proof, Scalar, VerificationKey};
 ///
 /// # Example
 /// ```no_run
-/// use cougr_core::zk::{G1Point, G2Point, Groth16Proof, MovementCircuit, VerificationKey};
+/// use cougr_core::zk::{G1Point, G2Point};
+/// use cougr_core::zk::experimental::{Groth16Proof, MovementCircuit, VerificationKey};
 /// use soroban_sdk::{BytesN, Env, Vec};
 ///
 /// let env = Env::default();
@@ -200,7 +201,10 @@ impl TurnSequenceCircuit {
 ///
 /// # Example
 /// ```no_run
-/// use cougr_core::zk::{bytes32_to_scalar, u32_to_scalar, CustomCircuit, G1Point, G2Point, GameCircuit, Groth16Proof, VerificationKey};
+/// use cougr_core::zk::{G1Point, G2Point};
+/// use cougr_core::zk::experimental::{
+///     bytes32_to_scalar, u32_to_scalar, CustomCircuit, GameCircuit, Groth16Proof, VerificationKey,
+/// };
 /// use soroban_sdk::{BytesN, Env, Vec};
 ///
 /// let env = Env::default();

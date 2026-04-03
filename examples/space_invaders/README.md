@@ -50,7 +50,7 @@ This example demonstrates how to build on-chain game logic on the Stellar blockc
 
 ```rust
 // Using cougr-core's Position component
-use cougr_core::components::Position as CougrPosition;
+use cougr_core::Position as CougrPosition;
 
 // Entity with Position, Velocity, and Health components
 pub struct Bullet {

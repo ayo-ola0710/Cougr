@@ -20,13 +20,13 @@ Remaining gaps:
 
 ### Privacy and ZK
 
-Status: Beta to Experimental
+Status: Stable subset plus Experimental extensions
 
 Remaining gaps:
 
-- commitments, commit-reveal, and Merkle utilities are usable but not yet promoted to Stable
+- stable privacy primitives are intentionally narrow and do not imply stable advanced proof verification
 - advanced proof-verification and confidential abstractions are explicitly Experimental
-- verification assumptions and malformed-input guarantees still need further hardening work
+- proof-submission orchestration remains Beta where it depends on experimental verification flows
 
 ### Broad Top-Level Crate Surface
 
@@ -39,7 +39,7 @@ Remaining gaps:
 
 ## Removed or Downgraded During Phase 0
 
-- the deprecated top-level placeholder helper `query_entities` was removed from `src/lib.rs`
+- deprecated placeholder helpers were removed from `src/lib.rs` in favor of the curated root API
 - `zk::testing` remains outside the default product contract and is only available for tests or `testutils`
 - accounts and advanced privacy features are described as Beta or Experimental rather than stable production guarantees
 

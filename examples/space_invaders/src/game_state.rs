@@ -10,7 +10,7 @@ use soroban_sdk::contracttype;
 
 // Import cougr-core Position component for entity position tracking
 // This demonstrates proper integration of cougr-core into game logic
-pub use cougr_core::components::Position as CougrPosition;
+pub use cougr_core::Position as CougrPosition;
 
 /// Direction for ship movement
 #[contracttype]

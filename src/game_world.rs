@@ -23,15 +23,14 @@
 
 use soroban_sdk::Env;
 
-use crate::accounts::error::AccountError;
-use crate::accounts::intent::{AuthResult, SignedIntent};
-use crate::accounts::traits::{CougrAccount, IntentAccount, SessionKeyProvider};
-use crate::accounts::types::{AccountCapabilities, GameAction, SessionKey, SessionScope};
+use crate::accounts::{
+    AccountCapabilities, AccountError, AuthResult, CougrAccount, GameAction, IntentAccount,
+    SessionKey, SessionKeyProvider, SessionScope, SignedIntent,
+};
 use crate::component::ComponentTrait;
 use crate::simple_world::{EntityId, SimpleWorld};
-use crate::zk::error::ZKError;
-use crate::zk::systems::verify_proofs_system;
-use crate::zk::types::{Groth16Proof, Scalar, VerificationKey};
+use crate::zk::experimental::{verify_proofs_system, Groth16Proof, VerificationKey};
+use crate::zk::{Scalar, ZKError};
 
 /// Game world that integrates ECS, ZK proofs, and account authorization.
 pub struct GameWorld<A: CougrAccount> {
@@ -217,9 +216,8 @@ impl<A: CougrAccount + SessionKeyProvider> GameWorld<A> {
 mod tests {
     use super::*;
     use crate::accounts::testing::MockAccount;
-    use crate::accounts::types::SessionScope;
     use crate::component::Position;
-    use crate::zk::types::{G1Point, G2Point};
+    use crate::zk::{G1Point, G2Point};
     use soroban_sdk::{symbol_short, vec, Bytes, BytesN, Env, Vec};
 
     fn make_game_world(env: &Env) -> GameWorld<MockAccount> {

@@ -28,7 +28,7 @@ Current maturity baseline:
 |---|---|
 | ECS runtime and storage | Beta |
 | Accounts and smart-account patterns | Beta |
-| Privacy primitives | Beta |
+| Privacy primitives (`zk::stable`) | Stable |
 | Advanced ZK verification and confidential abstractions | Experimental |
 
 ## What Cougr Provides
@@ -48,8 +48,7 @@ cougr-core = { git = "https://github.com/salazarsebas/Cougr.git", branch = "main
 ```
 
 ```rust
-use cougr_core::component::Position;
-use cougr_core::simple_world::SimpleWorld;
+use cougr_core::{Position, SimpleWorld};
 use soroban_sdk::Env;
 
 let env = Env::default();
@@ -137,6 +136,7 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 - [docs/MATURITY_MODEL.md](docs/MATURITY_MODEL.md) for maturity tiers and promotion criteria
 - [docs/API_CONTRACT.md](docs/API_CONTRACT.md) for the current public API contract and compatibility boundaries
 - [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) for the phase 1 account-kernel model, intents, signers, and replay protection
+- [docs/PRIVACY_MODEL.md](docs/PRIVACY_MODEL.md) for the phase 2 privacy split, maturity table, and proof-verification contract
 - [docs/PUBLIC_GAPS.md](docs/PUBLIC_GAPS.md) for public behaviors that remain outside the stable promise
 
 ## Compatibility
