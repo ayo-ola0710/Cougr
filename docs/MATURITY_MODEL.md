@@ -58,11 +58,11 @@ Experimental is the default for features where:
 
 | Surface | Status | Notes |
 |---|---|---|
-| ECS runtime, worlds, storage, scheduling | Beta | Broadly usable, but the public surface still needs narrowing before `1.0` |
+| ECS runtime, worlds, storage, scheduling | Beta | Broadly usable, with a curated root facade and a smaller onboarding path |
 | Accounts and smart-account flows | Beta | Valuable direction, but auth kernel and session enforcement still need redesign |
-| Commitments, commit-reveal, hidden-state encoding, and Merkle utilities | Stable | Phase 2 defines explicit interfaces, malformed-input behavior, and narrower guarantees |
+| Commitments, commit-reveal, hidden-state encoding, and Merkle utilities (`zk::stable`) | Stable | Explicitly separated from experimental proof-verification helpers |
 | Advanced ZK verification and confidential abstractions | Experimental | Do not treat as stable production primitives yet |
-| Testing helpers | Non-stable support surface | Intended only for tests or explicit test utility consumers |
+| Testing helpers (`zk::testing`, `MockAccount`) | Non-stable support surface | Intended only for tests or explicit test utility consumers |
 
 ## Rules for Public Surfaces
 

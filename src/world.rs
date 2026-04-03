@@ -9,15 +9,15 @@ use soroban_sdk::{Symbol, Vec};
 #[derive(Debug, Clone)]
 pub struct World {
     /// Entity manager for handling entity lifecycle
-    pub entities: EntityManager,
+    entities: EntityManager,
     /// Component registry for managing component types
-    pub components: ComponentRegistry,
+    components: ComponentRegistry,
     /// Component storage system
-    pub storage: Storage,
+    storage: Storage,
     /// Resources (global state)
-    pub resources: Vec<Resource>,
+    resources: Vec<Resource>,
     /// Event system
-    pub events: Vec<Event>,
+    events: Vec<Event>,
 }
 
 impl World {
@@ -225,6 +225,31 @@ impl World {
     /// Iterate over all entities mutably
     pub fn iter_entities_mut(&mut self) -> EntityIteratorMut<'_> {
         self.entities.iter_entities_mut()
+    }
+
+    /// Access the entity manager.
+    pub fn entity_manager(&self) -> &EntityManager {
+        &self.entities
+    }
+
+    /// Access the registered component metadata.
+    pub fn component_registry(&self) -> &ComponentRegistry {
+        &self.components
+    }
+
+    /// Access component storage.
+    pub fn storage(&self) -> &Storage {
+        &self.storage
+    }
+
+    /// Access world resources.
+    pub fn resources(&self) -> &Vec<Resource> {
+        &self.resources
+    }
+
+    /// Access queued world events.
+    pub fn events(&self) -> &Vec<Event> {
+        &self.events
     }
 
     /// Query entities with specific components

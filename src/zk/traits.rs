@@ -13,7 +13,8 @@ use super::types::{Groth16Proof, Scalar, VerificationKey};
 ///
 /// # Example
 /// ```no_run
-/// use cougr_core::zk::{GameCircuit, G1Point, G2Point, Groth16Proof, MovementCircuit, Scalar, VerificationKey};
+/// use cougr_core::zk::{G1Point, G2Point, Scalar};
+/// use cougr_core::zk::experimental::{GameCircuit, Groth16Proof, MovementCircuit, VerificationKey};
 /// use soroban_sdk::{BytesN, Env, Vec};
 ///
 /// let env = Env::default();

@@ -2,12 +2,8 @@
 //!
 //! Tests full game-loop patterns: spawn -> add components -> run systems -> query -> verify.
 
-use cougr_core::commands::CommandQueue;
-use cougr_core::component::ComponentStorage;
-use cougr_core::plugin::{Plugin, PluginApp};
-use cougr_core::query::SimpleQueryCache;
+use cougr_core::{CommandQueue, ComponentStorage, Plugin, PluginApp, SimpleQueryCache, SimpleWorld};
 use cougr_core::scheduler::SimpleScheduler;
-use cougr_core::simple_world::SimpleWorld;
 use soroban_sdk::{symbol_short, Bytes, Env};
 
 // ---------------------------------------------------------------------------

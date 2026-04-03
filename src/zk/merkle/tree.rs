@@ -13,7 +13,7 @@ pub const MAX_DEPTH: u32 = 20;
 ///
 /// # Example
 /// ```
-/// use cougr_core::zk::merkle::tree::MerkleTree;
+/// use cougr_core::zk::stable::MerkleTree;
 /// use soroban_sdk::Env;
 ///
 /// let env = Env::default();

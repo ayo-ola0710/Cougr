@@ -33,7 +33,8 @@
 //! ## Usage
 //!
 //! ```no_run
-//! use cougr_core::zk::{verify_groth16, G1Point, G2Point, Groth16Proof, Scalar, VerificationKey};
+//! use cougr_core::zk::experimental::{verify_groth16, Groth16Proof, VerificationKey};
+//! use cougr_core::zk::{G1Point, G2Point, Scalar};
 //! use soroban_sdk::{BytesN, Env, Vec};
 //!
 //! let env = Env::default();
@@ -51,58 +52,32 @@
 //! let _result = verify_groth16(&env, &vk, &proof, &public_inputs);
 //! ```
 
-pub mod bls12_381;
-pub mod circuits;
-pub mod commitment;
-pub mod components;
-pub mod crypto;
-pub mod error;
+pub(crate) mod bls12_381;
+pub(crate) mod circuits;
+pub(crate) mod commitment;
+pub(crate) mod components;
+pub(crate) mod crypto;
+pub(crate) mod error;
 pub mod experimental;
-pub mod groth16;
-pub mod interfaces;
-pub mod merkle;
+pub(crate) mod groth16;
+pub(crate) mod interfaces;
+pub(crate) mod merkle;
 pub mod stable;
-pub mod systems;
-pub mod testing;
-pub mod traits;
-pub mod types;
+pub(crate) mod systems;
+#[cfg(any(test, feature = "testutils"))]
+pub(crate) mod testing;
+pub(crate) mod traits;
+pub(crate) mod types;
 
-// Re-export commonly used items
-pub use experimental as experimental_privacy;
-pub use stable as privacy;
-
-// Stable privacy subset
-pub use bls12_381::{
-    bls12_381_g1_add, bls12_381_g1_msm, bls12_381_g1_mul, bls12_381_pairing_check,
+// Stable-by-default root exports.
+pub use stable::{
+    commit_reveal_deadline_system, encode_commit_reveal, pedersen_commit, pedersen_verify,
+    verify_inclusion, Bytes32HiddenStateCodec, CommitmentScheme, CommitReveal, HiddenState,
+    HiddenStateCodec, MerkleProof, MerkleProofVerifier, MerkleTree, OnChainMerkleProof,
+    PedersenCommitment, PedersenCommitmentScheme, PedersenParams, ProofVerifier,
+    Sha256MerkleProofVerifier, SparseMerkleTree, COMMIT_REVEAL_TYPE, HIDDEN_STATE_TYPE,
 };
-pub use commitment::{pedersen_commit, pedersen_verify, PedersenCommitment, PedersenParams};
-pub use components::{CommitReveal, HiddenState};
-pub use interfaces::{
-    Bytes32HiddenStateCodec, CommitmentScheme, HiddenStateCodec, MerkleProofVerifier,
-    PedersenCommitmentScheme, ProofVerifier, Sha256MerkleProofVerifier,
-};
-pub use merkle::{verify_inclusion, MerkleProof, MerkleTree, OnChainMerkleProof, SparseMerkleTree};
-
-// Experimental proof-verification surface kept for compatibility
-pub use circuits::{
-    CombatCircuit, CustomCircuit, CustomCircuitBuilder, InventoryCircuit, MovementCircuit,
-    TurnSequenceCircuit,
-};
-pub use components::{ProofSubmission, VerifiedMarker};
-#[cfg(feature = "hazmat-crypto")]
-pub use crypto::{poseidon2_hash, poseidon2_hash_single, Poseidon2Params};
 pub use error::ZKError;
-pub use groth16::{validate_groth16_contract, verify_groth16};
-pub use interfaces::Groth16ProofVerifier;
-#[cfg(feature = "hazmat-crypto")]
-pub use merkle::{
-    verify_poseidon_proof, PoseidonMerkleProof, PoseidonMerkleTree, PoseidonSparseMerkleTree,
-};
-pub use systems::{
-    cleanup_verified_system, commit_reveal_deadline_system, encode_commit_reveal,
-    encode_verified_marker, verify_proofs_system, verify_proofs_with,
-};
-pub use traits::{bytes32_to_scalar, i32_to_scalar, u32_to_scalar, GameCircuit};
 pub use types::{
     Bls12381G1Point, Bls12381G2Point, Bls12381Scalar, G1Point, G2Point, Groth16Proof, Scalar,
     VerificationKey,

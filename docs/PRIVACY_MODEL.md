@@ -26,7 +26,7 @@ The stable privacy subset in Cougr is:
 These are exposed through:
 
 - `cougr_core::zk::stable`
-- `cougr_core::zk::privacy`
+- `cougr_core::zk::stable`
 
 ## Experimental Privacy Surface
 
@@ -42,7 +42,7 @@ The following remain Experimental:
 These are exposed through:
 
 - `cougr_core::zk::experimental`
-- `cougr_core::zk::experimental_privacy`
+- `cougr_core::zk::experimental`
 
 Compatibility note:
 

@@ -31,7 +31,7 @@ mod test;
 
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env};
 
-// cougr_core ECS integration used via cougr_core::create_world()
+// cougr_core ECS integration uses the canonical `World::new()` entrypoint.
 
 // Re-export types for external use
 pub use types::*;
@@ -52,7 +52,7 @@ impl TapBattleContract {
     /// * `pubkey` - SEC-1 uncompressed secp256r1 public key (65 bytes)
     pub fn register_passkey(env: Env, player: Address, pubkey: BytesN<65>) {
         // Create cougr-core ECS World for entity management
-        let mut world = cougr_core::create_world();
+        let mut world = cougr_core::World::new();
         let _player_entity = world.spawn_empty();
 
         auth::register_passkey(&env, &player, &pubkey);

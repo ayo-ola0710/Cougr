@@ -5,13 +5,11 @@
 //! SimpleQueryCache + TrackedWorld, etc.
 
 use core::sync::atomic::{AtomicU32, Ordering};
-use cougr_core::change_tracker::TrackedWorld;
-use cougr_core::commands::CommandQueue;
-use cougr_core::observers::{ComponentEvent, ObservedWorld};
-use cougr_core::plugin::{Plugin, PluginApp};
-use cougr_core::query::SimpleQueryCache;
+use cougr_core::observers::ComponentEvent;
 use cougr_core::scheduler::SimpleScheduler;
-use cougr_core::simple_world::SimpleWorld;
+use cougr_core::{
+    CommandQueue, ObservedWorld, Plugin, PluginApp, SimpleQueryCache, SimpleWorld, TrackedWorld,
+};
 use soroban_sdk::{symbol_short, Bytes, Env};
 
 // ---------------------------------------------------------------------------

@@ -28,12 +28,14 @@ pub trait SystemParam {
     fn fetch_mut(world: &mut World) -> Self::Fetch;
 }
 
-/// A query for entities with specific components
-pub struct Query {
+/// Internal query helper used by the legacy system examples in this module.
+#[allow(dead_code)]
+struct LegacySystemQuery {
     component_types: Vec<Symbol>,
 }
 
-impl Query {
+#[allow(dead_code)]
+impl LegacySystemQuery {
     /// Create a new query
     pub fn new(component_types: Vec<Symbol>) -> Self {
         Self { component_types }
@@ -69,15 +71,17 @@ impl Query {
     }
 }
 
-/// Query state for tracking query results
-pub struct QueryState {
-    query: Query,
+/// Internal cached query state for the legacy system examples in this module.
+#[allow(dead_code)]
+struct LegacySystemQueryState {
+    query: LegacySystemQuery,
     last_results: Vec<EntityId>,
 }
 
-impl QueryState {
+#[allow(dead_code)]
+impl LegacySystemQueryState {
     /// Create a new query state
-    pub fn new(query: Query) -> Self {
+    pub fn new(query: LegacySystemQuery) -> Self {
         let env = soroban_sdk::Env::default();
         Self {
             query,
@@ -160,14 +164,14 @@ where
 
 /// System parameter for querying entities
 pub struct QueryParam {
-    query: Query,
+    query: LegacySystemQuery,
 }
 
 impl QueryParam {
     /// Create a new query parameter
     pub fn new(component_types: Vec<Symbol>) -> Self {
         Self {
-            query: Query::new(component_types),
+            query: LegacySystemQuery::new(component_types),
         }
     }
 
@@ -312,7 +316,7 @@ mod tests {
         let mut component_types = Vec::new(&env);
         component_types.push_back(symbol_short!("position"));
         component_types.push_back(symbol_short!("velocity"));
-        let query = Query::new(component_types);
+        let query = LegacySystemQuery::new(component_types);
 
         let world = World::new();
         let results = query.execute(&world);
@@ -324,8 +328,8 @@ mod tests {
         let env = Env::default();
         let mut component_types = Vec::new(&env);
         component_types.push_back(symbol_short!("position"));
-        let query = Query::new(component_types);
-        let mut query_state = QueryState::new(query);
+        let query = LegacySystemQuery::new(component_types);
+        let mut query_state = LegacySystemQueryState::new(query);
 
         let world = World::new();
         let results = query_state.execute(&world);

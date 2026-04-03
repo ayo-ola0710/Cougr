@@ -12,3 +12,6 @@ pub use super::interfaces::{
 pub use super::merkle::{
     verify_inclusion, MerkleProof, MerkleTree, OnChainMerkleProof, SparseMerkleTree,
 };
+pub use super::merkle::proof::to_on_chain_proof;
+pub use super::merkle::tree::verify_proof;
+pub use super::systems::{commit_reveal_deadline_system, encode_commit_reveal};

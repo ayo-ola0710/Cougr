@@ -8,8 +8,7 @@
 //!
 //! # Example
 //! ```no_run
-//! use cougr_core::accounts::{Secp256r1Key, Secp256r1Storage};
-//! use cougr_core::accounts::secp256r1_auth::verify_secp256r1;
+//! use cougr_core::accounts::{verify_secp256r1, Secp256r1Key, Secp256r1Storage};
 //! use soroban_sdk::{symbol_short, testutils::Address as _, Address, Bytes, BytesN, Env};
 //!
 //! let env = Env::default();

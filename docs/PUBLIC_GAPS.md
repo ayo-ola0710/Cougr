@@ -39,7 +39,7 @@ Remaining gaps:
 
 ## Removed or Downgraded During Phase 0
 
-- the deprecated top-level placeholder helper `query_entities` was removed from `src/lib.rs`
+- deprecated placeholder helpers were removed from `src/lib.rs` in favor of the curated root API
 - `zk::testing` remains outside the default product contract and is only available for tests or `testutils`
 - accounts and advanced privacy features are described as Beta or Experimental rather than stable production guarantees
 

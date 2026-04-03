@@ -1,9 +1,39 @@
 #![no_std]
 #![allow(unsafe_code)]
+#![doc = r#"
+Cougr is a monolithic-on-the-outside ECS framework for Soroban-compatible applications.
+
+The public API is intentionally split into:
+
+- root re-exports for the onboarding path
+- `accounts` for account abstraction and session flows
+- `zk::stable` for stable privacy primitives
+- `zk::experimental` for fast-moving proof-verification APIs
+
+# Golden Path
+
+```rust
+use cougr_core::{ComponentTrait, Position, SimpleWorld};
+use soroban_sdk::Env;
+
+let env = Env::default();
+let mut world = SimpleWorld::new(&env);
+let entity = world.spawn_entity();
+world.set_typed(&env, entity, &Position::new(1, 2));
+
+let pos: Position = world.get_typed(&env, entity).unwrap();
+assert_eq!(pos.x, 1);
+```
+
+# Stability
+
+- ECS runtime and storage: Beta
+- Accounts: Beta
+- `zk::stable`: Stable subset
+- `zk::experimental`: Experimental
+"#]
 
 extern crate alloc;
-
-use soroban_sdk::{Symbol, Vec};
 
 // Global allocator for WASM
 #[global_allocator]
@@ -13,16 +43,15 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 #[macro_use]
 pub mod macros;
 
-// Core ECS types adapted for Soroban
+// Public product domains
 pub mod accounts;
 pub mod archetype_world;
 pub mod change_tracker;
 pub mod commands;
 pub mod component;
-pub mod components;
 #[cfg(feature = "debug")]
+#[doc(hidden)]
 pub mod debug;
-pub mod entity;
 pub mod error;
 pub mod event;
 pub mod game_world;
@@ -34,18 +63,19 @@ pub mod query;
 pub mod resource;
 pub mod scheduler;
 pub mod simple_world;
-pub mod storage;
 pub mod system;
-pub mod systems;
 pub mod world;
 pub mod zk;
 
-// Re-export core types
+// Internal implementation modules kept out of the default public surface.
+mod entity;
+mod storage;
+
+// Root-level golden path re-exports.
 pub use archetype_world::{ArchetypeQueryCache, ArchetypeWorld};
 pub use change_tracker::{ChangeTracker, TrackedWorld};
 pub use commands::CommandQueue;
-pub use component::{Component, ComponentId, ComponentStorage, ComponentTrait};
-pub use components::Position;
+pub use component::{Component, ComponentId, ComponentStorage, ComponentTrait, Position};
 pub use entity::{Entity, EntityId};
 pub use error::{CougrError, CougrResult};
 pub use event::{Event, EventReader, EventWriter};
@@ -59,48 +89,25 @@ pub use resource::Resource;
 pub use scheduler::{SimpleScheduler, SystemScheduler};
 pub use simple_world::SimpleWorld;
 pub use storage::{SparseStorage, Storage, TableStorage};
-pub use system::{IntoSystem, System, SystemParam};
-pub use systems::MovementSystem;
+pub use system::{IntoSystem, MovementSystem, System, SystemParam};
 pub use world::World;
 
-// Library functions for ECS operations
-pub fn create_world() -> World {
-    World::new()
-}
-
-pub fn spawn_entity(world: &mut World, components: Vec<Component>) -> EntityId {
-    let entity = world.spawn(components);
-    entity.id()
-}
-
-pub fn add_component(world: &mut World, entity_id: EntityId, component: Component) -> bool {
-    world.add_component_to_entity(entity_id, component);
-    true
-}
-
-pub fn remove_component(world: &mut World, entity_id: EntityId, component_type: Symbol) -> bool {
-    world.remove_component_from_entity(entity_id, &component_type)
-}
-
-pub fn get_component(
-    world: &World,
-    entity_id: EntityId,
-    component_type: Symbol,
-) -> Option<Component> {
-    world.get_component(entity_id, &component_type)
-}
-
-// Predule for common types
+/// Common ECS imports for the default onboarding path.
 pub mod prelude {
     pub use super::{
-        component::{Component, ComponentId, ComponentStorage},
-        entity::{Entity, EntityId},
-        event::{Event, EventReader, EventWriter},
-        query::{Query, QueryState},
+        ArchetypeWorld, CommandQueue, Component, ComponentStorage, ComponentTrait, EntityId,
+        Position, Query, Resource, SimpleWorld, World,
+    };
+}
+
+/// Advanced runtime primitives that remain supported but are not part of the
+/// smallest onboarding surface.
+pub mod runtime {
+    pub use super::{
+        ChangeTracker, Event, EventReader, EventWriter, HookRegistry, HookedWorld, ObservedWorld,
+        ObserverRegistry, Plugin, PluginApp, QueryState, SimpleQueryCache, SimpleScheduler,
         resource::Resource,
-        storage::{SparseStorage, Storage, TableStorage},
-        system::{IntoSystem, System, SystemParam},
-        world::World,
+        StorageWorld, System, SystemParam, SystemScheduler, TrackedWorld,
     };
 }
 

@@ -28,7 +28,7 @@ Current maturity baseline:
 |---|---|
 | ECS runtime and storage | Beta |
 | Accounts and smart-account patterns | Beta |
-| Privacy primitives | Beta |
+| Privacy primitives (`zk::stable`) | Stable |
 | Advanced ZK verification and confidential abstractions | Experimental |
 
 ## What Cougr Provides
@@ -48,8 +48,7 @@ cougr-core = { git = "https://github.com/salazarsebas/Cougr.git", branch = "main
 ```
 
 ```rust
-use cougr_core::component::Position;
-use cougr_core::simple_world::SimpleWorld;
+use cougr_core::{Position, SimpleWorld};
 use soroban_sdk::Env;
 
 let env = Env::default();

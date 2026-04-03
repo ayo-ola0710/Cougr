@@ -57,7 +57,7 @@ This example showcases two key cougr-core features:
 ### Passkey Authentication (`secp256r1_auth`)
 
 ```rust
-use cougr_core::accounts::secp256r1_auth::{Secp256r1Key, Secp256r1Storage, verify_secp256r1};
+use cougr_core::accounts::{Secp256r1Key, Secp256r1Storage, verify_secp256r1};
 
 // Register: store public key on-chain
 Secp256r1Storage::store(&env, &player, &key);
@@ -69,7 +69,7 @@ verify_secp256r1(&env, &pubkey, &message, &signature)?;
 ### Session Builder (`session_builder`)
 
 ```rust
-use cougr_core::accounts::session_builder::SessionBuilder;
+use cougr_core::accounts::SessionBuilder;
 
 // Create scoped session for gasless gameplay
 let scope = SessionBuilder::new(&env)

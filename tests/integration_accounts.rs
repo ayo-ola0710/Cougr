@@ -3,11 +3,10 @@
 //! Tests session key lifecycle, BatchBuilder with MockAccount,
 //! SessionStorage persistence, recovery flow, and DeviceManager.
 
-use cougr_core::accounts::error::AccountError;
-use cougr_core::accounts::multi_device::{DeviceManager, DevicePolicy, MultiDeviceProvider};
-use cougr_core::accounts::recovery::{RecoverableAccount, RecoveryConfig, RecoveryProvider};
-use cougr_core::accounts::storage::SessionStorage;
-use cougr_core::accounts::types::{SessionKey, SessionScope};
+use cougr_core::accounts::{
+    AccountError, DeviceManager, DevicePolicy, MultiDeviceProvider, RecoverableAccount,
+    RecoveryConfig, RecoveryProvider, SessionKey, SessionScope, SessionStorage,
+};
 use soroban_sdk::{
     contract, contractimpl, symbol_short, testutils::Address as _, vec, Address, BytesN, Env,
 };

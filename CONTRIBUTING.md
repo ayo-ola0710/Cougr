@@ -69,3 +69,13 @@ Changes are more likely to be accepted when they:
 - include appropriate validation
 - improve the repository without increasing maintenance noise
 
+## Public API Checklist
+
+Changes that touch public Rust APIs should be reviewed against this checklist before merge:
+
+- the symbol belongs to the curated onboarding path or an intentional namespace such as `accounts`, `zk::stable`, or `zk::experimental`
+- stable, beta, experimental, and test-only surfaces are not mixed in the same default entrypoint
+- new public names do not duplicate an existing public concept
+- root-level re-exports are intentional and minimal
+- examples and integration tests use the sanctioned public path instead of deep internal module paths
+- documentation is updated to match the actual exported API
