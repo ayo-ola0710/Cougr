@@ -5,23 +5,27 @@
 //! Follows the same wrapper pattern as `HookedWorld`, `TrackedWorld`, `ObservedWorld`.
 //!
 //! # Example
-//! ```ignore
+//! ```no_run
+//! use cougr_core::accounts::{ClassicAccount, GameAction};
+//! use cougr_core::game_world::GameWorld;
+//! use cougr_core::simple_world::SimpleWorld;
+//! use soroban_sdk::{symbol_short, testutils::Address as _, Address, Bytes, Env};
+//!
+//! let env = Env::default();
 //! let world = SimpleWorld::new(&env);
-//! let account = ClassicAccount::new(player_address);
-//! let mut game = GameWorld::new(world, account);
+//! let account = ClassicAccount::new(Address::generate(&env));
+//! let game = GameWorld::new(world, account);
 //!
-//! // Execute authorized actions
+//! let action = GameAction { system_name: symbol_short!("move"), data: Bytes::new(&env) };
 //! game.execute_authorized(&env, &action)?;
-//!
-//! // Submit and verify ZK proofs
-//! game.submit_proof(&env, entity_id, &vk, &proof, &public_inputs)?;
+//! # Ok::<(), cougr_core::accounts::AccountError>(())
 //! ```
 
 use soroban_sdk::Env;
 
-use crate::accounts::degradation::authorize_with_fallback;
 use crate::accounts::error::AccountError;
-use crate::accounts::traits::{CougrAccount, SessionKeyProvider};
+use crate::accounts::intent::{AuthResult, SignedIntent};
+use crate::accounts::traits::{CougrAccount, IntentAccount, SessionKeyProvider};
 use crate::accounts::types::{AccountCapabilities, GameAction, SessionKey, SessionScope};
 use crate::component::ComponentTrait;
 use crate::simple_world::{EntityId, SimpleWorld};
@@ -62,12 +66,12 @@ impl<A: CougrAccount> GameWorld<A> {
         Ok(verified)
     }
 
-    /// Execute an authorized game action.
+    /// Execute an owner-authorized game action.
     ///
-    /// Uses the active session if available and valid, otherwise falls back
-    /// to direct authorization via the account.
+    /// This path is explicit direct authorization and does not infer or consume
+    /// sessions implicitly.
     pub fn execute_authorized(&self, env: &Env, action: &GameAction) -> Result<(), AccountError> {
-        authorize_with_fallback(env, &self.account, action, self.active_session.as_ref())
+        self.account.authorize(env, action)
     }
 
     /// Set an active session key for this game world.
@@ -149,6 +153,47 @@ impl<A: CougrAccount> GameWorld<A> {
             self.execute_authorized(env, action)?;
         }
         Ok(())
+    }
+}
+
+impl<A: CougrAccount + IntentAccount> GameWorld<A> {
+    /// Execute a signed intent through the account kernel.
+    pub fn execute_intent(
+        &mut self,
+        env: &Env,
+        intent: &SignedIntent,
+    ) -> Result<AuthResult, AccountError> {
+        self.account.authorize_intent(env, intent)
+    }
+
+    /// Execute an action using the currently active session.
+    ///
+    /// This path is explicit session authorization. It does not fall back to
+    /// owner auth if the session is invalid or exhausted.
+    pub fn execute_with_active_session(
+        &mut self,
+        env: &Env,
+        action: &GameAction,
+    ) -> Result<AuthResult, AccountError> {
+        let session = self
+            .active_session
+            .as_ref()
+            .ok_or(AccountError::SessionRevoked)?
+            .clone();
+        let intent = SignedIntent::session(
+            env,
+            self.account.address().clone(),
+            &session.key_id,
+            action.clone(),
+            session.next_nonce,
+            session.scope.expires_at,
+        );
+        let result = self.account.authorize_intent(env, &intent)?;
+        if let Some(active) = self.active_session.as_mut() {
+            active.operations_used += 1;
+            active.next_nonce += 1;
+        }
+        Ok(result)
     }
 }
 
@@ -244,6 +289,7 @@ mod tests {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
 
         game.set_session(session);
@@ -267,6 +313,7 @@ mod tests {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
         game.set_session(session);
 

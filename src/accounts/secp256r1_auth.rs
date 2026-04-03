@@ -7,17 +7,25 @@
 //! available in Protocol 21.
 //!
 //! # Example
-//! ```ignore
-//! // Register a passkey
+//! ```no_run
+//! use cougr_core::accounts::{Secp256r1Key, Secp256r1Storage};
+//! use cougr_core::accounts::secp256r1_auth::verify_secp256r1;
+//! use soroban_sdk::{symbol_short, testutils::Address as _, Address, Bytes, BytesN, Env};
+//!
+//! let env = Env::default();
+//! let account_addr = Address::generate(&env);
+//! let passkey_pubkey = BytesN::from_array(&env, &[4u8; 65]);
 //! let key = Secp256r1Key {
-//!     public_key: passkey_pubkey,
+//!     public_key: passkey_pubkey.clone(),
 //!     label: symbol_short!("passkey1"),
-//!     registered_at: env.ledger().timestamp(),
+//!     registered_at: 0,
 //! };
 //! Secp256r1Storage::store(&env, &account_addr, &key);
 //!
-//! // Verify a signature
+//! let message = Bytes::new(&env);
+//! let signature = BytesN::from_array(&env, &[0u8; 64]);
 //! verify_secp256r1(&env, &passkey_pubkey, &message, &signature)?;
+//! # Ok::<(), cougr_core::accounts::AccountError>(())
 //! ```
 
 use soroban_sdk::{contracttype, Address, Bytes, BytesN, Env, Symbol, Vec};

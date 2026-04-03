@@ -2,7 +2,7 @@ use soroban_sdk::{contracttype, Bytes, BytesN, Symbol, Vec};
 
 /// A game action that can be authorized by an account.
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct GameAction {
     pub system_name: Symbol,
     pub data: Bytes,
@@ -25,6 +25,7 @@ pub struct SessionKey {
     pub scope: SessionScope,
     pub created_at: u64,
     pub operations_used: u32,
+    pub next_nonce: u64,
 }
 
 /// Capabilities supported by an account.
@@ -37,8 +38,7 @@ pub struct AccountCapabilities {
     pub has_passkey_auth: bool,
 }
 
-/// Authentication method variants.
-#[contracttype]
+/// Authentication method variants used by legacy account capability code.
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
 pub enum AuthMethod {
@@ -102,6 +102,7 @@ mod tests {
             },
             created_at: 500,
             operations_used: 0,
+            next_nonce: 0,
         };
         assert_eq!(key.operations_used, 0);
         assert_eq!(key.created_at, 500);

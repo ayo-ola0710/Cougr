@@ -1,6 +1,6 @@
 [package]
 name = "cougr-core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Cougr - A Soroban-compatible ECS framework for on-chain gaming on Stellar"
 license = "MIT"

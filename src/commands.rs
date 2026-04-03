@@ -26,17 +26,22 @@ struct CommandEntry {
 /// systems can queue commands and apply them after iteration completes.
 ///
 /// # Example
-/// ```ignore
-/// fn spawn_bullets_system(world: &mut SimpleWorld, env: &Env) {
-///     let mut commands = CommandQueue::new();
+/// ```
+/// use cougr_core::commands::CommandQueue;
+/// use cougr_core::simple_world::SimpleWorld;
+/// use soroban_sdk::{symbol_short, Bytes, Env};
 ///
-///     // ... iterate entities, decide to spawn bullets ...
-///     commands.spawn();
-///     commands.add_component(0, symbol_short!("bullet"), data); // entity 0 = placeholder
+/// let env = Env::default();
+/// let mut world = SimpleWorld::new(&env);
+/// let mut commands = CommandQueue::new();
 ///
-///     // Apply all queued changes at once
-///     let spawned = commands.apply(world);
-/// }
+/// commands.spawn();
+/// let spawned = commands.apply(&mut world);
+/// commands = CommandQueue::new();
+/// commands.add_component(spawned[0], symbol_short!("bullet"), Bytes::new(&env));
+/// commands.apply(&mut world);
+///
+/// assert!(world.has_component(spawned[0], &symbol_short!("bullet")));
 /// ```
 pub struct CommandQueue {
     commands: Vec<CommandEntry>,

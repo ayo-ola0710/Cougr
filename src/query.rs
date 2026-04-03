@@ -132,11 +132,21 @@ impl QueryState {
 /// Automatically invalidates when the world version changes.
 ///
 /// # Example
-/// ```ignore
-/// let mut cache = SimpleQueryCache::new(symbol_short!("position"));
+/// ```
+/// use cougr_core::query::SimpleQueryCache;
+/// use cougr_core::simple_world::SimpleWorld;
+/// use soroban_sdk::{symbol_short, Bytes, Env};
+///
+/// let env = Env::default();
+/// let mut world = SimpleWorld::new(&env);
+/// let entity = world.spawn_entity();
+/// world.add_component(entity, symbol_short!("position"), Bytes::new(&env));
+///
+/// let mut cache = SimpleQueryCache::new(symbol_short!("position"), &env);
 /// let entities = cache.execute(&world, &env);
-/// // Second call returns cached results if world hasn't changed
+/// assert_eq!(entities.len(), 1);
 /// let entities2 = cache.execute(&world, &env);
+/// assert_eq!(entities2.len(), 1);
 /// ```
 pub struct SimpleQueryCache {
     component_type: Symbol,

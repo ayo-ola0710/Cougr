@@ -18,13 +18,13 @@ pub type ArchetypeId = u32;
 #[derive(Clone, Debug)]
 pub struct Archetype {
     /// Unique archetype identifier.
-    pub id: ArchetypeId,
+    pub id: u32,
     /// Sorted list of component types in this archetype.
     pub component_types: Vec<Symbol>,
     /// List of entity IDs in this archetype.
-    pub entities: Vec<EntityId>,
+    pub entities: Vec<u32>,
     /// Component data keyed by (entity_id, component_type).
-    pub data: Map<(EntityId, Symbol), Bytes>,
+    pub data: Map<(u32, Symbol), Bytes>,
 }
 
 impl Archetype {

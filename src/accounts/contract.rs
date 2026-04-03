@@ -1,8 +1,10 @@
 use soroban_sdk::{Address, BytesN, Env};
 
 use super::error::AccountError;
+use super::intent::{AuthResult, SignedIntent};
+use super::kernel::AccountKernel;
 use super::storage::SessionStorage;
-use super::traits::{CougrAccount, SessionKeyProvider};
+use super::traits::{CougrAccount, IntentAccount, SessionKeyProvider};
 use super::types::{AccountCapabilities, GameAction, SessionKey, SessionScope};
 
 /// A Contract Stellar account (C-address).
@@ -40,26 +42,20 @@ impl CougrAccount for ContractAccount {
         }
     }
 
-    fn authorize(&self, env: &Env, action: &GameAction) -> Result<(), AccountError> {
-        // Check if any active session key covers this action
-        let keys = SessionStorage::load_all(env, &self.address);
-        for i in 0..keys.len() {
-            if let Some(key) = keys.get(i) {
-                let mut found = false;
-                for j in 0..key.scope.allowed_actions.len() {
-                    if key.scope.allowed_actions.get(j).unwrap() == action.system_name {
-                        found = true;
-                        break;
-                    }
-                }
-                if found && key.operations_used < key.scope.max_operations {
-                    return Ok(());
-                }
-            }
-        }
-        // Fallback to require_auth
+    fn authorize(&self, _env: &Env, action: &GameAction) -> Result<(), AccountError> {
+        let _ = action;
         self.address.require_auth();
         Ok(())
+    }
+}
+
+impl IntentAccount for ContractAccount {
+    fn authorize_intent(
+        &mut self,
+        env: &Env,
+        intent: &SignedIntent,
+    ) -> Result<AuthResult, AccountError> {
+        AccountKernel::new(self.address.clone()).authorize(env, intent)
     }
 }
 
@@ -69,11 +65,14 @@ impl SessionKeyProvider for ContractAccount {
         env: &Env,
         scope: SessionScope,
     ) -> Result<SessionKey, AccountError> {
+        let existing = SessionStorage::load_all(env, &self.address).len();
+        let key_id = session_key_id(env, existing, &scope);
         let key = SessionKey {
-            key_id: BytesN::from_array(env, &[0u8; 32]), // placeholder key ID
+            key_id,
             scope,
             created_at: env.ledger().timestamp(),
             operations_used: 0,
+            next_nonce: 0,
         };
         SessionStorage::store(env, &self.address, &key);
         Ok(key)
@@ -92,6 +91,10 @@ impl SessionKeyProvider for ContractAccount {
             return Ok(false);
         }
 
+        if SessionStorage::load(env, &self.address, &key.key_id).is_none() {
+            return Ok(false);
+        }
+
         Ok(true)
     }
 
@@ -101,6 +104,17 @@ impl SessionKeyProvider for ContractAccount {
         }
         Ok(())
     }
+}
+
+fn session_key_id(env: &Env, existing_sessions: u32, scope: &SessionScope) -> BytesN<32> {
+    let mut bytes = [0u8; 32];
+    bytes[0..8].copy_from_slice(&env.ledger().timestamp().to_be_bytes());
+    bytes[8..12].copy_from_slice(&env.ledger().sequence().to_be_bytes());
+    bytes[12..16].copy_from_slice(&existing_sessions.to_be_bytes());
+    bytes[16..20].copy_from_slice(&(scope.allowed_actions.len()).to_be_bytes());
+    bytes[20..24].copy_from_slice(&scope.max_operations.to_be_bytes());
+    bytes[24..32].copy_from_slice(&scope.expires_at.to_be_bytes());
+    BytesN::from_array(env, &bytes)
 }
 
 #[cfg(test)]

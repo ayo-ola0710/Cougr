@@ -12,10 +12,16 @@ pub const MAX_DEPTH: u32 = 20;
 /// Constructed from a list of leaf hashes. Supports inclusion proof generation.
 ///
 /// # Example
-/// ```ignore
-/// let leaves = vec![[1u8; 32], [2u8; 32], [3u8; 32], [4u8; 32]];
+/// ```
+/// use cougr_core::zk::merkle::tree::MerkleTree;
+/// use soroban_sdk::Env;
+///
+/// let env = Env::default();
+/// let leaves = [[1u8; 32], [2u8; 32], [3u8; 32], [4u8; 32]];
 /// let tree = MerkleTree::from_leaves(&env, &leaves)?;
 /// let proof = tree.proof(2)?;
+/// assert_eq!(proof.leaf_index, 2);
+/// # Ok::<(), cougr_core::zk::ZKError>(())
 /// ```
 pub struct MerkleTree {
     depth: u32,

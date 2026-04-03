@@ -1,13 +1,18 @@
 //! Fluent builder pattern for creating session keys with scoped permissions.
 //!
 //! # Example
-//! ```ignore
+//! ```no_run
+//! use cougr_core::accounts::SessionBuilder;
+//! use soroban_sdk::{symbol_short, Env};
+//!
+//! let env = Env::default();
 //! let scope = SessionBuilder::new(&env)
 //!     .allow_action(symbol_short!("move"))
 //!     .allow_action(symbol_short!("attack"))
-//!     .max_operations(100)
-//!     .expires_at(env.ledger().timestamp() + 3600)
+//!     .max_operations(100_u32)
+//!     .expires_at(3_600_u64)
 //!     .build_scope();
+//! assert_eq!(scope.allowed_actions.len(), 2);
 //! ```
 
 use soroban_sdk::{Env, Symbol, Vec};

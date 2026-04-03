@@ -11,11 +11,16 @@ use soroban_sdk::Env;
 /// Works with the full `World` type and boxed `System` trait objects.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use cougr_core::scheduler::SystemScheduler;
+/// use cougr_core::system::MovementSystem;
+/// use cougr_core::world::World;
+///
 /// let mut scheduler = SystemScheduler::new();
 /// scheduler.add_system(MovementSystem);
-/// scheduler.add_system(CollisionSystem);
+/// let mut world = World::new();
 /// scheduler.run_all(&mut world);
+/// assert_eq!(scheduler.system_count(), 1);
 /// ```
 pub struct SystemScheduler {
     systems: Vec<(String, Box<dyn System<In = (), Out = ()>>)>,
@@ -74,14 +79,27 @@ impl Default for SystemScheduler {
 /// are standalone functions taking `(&mut SimpleWorld, &Env)`.
 ///
 /// # Example
-/// ```ignore
-/// fn physics_system(world: &mut SimpleWorld, env: &Env) { /* ... */ }
-/// fn scoring_system(world: &mut SimpleWorld, env: &Env) { /* ... */ }
+/// ```
+/// use cougr_core::scheduler::SimpleScheduler;
+/// use cougr_core::simple_world::SimpleWorld;
+/// use soroban_sdk::{Bytes, Env};
 ///
+/// fn physics_system(world: &mut SimpleWorld, env: &Env) {
+///     let entity = world.spawn_entity();
+///     world.add_component(entity, soroban_sdk::Symbol::new(env, "physics"), Bytes::new(env));
+/// }
+/// fn scoring_system(world: &mut SimpleWorld, env: &Env) {
+///     let entity = world.spawn_entity();
+///     world.add_component(entity, soroban_sdk::Symbol::new(env, "scoring"), Bytes::new(env));
+/// }
+///
+/// let env = Env::default();
+/// let mut world = SimpleWorld::new(&env);
 /// let mut scheduler = SimpleScheduler::new();
 /// scheduler.add_system("physics", physics_system);
 /// scheduler.add_system("scoring", scoring_system);
 /// scheduler.run_all(&mut world, &env);
+/// assert_eq!(scheduler.system_count(), 2);
 /// ```
 pub struct SimpleScheduler {
     systems: Vec<SimpleSystemEntry>,

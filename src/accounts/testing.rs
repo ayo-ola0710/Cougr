@@ -1,7 +1,8 @@
 use soroban_sdk::{Address, Env};
 
 use super::error::AccountError;
-use super::traits::CougrAccount;
+use super::intent::{AuthMethod, AuthResult, SignedIntent};
+use super::traits::{CougrAccount, IntentAccount};
 use super::types::{AccountCapabilities, GameAction};
 
 /// A mock account for testing that always authorizes actions.
@@ -49,6 +50,25 @@ impl CougrAccount for MockAccount {
     fn authorize(&self, _env: &Env, _action: &GameAction) -> Result<(), AccountError> {
         // Mock always succeeds
         Ok(())
+    }
+}
+
+impl IntentAccount for MockAccount {
+    fn authorize_intent(
+        &mut self,
+        _env: &Env,
+        intent: &SignedIntent,
+    ) -> Result<AuthResult, AccountError> {
+        Ok(AuthResult {
+            method: match intent.signer.kind {
+                super::intent::IntentSigner::Direct => AuthMethod::Direct,
+                super::intent::IntentSigner::Session => AuthMethod::Session,
+                super::intent::IntentSigner::Passkey => AuthMethod::Passkey,
+            },
+            nonce_consumed: intent.nonce,
+            session_key_id: intent.signer.session_key_id.clone(),
+            remaining_operations: 0,
+        })
     }
 }
 

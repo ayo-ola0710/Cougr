@@ -24,6 +24,7 @@ Current guidance:
 | Advanced ZK verification | Experimental | Treat as non-stable until verification contracts and assumptions are fully hardened |
 
 The latest maturity definitions live in [docs/MATURITY_MODEL.md](docs/MATURITY_MODEL.md).
+The current threat-model baseline lives in [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
 
 ## Threat Model Expectations
 
