@@ -37,6 +37,15 @@ Remaining gaps:
 - the crate still exports more modules than the eventual stable golden path is likely to keep
 - internals-heavy modules remain public in places where durable invariants are not yet fully documented
 
+### Standards Layer
+
+Status: Beta
+
+Remaining gaps:
+
+- reusable standards are now implemented, but their long-term SemVer-frozen surface is not promised before `1.0`
+- integrating contracts are still responsible for composing caller authentication around generic state-machine helpers such as `Pausable` and `RecoveryGuard`
+
 ## Removed or Downgraded During Phase 0
 
 - deprecated placeholder helpers were removed from `src/lib.rs` in favor of the curated root API

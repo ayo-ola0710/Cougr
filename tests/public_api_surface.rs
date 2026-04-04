@@ -7,6 +7,10 @@
 use cougr_core::accounts::{
     verify_secp256r1, ClassicAccount, GameAction, Secp256r1Key, Secp256r1Storage, SessionBuilder,
 };
+use cougr_core::standards::{
+    AccessControl, BatchExecutor, DelayedExecutionPolicy, ExecutionGuard, Ownable, Ownable2Step,
+    Pausable, RecoveryGuard, StandardsError,
+};
 use cougr_core::zk::experimental::{
     bytes32_to_scalar, open_state_channel, u32_to_scalar, CustomCircuit, FogOfWarSnapshot,
     GameCircuit, MovementCircuit, RecursiveProofLayout,
@@ -120,4 +124,22 @@ fn accounts_namespace_exposes_curated_beta_entrypoints() {
         &Bytes,
         &BytesN<64>,
     ) -> Result<(), cougr_core::accounts::AccountError> = verify_secp256r1;
+}
+
+#[test]
+fn standards_namespace_exposes_reusable_contract_primitives() {
+    let env = Env::default();
+    let account = Address::generate(&env);
+
+    let _ownable = Ownable::new(symbol_short!("own"));
+    let _ownable_2step = Ownable2Step::new(symbol_short!("own2"));
+    let _access = AccessControl::new(symbol_short!("acl"));
+    let _pausable = Pausable::new(symbol_short!("pause"));
+    let _guard = ExecutionGuard::new(symbol_short!("exec"));
+    let _recovery_guard = RecoveryGuard::new(symbol_short!("reco"));
+    let _delayed = DelayedExecutionPolicy::new(symbol_short!("delay"));
+    let _batch = BatchExecutor::new(8);
+
+    let _error_marker = StandardsError::Paused;
+    let _ = account;
 }
