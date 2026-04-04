@@ -28,6 +28,7 @@ Current maturity baseline:
 |---|---|
 | ECS runtime and storage | Beta |
 | Accounts and smart-account patterns | Beta |
+| Standards layer (`standards`) | Beta |
 | Privacy primitives (`zk::stable`) | Stable |
 | Advanced ZK verification and confidential abstractions | Experimental |
 
@@ -38,6 +39,7 @@ Current maturity baseline:
 | ECS | Typed components, multiple world implementations, scheduling, deferred commands, hooks, observers, and change tracking |
 | Zero-knowledge tooling | Groth16 verification, curve helpers, commitments, Merkle structures, reusable circuits, and ECS-integrated proof flows |
 | Smart account patterns | Session keys, social recovery, multi-device authorization, and fallback authorization flows |
+| Contract standards | Ownable, Ownable2Step, AccessControl, Pausable, execution guards, recovery guards, delayed execution, and batch primitives |
 | Example contracts | 20+ example game projects and growing, each intended to show concrete patterns rather than isolated snippets |
 
 ## Quick Start
@@ -91,6 +93,16 @@ let pos: Position = world.get_typed(&env, player).unwrap();
 | Multi-device usage | Per-device policies and device-scoped access control |
 | Fallback authorization | Graceful degradation from advanced auth flows to direct authorization |
 
+### Standards Layer
+
+| Capability | Description |
+|---|---|
+| `Ownable` and `Ownable2Step` | Owner-based authority with direct and staged transfers |
+| `AccessControl` | Symbol-keyed roles with delegated role admins |
+| `Pausable` | Emergency stop primitive for mutating entrypoints |
+| `ExecutionGuard` and `RecoveryGuard` | Serialized critical sections and recovery-aware protection |
+| `BatchExecutor` and `DelayedExecutionPolicy` | Bounded multi-operation flows and timelocked execution queues |
+
 ## Example Projects
 
 The `examples/` directory contains 20+ standalone game contracts and is expected to keep growing. Examples are useful both as runnable references and as design patterns for structuring new projects on top of Cougr.
@@ -137,6 +149,7 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 - [docs/API_CONTRACT.md](docs/API_CONTRACT.md) for the current public API contract and compatibility boundaries
 - [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) for the phase 1 account-kernel model, intents, signers, and replay protection
 - [docs/PRIVACY_MODEL.md](docs/PRIVACY_MODEL.md) for the phase 2 privacy split, maturity table, and proof-verification contract
+- [docs/STANDARDS_LAYER.md](docs/STANDARDS_LAYER.md) for the reusable standards layer, storage model, and failure semantics
 - [docs/PUBLIC_GAPS.md](docs/PUBLIC_GAPS.md) for public behaviors that remain outside the stable promise
 
 ## Compatibility

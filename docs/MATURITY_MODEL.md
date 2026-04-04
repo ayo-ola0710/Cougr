@@ -60,6 +60,7 @@ Experimental is the default for features where:
 |---|---|---|
 | ECS runtime, worlds, storage, scheduling | Beta | Broadly usable, with a curated root facade and a smaller onboarding path |
 | Accounts and smart-account flows | Beta | Valuable direction, but auth kernel and session enforcement still need redesign |
+| Standards layer (`standards`) | Beta | Reusable and integration-tested, but still pre-`1.0` and not yet frozen |
 | Commitments, commit-reveal, hidden-state encoding, and Merkle utilities (`zk::stable`) | Stable | Explicitly separated from experimental proof-verification helpers |
 | Advanced ZK verification and confidential abstractions | Experimental | Do not treat as stable production primitives yet |
 | Testing helpers (`zk::testing`, `MockAccount`) | Non-stable support surface | Intended only for tests or explicit test utility consumers |

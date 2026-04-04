@@ -63,6 +63,7 @@ pub mod query;
 pub mod resource;
 pub mod scheduler;
 pub mod simple_world;
+pub mod standards;
 pub mod system;
 pub mod world;
 pub mod zk;

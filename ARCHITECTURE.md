@@ -8,8 +8,8 @@ High-level overview of how Cougr is organized. For usage, see [README.md](README
 ┌─────────────────────────────────────────────┐
 │              GameWorld                       │  Unified API: ECS + Auth + ZK
 ├───────────┬───────────────┬─────────────────┤
-│  ECS      │  Accounts     │  ZK Proofs      │
-├───────────┼───────────────┼─────────────────┤
+│  ECS      │  Accounts     │  Standards      │  ZK Proofs
+├───────────┼───────────────┼─────────────────┼─────────────────┤
 │  soroban-sdk 25.1.0  (no_std, WASM)         │
 └─────────────────────────────────────────────┘
 ```
@@ -71,6 +71,20 @@ CougrAccount (trait)
 Key traits: `CougrAccount`, `SessionKeyProvider`, `RecoveryProvider`, `MultiDeviceProvider`.
 
 `SessionBuilder` provides a fluent API for constructing scoped session keys. `authorize_with_fallback` handles graceful degradation from session keys to direct authorization.
+
+## Standards (`src/standards/`)
+
+Reusable contract standards for integrations that need explicit operational controls:
+
+- `Ownable` and `Ownable2Step` for owner-managed authority
+- `AccessControl` for role-based authorization with delegated admins
+- `Pausable` for emergency stops
+- `ExecutionGuard` for serialized critical sections
+- `RecoveryGuard` for blocking sensitive paths during recovery windows
+- `BatchExecutor` for bounded multi-operation flows
+- `DelayedExecutionPolicy` for time-delayed operation queues
+
+Each standard instance is keyed by a caller-supplied `Symbol`, which keeps storage deterministic and avoids collisions when a contract composes multiple modules.
 
 ## Feature Flags
 
