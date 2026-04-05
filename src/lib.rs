@@ -1,5 +1,4 @@
 #![no_std]
-#![allow(unsafe_code)]
 #![doc = r#"
 Cougr is a monolithic-on-the-outside ECS framework for Soroban-compatible applications.
 
@@ -71,15 +70,8 @@ pub mod resource;
 pub mod scheduler;
 pub mod simple_world;
 pub mod standards;
-#[doc(hidden)]
-pub mod system;
-#[doc(hidden)]
-pub mod world;
+mod system;
 pub mod zk;
-
-// Internal implementation modules kept out of the default public surface.
-mod entity;
-mod storage;
 
 // Root-level golden path re-exports.
 pub use archetype_world::{
@@ -89,7 +81,6 @@ pub use change_tracker::{ChangeTracker, TrackedWorld};
 pub use commands::CommandQueue;
 pub use component::{Component, ComponentId, ComponentStorage, ComponentTrait, Position};
 pub use ecs::{RuntimeWorld, RuntimeWorldMut, WorldBackend};
-pub use entity::{Entity, EntityId};
 pub use error::{CougrError, CougrResult};
 pub use event::{Event, EventReader, EventWriter};
 #[doc(hidden)]
@@ -102,23 +93,16 @@ pub use incremental::{StorageWorld, WorldMetadata};
 pub use observers::{ObservedWorld, ObserverRegistry};
 pub use plugin::{GameApp, Plugin, PluginApp, PluginGroup};
 pub use query::{
-    Query, QueryState, QueryStorage, SimpleQuery, SimpleQueryBuilder, SimpleQueryCache,
-    SimpleQueryState,
+    QueryStorage, SimpleQuery, SimpleQueryBuilder, SimpleQueryCache, SimpleQueryState,
 };
 pub use resource::Resource;
 pub use resource::ResourceTrait;
-pub use scheduler::{
-    ScheduleError, ScheduleStage, SimpleScheduler, SystemConfig, SystemGroup, SystemScheduler,
-};
+pub use scheduler::{ScheduleError, ScheduleStage, SimpleScheduler, SystemConfig, SystemGroup};
 pub use simple_world::SimpleWorld;
-#[doc(hidden)]
-pub use storage::{SparseStorage, Storage, TableStorage};
 pub use system::{
     context_system, named_app_system, named_context_system, named_system, world_system, AppSystem,
     SimpleSystem, SystemContext, SystemSpec,
 };
-#[doc(hidden)]
-pub use world::World;
 
 /// Default gameplay runtime surface for new Cougr projects.
 pub mod app {
@@ -129,15 +113,6 @@ pub mod app {
         SimpleQueryBuilder, SimpleScheduler, SimpleSystem, SimpleWorld, SystemConfig,
         SystemContext, SystemGroup, SystemSpec,
     };
-}
-
-/// Compatibility-preserving legacy ECS surface.
-///
-/// New Soroban projects should prefer [`app`] and the root onboarding exports.
-pub mod legacy {
-    pub use super::scheduler::SystemScheduler;
-    pub use super::system::{IntoSystem, MovementSystem, System, SystemParam};
-    pub use super::World;
 }
 
 /// Beta account and session surface.
@@ -167,11 +142,11 @@ pub mod ops {
 
 /// Common ECS imports for the default onboarding path.
 pub mod prelude {
+    pub use super::simple_world::EntityId;
     pub use super::{
-        ArchetypeWorld, CommandQueue, Component, ComponentStorage, ComponentTrait, EntityId,
-        GameApp, PluginGroup, Position, Query, QueryStorage, Resource, RuntimeWorld,
-        RuntimeWorldMut, SimpleQuery, SimpleQueryBuilder, SimpleWorld, SystemContext, World,
-        WorldBackend,
+        ArchetypeWorld, CommandQueue, Component, ComponentStorage, ComponentTrait, GameApp,
+        PluginGroup, Position, QueryStorage, Resource, RuntimeWorld, RuntimeWorldMut, SimpleQuery,
+        SimpleQueryBuilder, SimpleWorld, SystemContext, WorldBackend,
     };
 }
 
@@ -180,30 +155,9 @@ pub mod prelude {
 pub mod runtime {
     pub use super::{
         resource::Resource, ChangeTracker, Event, EventReader, EventWriter, HookRegistry,
-        HookedWorld, ObservedWorld, ObserverRegistry, Plugin, PluginApp, PluginGroup, QueryState,
-        QueryStorage, RuntimeWorld, RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery,
+        HookedWorld, ObservedWorld, ObserverRegistry, Plugin, PluginApp, PluginGroup, QueryStorage,
+        RuntimeWorld, RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery,
         SimpleQueryBuilder, SimpleQueryCache, SimpleQueryState, SimpleScheduler, StorageWorld,
-        SystemConfig, SystemScheduler, TrackedWorld, WorldBackend,
+        SystemConfig, TrackedWorld, WorldBackend,
     };
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use soroban_sdk::Env;
-
-    #[test]
-    fn test_world_creation() {
-        let _env = Env::default();
-        let world = World::new();
-        assert_eq!(world.entity_count(), 0);
-    }
-
-    #[test]
-    fn test_entity_spawn() {
-        let _env = Env::default();
-        let mut world = World::new();
-        let _entity = world.spawn_empty();
-        assert_eq!(world.entity_count(), 1);
-    }
 }

@@ -10,7 +10,7 @@ This document groups Cougr feature flags by maturity and intended usage.
 |---|---|---|---|
 | `debug` | Support-only | Local diagnostics and introspection | Exposes runtime snapshots and metrics that are not part of the stable product contract |
 | `hazmat-crypto` | Experimental | Advanced ZK and cryptographic integrations | Enables low-level host crypto helpers; do not treat as part of the stable privacy promise |
-| `testutils` | Non-contract support surface | Tests and explicit test-utility consumers | Enables testing helpers such as `MockAccount` and `zk::testing` |
+| `testutils` | Non-contract support surface | Tests and explicit test-utility consumers | Enables testing helpers such as `MockAccount` |
 
 ## Policy
 

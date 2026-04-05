@@ -47,8 +47,6 @@ Concrete frozen root-level contract:
 - `ArchetypeWorld`
 - `CommandQueue`
 - `Component`, `ComponentTrait`, `ComponentStorage`, `ComponentId`
-- `Entity`, `EntityId`
-- `Query`, `QueryState`
 - `SimpleQuery`, `SimpleQueryBuilder`, `SimpleQueryState`
 - `RuntimeWorld`, `RuntimeWorldMut`, `WorldBackend`
 - `SystemContext`
@@ -60,7 +58,6 @@ Concrete frozen root-level contract:
 - `prelude`
 - `runtime`
 - `app`
-- `legacy` as a compatibility-preserving namespace
 - `ops` as the clearest Stable standards namespace
 - `standards` as a Stable namespace
 - `privacy::stable` as the clearest stable privacy namespace
@@ -74,7 +71,6 @@ Concrete frozen root-level contract:
 
 These surfaces are useful and implemented, but should continue to be presented as Beta:
 
-- `legacy`
 - `accounts`
 - `game_world`
 - higher-level query helpers
@@ -95,7 +91,7 @@ These privacy surfaces are intentionally narrower and can be presented as Stable
 
 These surfaces are public today, but they must not be interpreted as stable commitments:
 
-- testing-only helpers such as `zk::testing`
+- testing-only helpers
 - advanced proof-verification APIs whose assumptions are still being hardened
 - `zk::experimental`
 - compatibility shims retained for transition
@@ -129,11 +125,10 @@ Current top-level modules:
 - `scheduler`
 - `simple_world`
 - `system`
-- `world`
 - `zk`
 
-Internal implementation modules such as legacy demo components, duplicate
-system helpers, storage internals, and entity internals are no longer part of
+Internal implementation modules such as hidden scheduler helpers, storage
+internals, and entity internals are no longer part of
 the intended default public surface. They may still exist in the repository,
 but the root crate is not meant to advertise them as onboarding entrypoints.
 
@@ -141,11 +136,11 @@ but the root crate is not meant to advertise them as onboarding entrypoints.
 
 Current top-level re-exports emphasize:
 
-- worlds: `World`, `SimpleWorld`, `ArchetypeWorld`
+- worlds: `SimpleWorld`, `ArchetypeWorld`
 - backend contracts: `RuntimeWorld`, `RuntimeWorldMut`, `WorldBackend`
-- ECS data: `Component`, `ComponentId`, `ComponentStorage`, `ComponentTrait`, `Position`, `Entity`, `EntityId`, `Resource`
+- ECS data: `Component`, `ComponentId`, `ComponentStorage`, `ComponentTrait`, `Position`, `Resource`
 - orchestration: `CommandQueue`, `HookRegistry`, `ObserverRegistry`, `PluginApp`, schedulers
-- queries and systems: `Query`, `QueryState`, `SimpleQuery`, `SimpleQueryState`, `SystemContext`, `SystemSpec`, declarative runtime system helpers
+- queries and systems: `SimpleQuery`, `SimpleQueryState`, `SystemContext`, `SystemSpec`, declarative runtime system helpers
 - domain access through explicit namespaces: `auth`, `privacy`, `ops`, `accounts`, `zk::stable`, `zk::experimental`
 
 ### Public top-level helper functions
@@ -160,18 +155,11 @@ The sanctioned onboarding path is the curated root surface itself:
 - `ops`
 - `SimpleWorld`
 - `ArchetypeWorld`
-- `legacy`
 - `CommandQueue`
 - `GameApp`
 - `named_system`, `named_context_system`, `add_systems`
 
 ## Compatibility Exceptions
-
-### `zk::testing`
-
-`zk::testing` is a support surface for tests and explicit test utility consumers.
-It is not part of the default product contract and is gated to tests or the
-`testutils` feature.
 
 ## Public API Risks
 
@@ -192,7 +180,6 @@ The `1.0` freeze is intentionally narrower than the full public module graph:
 - `ops` is the clearest stable namespace for operational standards in application code
 - root re-exports and `prelude` are the default onboarding path
 - `runtime` is a supported stable namespace for advanced ECS integrations
-- `legacy` is compatibility-preserving, Beta, and intentionally not the default onboarding path
 - `standards` is a supported stable namespace
 - `accounts` remains a public Beta namespace
 - `zk::stable` is the only privacy namespace treated as Stable

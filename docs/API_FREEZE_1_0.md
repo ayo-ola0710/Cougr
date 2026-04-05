@@ -21,7 +21,6 @@ The `1.0` stable contract includes:
 
 The following namespaces remain supported but intentionally outside the stable guarantee:
 
-- `legacy`
 - `auth`
 - `accounts`
 - `game_world`
@@ -33,7 +32,6 @@ The following remain outside the `1.0` compatibility guarantee:
 
 - `privacy::experimental`
 - `zk::experimental`
-- `zk::testing`
 - hazmat crypto helpers
 - transition or support-only helpers documented outside the stable contract
 
@@ -60,7 +58,6 @@ The root crate continues to expose some advanced or compatibility-oriented re-ex
 but documentation should prefer:
 
 - `app` for gameplay runtime
-- `legacy` for the older `World` / `System` surface
 - `auth`, `privacy`, and `ops` for product-level domain adoption
 
 ## Notes

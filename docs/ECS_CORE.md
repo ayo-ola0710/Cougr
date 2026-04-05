@@ -62,19 +62,6 @@ Cost profile:
 - more expensive structural changes
 - more selective scans for multi-component queries
 
-## Legacy Surface
-
-`World` and the legacy `System` path remain supported, but they are not the default Soroban onboarding path.
-
-They should be interpreted as:
-
-- compatibility-preserving advanced surface
-- available through the explicit `legacy` namespace
-- not the primary model new Cougr users should learn first
-
-They are intentionally outside the Soroban-first backend contract defined by
-`RuntimeWorld` and `RuntimeWorldMut`.
-
 ## Learnability Rule
 
 A new user should be able to learn the main Cougr runtime from:
@@ -85,4 +72,4 @@ A new user should be able to learn the main Cougr runtime from:
 4. `SimpleQueryBuilder`
 5. one or two canonical examples
 
-If a concept requires diving into legacy `World` internals or broad root exports to understand basic gameplay flow, that is a product bug.
+If a concept requires diving outside the Soroban-first runtime path to understand basic gameplay flow, that is a product bug.

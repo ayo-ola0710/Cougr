@@ -36,7 +36,6 @@ Remaining gaps:
 
 - the crate still exports more modules than the frozen stable contract actually guarantees
 - internals-heavy modules remain public in places where durable invariants are not yet fully documented
-- the legacy `World`-centric systems API remains available through `legacy`, but the recommended Soroban runtime path is now `app::GameApp` + `SimpleWorld` + `SimpleQuery`
 - migration still depends on user choice; the crate does not automatically force older imports onto the curated path
 
 ### Scheduling and Query Ergonomics
@@ -46,7 +45,6 @@ Status: Stable default path plus some evolving edges
 Remaining gaps:
 
 - `GameApp`, declarative runtime system registration, and `SimpleQuery` are now the intended default path
-- advanced borrow-aware system parameters still live on the legacy side rather than the curated Soroban-first runtime
 - dependency validation is stage-local by design; cross-stage ordering should remain a phase concern, not an arbitrary graph promise
 
 ### Standards Layer
@@ -60,7 +58,6 @@ Remaining gaps:
 ## Removed or Downgraded During Phase 0
 
 - deprecated placeholder helpers were removed from `src/lib.rs` in favor of the curated root API
-- `zk::testing` remains outside the default product contract and is only available for tests or `testutils`
 - accounts and advanced privacy features are described as Beta or Experimental rather than stable production guarantees
 
 ## How To Use This List

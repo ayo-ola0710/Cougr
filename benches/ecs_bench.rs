@@ -13,6 +13,12 @@ use cougr_core::scheduler::{ScheduleStage, SimpleScheduler, SystemConfig};
 use cougr_core::simple_world::SimpleWorld;
 use soroban_sdk::{symbol_short, Bytes, Env, Symbol};
 
+const SPAWN_COUNTS: [usize; 3] = [100, 250, 500];
+const STORAGE_COUNTS: [usize; 3] = [50, 100, 150];
+const QUERY_COUNTS: [usize; 2] = [50, 100];
+const QUERY_CACHE_COUNTS: [usize; 2] = [50, 100];
+const MUTATION_COUNTS: [usize; 2] = [50, 100];
+
 fn per_op_us(elapsed: std::time::Duration, ops: usize) -> f64 {
     elapsed.as_micros() as f64 / ops as f64
 }
@@ -23,7 +29,7 @@ fn print_header(title: &str) {
 
 fn bench_spawn_entities() {
     print_header("Spawn Entities");
-    for count in [100, 500, 1_000] {
+    for count in SPAWN_COUNTS {
         let env = Env::default();
         let mut world = SimpleWorld::new(&env);
 
@@ -41,7 +47,7 @@ fn bench_spawn_entities() {
 
 fn bench_component_insert_and_lookup() {
     print_header("Component Insert / Lookup");
-    for count in [100, 500, 1_000] {
+    for count in STORAGE_COUNTS {
         let env = Env::default();
         let mut world = SimpleWorld::new(&env);
         let entities: StdVec<u32> = (0..count).map(|_| world.spawn_entity()).collect();
@@ -76,7 +82,7 @@ fn bench_component_insert_and_lookup() {
 
 fn bench_query_paths() {
     print_header("Query Paths");
-    for count in [250, 1_000, 5_000] {
+    for count in QUERY_COUNTS {
         let env = Env::default();
         let mut world = SimpleWorld::new(&env);
         let data = Bytes::from_slice(&env, &[1u8; 16]);
@@ -135,7 +141,7 @@ fn bench_query_paths() {
 
 fn bench_query_cache_invalidation() {
     print_header("Query Cache Invalidation");
-    for count in [250, 1_000] {
+    for count in QUERY_CACHE_COUNTS {
         let env = Env::default();
         let mut world = SimpleWorld::new(&env);
         let data = Bytes::from_slice(&env, &[7u8; 16]);
@@ -204,7 +210,7 @@ fn bench_scheduler_validation_and_execution() {
             }
         },
         SystemConfig::new()
-            .in_stage(ScheduleStage::Update)
+            .in_stage(ScheduleStage::PreUpdate)
             .after("spawn"),
     );
 
@@ -275,19 +281,20 @@ fn bench_backend_query_comparison() {
         symbol_short!("buff"),
     ];
 
-    for count in [250, 1_000, 5_000] {
-        let env = Env::default();
-        let simple = populate_simple_world(&env, count, &required, &optional);
-        let archetype = populate_archetype_world(&env, count, &required, &optional);
+    for count in QUERY_COUNTS {
+        let simple_env = Env::default();
+        let archetype_env = Env::default();
+        let simple = populate_simple_world(&simple_env, count, &required, &optional);
+        let archetype = populate_archetype_world(&archetype_env, count, &required, &optional);
 
-        let query = SimpleQueryBuilder::new(&env)
+        let query = SimpleQueryBuilder::new(&simple_env)
             .with_component(symbol_short!("pos"))
             .with_component(symbol_short!("vel"))
             .with_component(symbol_short!("hp"))
             .build();
 
         let start = Instant::now();
-        let simple_hits = query.execute(&simple, &env).len();
+        let simple_hits = query.execute(&simple, &simple_env).len();
         let simple_elapsed = start.elapsed();
 
         let start = Instant::now();
@@ -298,7 +305,7 @@ fn bench_backend_query_comparison() {
                     symbol_short!("vel"),
                     symbol_short!("hp"),
                 ],
-                &env,
+                &archetype_env,
             )
             .len();
         let archetype_elapsed = start.elapsed();
@@ -311,32 +318,44 @@ fn bench_backend_query_comparison() {
 
 fn bench_backend_mutation_comparison() {
     print_header("Backend Structural Mutation Comparison");
-    for count in [250, 1_000] {
-        let env = Env::default();
-        let bytes = Bytes::from_slice(&env, &[3u8; 16]);
+    for count in MUTATION_COUNTS {
+        let simple_env = Env::default();
+        let archetype_env = Env::default();
+        let simple_bytes = Bytes::from_slice(&simple_env, &[3u8; 16]);
+        let archetype_bytes = Bytes::from_slice(&archetype_env, &[3u8; 16]);
 
-        let mut simple = SimpleWorld::new(&env);
+        let mut simple = SimpleWorld::new(&simple_env);
         let simple_entities: StdVec<u32> = (0..count).map(|_| simple.spawn_entity()).collect();
         for &entity in &simple_entities {
-            simple.add_component(entity, symbol_short!("pos"), bytes.clone());
+            simple.add_component(entity, symbol_short!("pos"), simple_bytes.clone());
         }
 
-        let mut archetype = ArchetypeWorld::new(&env);
+        let mut archetype = ArchetypeWorld::new(&archetype_env);
         let archetype_entities: StdVec<u32> =
             (0..count).map(|_| archetype.spawn_entity()).collect();
         for &entity in &archetype_entities {
-            archetype.add_component(entity, symbol_short!("pos"), bytes.clone(), &env);
+            archetype.add_component(
+                entity,
+                symbol_short!("pos"),
+                archetype_bytes.clone(),
+                &archetype_env,
+            );
         }
 
         let start = Instant::now();
         for &entity in &simple_entities {
-            simple.add_component(entity, symbol_short!("vel"), bytes.clone());
+            simple.add_component(entity, symbol_short!("vel"), simple_bytes.clone());
         }
         let simple_add_elapsed = start.elapsed();
 
         let start = Instant::now();
         for &entity in &archetype_entities {
-            archetype.add_component(entity, symbol_short!("vel"), bytes.clone(), &env);
+            archetype.add_component(
+                entity,
+                symbol_short!("vel"),
+                archetype_bytes.clone(),
+                &archetype_env,
+            );
         }
         let archetype_add_elapsed = start.elapsed();
 
@@ -348,7 +367,7 @@ fn bench_backend_mutation_comparison() {
 
         let start = Instant::now();
         for &entity in &archetype_entities {
-            let _ = archetype.remove_component(entity, &symbol_short!("vel"), &env);
+            let _ = archetype.remove_component(entity, &symbol_short!("vel"), &archetype_env);
         }
         let archetype_remove_elapsed = start.elapsed();
 

@@ -95,20 +95,6 @@ pub fn list_entities(world: &SimpleWorld, env: &Env) -> Vec<EntitySummary> {
     summaries
 }
 
-/// Emit a world summary as a Soroban diagnostic event.
-#[allow(deprecated)]
-pub fn emit_world_summary(world: &SimpleWorld, env: &Env) {
-    let summary = inspect_world(world, env);
-    env.events().publish(
-        (Symbol::new(env, "debug_world"),),
-        (
-            summary.entity_count,
-            summary.total_components,
-            summary.version,
-        ),
-    );
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -196,16 +182,5 @@ mod tests {
 
         let list = list_entities(&world, &env);
         assert_eq!(list.len(), 2);
-    }
-
-    #[test]
-    fn test_emit_world_summary() {
-        let env = Env::default();
-        let mut world = SimpleWorld::new(&env);
-        let e = world.spawn_entity();
-        world.add_component(e, symbol_short!("pos"), Bytes::from_array(&env, &[1]));
-
-        // Should not panic
-        emit_world_summary(&world, &env);
     }
 }

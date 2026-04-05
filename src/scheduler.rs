@@ -1,6 +1,5 @@
 use crate::simple_world::SimpleWorld;
-use crate::system::{AppSystem, SimpleSystem, System, SystemContext, SystemSpec, WorldSystem};
-use crate::world::World;
+use crate::system::{AppSystem, SimpleSystem, SystemContext, SystemSpec, WorldSystem};
 use alloc::boxed::Box;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
@@ -139,68 +138,7 @@ pub enum ScheduleError {
 struct SimpleSystemEntry {
     name: String,
     config: SystemConfig,
-    system: Box<dyn SimpleSystem>,
-}
-
-/// A scheduler that executes `System` trait objects in registration order.
-///
-/// Works with the full `World` type and boxed `System` trait objects.
-///
-/// # Example
-/// ```
-/// use cougr_core::scheduler::SystemScheduler;
-/// use cougr_core::system::MovementSystem;
-/// use cougr_core::world::World;
-///
-/// let mut scheduler = SystemScheduler::new();
-/// scheduler.add_system(MovementSystem);
-/// let mut world = World::new();
-/// scheduler.run_all(&mut world);
-/// assert_eq!(scheduler.system_count(), 1);
-/// ```
-pub struct SystemScheduler {
-    systems: Vec<(String, Box<dyn System<In = (), Out = ()>>)>,
-}
-
-impl SystemScheduler {
-    pub fn new() -> Self {
-        Self {
-            systems: Vec::new(),
-        }
-    }
-
-    pub fn add_system<S: System<In = (), Out = ()> + 'static>(&mut self, system: S) {
-        let name = core::any::type_name::<S>();
-        self.systems.push((String::from(name), Box::new(system)));
-    }
-
-    pub fn add_named_system<S: System<In = (), Out = ()> + 'static>(
-        &mut self,
-        name: &str,
-        system: S,
-    ) {
-        self.systems.push((String::from(name), Box::new(system)));
-    }
-
-    pub fn run_all(&mut self, world: &mut World) {
-        for (_name, system) in &mut self.systems {
-            system.run(world, ());
-        }
-    }
-
-    pub fn system_count(&self) -> usize {
-        self.systems.len()
-    }
-
-    pub fn system_names(&self) -> Vec<&str> {
-        self.systems.iter().map(|(name, _)| name.as_str()).collect()
-    }
-}
-
-impl Default for SystemScheduler {
-    fn default() -> Self {
-        Self::new()
-    }
+    system: alloc::boxed::Box<dyn SimpleSystem>,
 }
 
 /// Scheduler for the Soroban-first `SimpleWorld` runtime.
@@ -714,35 +652,8 @@ impl Default for SimpleScheduler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::system::{named_context_system, named_system, MovementSystem};
+    use crate::system::{named_context_system, named_system};
     use soroban_sdk::{symbol_short, Bytes, Env};
-
-    #[test]
-    fn test_system_scheduler_empty() {
-        let mut scheduler = SystemScheduler::new();
-        let mut world = World::new();
-        scheduler.run_all(&mut world);
-        assert_eq!(scheduler.system_count(), 0);
-    }
-
-    #[test]
-    fn test_system_scheduler_add_and_run() {
-        let mut scheduler = SystemScheduler::new();
-        scheduler.add_system(MovementSystem);
-        assert_eq!(scheduler.system_count(), 1);
-
-        let mut world = World::new();
-        scheduler.run_all(&mut world);
-    }
-
-    #[test]
-    fn test_system_scheduler_named() {
-        let mut scheduler = SystemScheduler::new();
-        scheduler.add_named_system("movement", MovementSystem);
-        let names = scheduler.system_names();
-        assert_eq!(names.len(), 1);
-        assert_eq!(names[0], "movement");
-    }
 
     #[test]
     fn test_simple_scheduler_empty() {

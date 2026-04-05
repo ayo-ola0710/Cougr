@@ -124,12 +124,7 @@ Choose `ArchetypeWorld` when:
 - compositions are mostly fixed after startup
 - entity migration cost is amortized over many reads
 
-Keep `World` only when:
-
-- you are preserving an older integration
-- you explicitly need the legacy system model
-
-It is not part of the preferred performance story for new Soroban gameplay code.
+Keep `GameApp`, `SimpleWorld`, and `SimpleQuery` as the default performance story for new Soroban gameplay code.
 
 ## Interpretation Rules
 

@@ -41,7 +41,6 @@ For these surfaces, maintainers should preserve:
 The following surfaces are supported but intentionally not frozen:
 
 - higher-level ECS helpers outside the frozen root/runtime contract
-- `legacy`
 - `auth`
 - `accounts`
 - `game_world`
@@ -79,7 +78,7 @@ These may:
 
 ## Non-Contract Support Surfaces
 
-Support-only surfaces such as `zk::testing` and `MockAccount` are not part of the default product contract.
+Support-only surfaces such as `MockAccount` are not part of the default product contract.
 
 They exist for tests and explicit utility consumers, not as long-term framework guarantees.
 

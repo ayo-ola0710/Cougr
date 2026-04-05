@@ -238,7 +238,8 @@ impl EventTrait for DamageEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::Env;
+    use alloc::vec::Vec as StdVec;
+    use soroban_sdk::{symbol_short, Env, Vec};
 
     #[test]
     fn test_event_creation() {
@@ -279,10 +280,46 @@ mod tests {
         assert_eq!(damage_event.damage_type, deserialized.damage_type);
     }
 
-    // TODO: These tests require std vec! macro - need to adapt for Soroban
-    // #[test]
-    // fn test_event_reader() { ... }
+    #[test]
+    fn test_event_writer_and_reader_filter_by_type() {
+        let env = Env::default();
+        let mut events = Vec::new(&env);
+        {
+            let mut writer = EventWriter::new(&mut events);
+            writer.send_with_data(symbol_short!("spawn"), Bytes::from_array(&env, &[1]));
+            writer.send_with_data(symbol_short!("move"), Bytes::from_array(&env, &[2]));
+            writer.send_with_data(symbol_short!("spawn"), Bytes::from_array(&env, &[3]));
+        }
 
-    // #[test]
-    // fn test_event_writer() { ... }
+        let mut snapshot = StdVec::new();
+        for i in 0..events.len() {
+            snapshot.push(events.get(i).unwrap());
+        }
+        let mut reader = EventReader::new(&snapshot, symbol_short!("spawn"));
+
+        let first = reader.read().cloned().unwrap();
+        let second = reader.read().cloned().unwrap();
+
+        assert_eq!(first.event_type(), &symbol_short!("spawn"));
+        assert_eq!(first.data(), &Bytes::from_array(&env, &[1]));
+        assert_eq!(second.event_type(), &symbol_short!("spawn"));
+        assert_eq!(second.data(), &Bytes::from_array(&env, &[3]));
+        assert!(reader.read().is_none());
+        assert!(!reader.has_more());
+    }
+
+    #[test]
+    fn test_event_reader_reset_rewinds_sequence() {
+        let env = Env::default();
+        let event = Event::with_timestamp(symbol_short!("tick"), Bytes::from_array(&env, &[9]), 42);
+        let events = [event.clone()];
+        let mut reader = EventReader::new(&events, symbol_short!("tick"));
+
+        assert_eq!(reader.read().unwrap().timestamp(), 42);
+        assert!(reader.read().is_none());
+
+        reader.reset();
+
+        assert_eq!(reader.read().unwrap().timestamp(), 42);
+    }
 }

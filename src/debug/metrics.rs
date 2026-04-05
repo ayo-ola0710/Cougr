@@ -74,21 +74,6 @@ pub fn unique_component_types(world: &SimpleWorld, _env: &Env) -> Vec<Symbol> {
     types
 }
 
-/// Emit storage metrics as a Soroban diagnostic event.
-#[allow(deprecated)]
-pub fn emit_metrics(world: &SimpleWorld, env: &Env) {
-    let metrics = collect_metrics(world, env);
-    env.events().publish(
-        (Symbol::new(env, "debug_metrics"),),
-        (
-            metrics.total_entities,
-            metrics.total_table_entries,
-            metrics.total_sparse_entries,
-            metrics.unique_component_types,
-        ),
-    );
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -163,16 +148,5 @@ mod tests {
 
         let types = unique_component_types(&world, &env);
         assert_eq!(types.len(), 2); // pos + vel
-    }
-
-    #[test]
-    fn test_emit_metrics() {
-        let env = Env::default();
-        let mut world = SimpleWorld::new(&env);
-        let e = world.spawn_entity();
-        world.add_component(e, symbol_short!("pos"), Bytes::from_array(&env, &[1]));
-
-        // Should not panic
-        emit_metrics(&world, &env);
     }
 }

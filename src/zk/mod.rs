@@ -65,7 +65,7 @@ pub(crate) mod interfaces;
 pub(crate) mod merkle;
 pub mod stable;
 pub(crate) mod systems;
-#[cfg(any(test, feature = "testutils"))]
+#[cfg(test)]
 pub(crate) mod testing;
 pub(crate) mod traits;
 pub(crate) mod types;

@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use soroban_sdk::{BytesN, Env, Vec};
 
 use super::types::{G1Point, G2Point, Groth16Proof, Scalar, VerificationKey};

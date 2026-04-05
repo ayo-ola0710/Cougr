@@ -63,7 +63,7 @@ Experimental is the default for features where:
 | Standards layer (`standards`) | Stable | Reusable, documented, and validated as part of the `1.0` contract |
 | Commitments, commit-reveal, hidden-state encoding, and Merkle utilities (`zk::stable`) | Stable | Explicitly separated from experimental proof-verification helpers |
 | Advanced ZK verification and confidential abstractions | Experimental | Do not treat as stable production primitives yet |
-| Testing helpers (`zk::testing`, `MockAccount`) | Non-stable support surface | Intended only for tests or explicit test utility consumers |
+| Testing helpers (`MockAccount`) | Non-stable support surface | Intended only for tests or explicit test utility consumers |
 
 ## Rules for Public Surfaces
 

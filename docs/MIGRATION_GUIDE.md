@@ -11,7 +11,6 @@ It is not a promise that every older pattern disappears immediately. It is the r
 Prefer these namespaces in new or updated code:
 
 - `app` for gameplay runtime
-- `legacy` only for the older `World` / `System` model
 - `auth` for account and session flows
 - `privacy::stable` for stable privacy primitives
 - `ops` for operational standards
@@ -69,24 +68,10 @@ Why:
 - one onboarding surface instead of several loose primitives
 - a single system registration model for plain and context-aware systems
 
-### From root `World`
+### From the removed pre-1.0 ECS model
 
-If you intentionally stay on the older ECS model, change:
-
-```rust
-let mut world = cougr_core::World::new();
-```
-
-to:
-
-```rust
-let mut world = cougr_core::legacy::World::new();
-```
-
-Why:
-
-- it keeps compatibility explicit
-- it avoids presenting the legacy path as the default Soroban runtime
+If you were previously on the removed pre-1.0 `World` / `System` path, port directly to
+`GameApp`, `SimpleWorld`, and `SimpleQuery`.
 
 ## Query Migration
 
@@ -173,13 +158,11 @@ Use these examples as references:
 - `battleship` for `privacy::stable` and hidden-information patterns
 - `guild_arena` for account/session/recovery patterns
 
-Examples that still use `legacy` are intentionally compatibility-oriented, not the primary direction for new gameplay contracts.
-
 ## What Does Not Need Immediate Migration
 
 You do not need to rewrite everything at once if:
 
-- the contract intentionally depends on the old `World` / `System` path
+- the contract still needs a focused port from the removed pre-1.0 runtime path
 - you are preserving an older example or integration
 - your current code already sits behind a stable local abstraction
 
@@ -188,7 +171,6 @@ The main goal is to stop growing new code on top of older default imports.
 ## Migration Checklist
 
 - [x] move runtime entrypoints to `app` where practical
-- [x] move legacy ECS usage to `legacy`
 - [x] move account imports to `auth`
 - [x] move stable privacy imports to `privacy::stable`
 - [x] move standards imports to `ops`

@@ -17,7 +17,6 @@ It is intentionally practical: if a box cannot be checked with evidence in the r
 ## Runtime Story
 
 - [x] `app` remains the clearest onboarding path
-- [x] `legacy` remains explicit and non-default
 - [x] `SimpleWorld` and `ArchetypeWorld` remain the defended Soroban-first backends
 - [x] `RuntimeWorld` and `RuntimeWorldMut` still describe the stable shared overlap
 
@@ -45,7 +44,7 @@ It is intentionally practical: if a box cannot be checked with evidence in the r
 ## Security And Risk
 
 - [x] [THREAT_MODEL.md](THREAT_MODEL.md) still matches the shipped trust boundaries
-- [x] [UNSAFE_INVARIANTS.md](UNSAFE_INVARIANTS.md) still matches unsafe-heavy internals
+- [x] [UNSAFE_INVARIANTS.md](UNSAFE_INVARIANTS.md) still matches the crate's current safety posture
 - [x] no Beta or Experimental surface is accidentally described as stable
 
 ## Ship Decision

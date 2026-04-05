@@ -7,7 +7,7 @@ This document is a high-signal status snapshot of Cougr after the current cleanu
 It is meant to answer:
 
 - what is clearly done
-- what is intentionally legacy or Beta
+- what is intentionally Beta
 - what is still an honest remaining gap
 
 ## Stable Product Story
@@ -20,11 +20,10 @@ The current defended product story is:
 - `ops` / `standards` are stable operational standards
 - `privacy::stable` / `zk::stable` are the frozen privacy contract
 
-## Beta Or Compatibility Story
+## Beta Story
 
 The following remain intentionally non-frozen:
 
-- `legacy` for the older `World` / `System` model
 - `auth` / `accounts`
 - `game_world`
 
@@ -42,7 +41,6 @@ The following remain explicitly outside the stable guarantee:
 
 - curated runtime onboarding through `app`
 - explicit domain namespaces through `auth`, `privacy`, and `ops`
-- explicit compatibility namespace through `legacy`
 - stronger scheduler model
 - stronger query model, backend parity, and benchmark story
 - modern declarative system registration through `named_system(...)` and `add_systems(...)`
@@ -52,7 +50,6 @@ The following remain explicitly outside the stable guarantee:
 ## Remaining Honest Gaps
 
 - the crate still exposes more total public surface than the stable contract actually guarantees
-- legacy surfaces still exist by compatibility choice rather than enforced migration
 - auth remains Beta
 - advanced proof tooling remains Experimental
 - some advanced/internal surfaces remain public even if they are no longer part of the preferred onboarding story

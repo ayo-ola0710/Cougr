@@ -30,7 +30,6 @@ That claim is intentionally narrow:
 
 ## What Is Deliberately Not Frozen
 
-- `legacy` for the older `World` / `System` path
 - `auth` / `accounts`
 - `game_world`
 

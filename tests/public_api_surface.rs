@@ -184,20 +184,6 @@ fn sanctioned_root_api_supports_plugin_groups() {
 }
 
 #[test]
-fn legacy_module_keeps_world_surface_explicit() {
-    let mut world = cougr_core::legacy::World::new();
-    let _entity = world.spawn_empty();
-    assert_eq!(world.entity_count(), 1);
-}
-
-#[test]
-fn root_still_keeps_advanced_surface_available_for_compatibility() {
-    let _ = core::mem::size_of::<Option<cougr_core::World>>();
-    let _ = core::mem::size_of::<Option<cougr_core::SystemScheduler>>();
-    let _ = core::mem::size_of::<Option<cougr_core::Storage>>();
-}
-
-#[test]
 fn stable_zk_namespace_exposes_stable_commit_reveal_flow() {
     let env = Env::default();
     let commitment = BytesN::from_array(&env, &[9u8; 32]);

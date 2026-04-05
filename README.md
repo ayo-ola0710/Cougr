@@ -44,7 +44,6 @@ Runtime backend guidance:
 
 - `SimpleWorld` and `ArchetypeWorld` are the supported Soroban-first backends
 - `RuntimeWorld` and `RuntimeWorldMut` define their shared stable overlap
-- `legacy::World` remains available for compatibility, but is not part of the preferred gameplay path
 
 ## What Cougr Provides
 
@@ -111,8 +110,6 @@ The most direct onboarding import is `cougr_core::app`.
 - plugin-based composition without losing direct world access
 
 Use `PluginApp` only as a compatibility name; it aliases `GameApp`.
-
-Use `legacy` only when you intentionally need the older `World` / `System` surface.
 
 ### Zero-Knowledge and Hidden State
 
@@ -191,7 +188,7 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 - [SECURITY.md](SECURITY.md) for the current security posture and reporting guidance
 - [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for the current threat model and sensitive subsystem map
 - [docs/MATURITY_MODEL.md](docs/MATURITY_MODEL.md) for maturity tiers and promotion criteria
-- [docs/STATE_OF_REPO.md](docs/STATE_OF_REPO.md) for a concise snapshot of what is stable, Beta, legacy, and still open
+- [docs/STATE_OF_REPO.md](docs/STATE_OF_REPO.md) for a concise snapshot of what is stable, Beta, and still open
 - [docs/RELEASE_STATUS.md](docs/RELEASE_STATUS.md) for the shortest release-facing summary of what is actually ship-ready
 - [docs/API_CONTRACT.md](docs/API_CONTRACT.md) for the current public API contract and compatibility boundaries
 - [docs/API_FREEZE_1_0.md](docs/API_FREEZE_1_0.md) for the frozen `1.0` contract and exclusion list
