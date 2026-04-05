@@ -3,7 +3,6 @@ use soroban_sdk::{contracttype, symbol_short, Bytes, Env, Symbol};
 /// ComponentTrait from cougr-core
 /// Components must implement serialization for on-chain storage
 pub trait ComponentTrait {
-    #[allow(dead_code)]
     fn component_type() -> Symbol;
     fn serialize(&self, env: &Env) -> Bytes;
     fn deserialize(env: &Env, data: &Bytes) -> Option<Self>

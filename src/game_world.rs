@@ -7,8 +7,7 @@
 //! # Example
 //! ```no_run
 //! use cougr_core::accounts::{ClassicAccount, GameAction};
-//! use cougr_core::game_world::GameWorld;
-//! use cougr_core::simple_world::SimpleWorld;
+//! use cougr_core::{GameWorld, SimpleWorld};
 //! use soroban_sdk::{symbol_short, testutils::Address as _, Address, Bytes, Env};
 //!
 //! let env = Env::default();

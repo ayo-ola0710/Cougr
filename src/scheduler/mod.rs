@@ -1,3 +1,7 @@
+mod types;
+
+pub use types::{ScheduleError, ScheduleStage, SystemConfig};
+
 use crate::simple_world::SimpleWorld;
 use crate::system::{AppSystem, SimpleSystem, SystemContext, SystemSpec, WorldSystem};
 use alloc::boxed::Box;
@@ -5,140 +9,10 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use soroban_sdk::Env;
 
-/// Ordered execution phases for Soroban gameplay loops.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ScheduleStage {
-    Startup,
-    PreUpdate,
-    Update,
-    PostUpdate,
-    Cleanup,
-}
-
-impl ScheduleStage {
-    fn ordered() -> [Self; 5] {
-        [
-            Self::Startup,
-            Self::PreUpdate,
-            Self::Update,
-            Self::PostUpdate,
-            Self::Cleanup,
-        ]
-    }
-}
-
-/// Declarative configuration for a scheduled system.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SystemConfig {
-    stage: ScheduleStage,
-    set: Option<String>,
-    after: Vec<String>,
-    before: Vec<String>,
-    after_sets: Vec<String>,
-    before_sets: Vec<String>,
-}
-
-impl SystemConfig {
-    pub fn new() -> Self {
-        Self {
-            stage: ScheduleStage::Update,
-            set: None,
-            after: Vec::new(),
-            before: Vec::new(),
-            after_sets: Vec::new(),
-            before_sets: Vec::new(),
-        }
-    }
-
-    pub fn in_stage(mut self, stage: ScheduleStage) -> Self {
-        self.stage = stage;
-        self
-    }
-
-    pub fn after(mut self, system_name: impl Into<String>) -> Self {
-        self.after.push(system_name.into());
-        self
-    }
-
-    pub fn before(mut self, system_name: impl Into<String>) -> Self {
-        self.before.push(system_name.into());
-        self
-    }
-
-    pub fn in_set(mut self, set_name: impl Into<String>) -> Self {
-        self.set = Some(set_name.into());
-        self
-    }
-
-    pub fn after_set(mut self, set_name: impl Into<String>) -> Self {
-        self.after_sets.push(set_name.into());
-        self
-    }
-
-    pub fn before_set(mut self, set_name: impl Into<String>) -> Self {
-        self.before_sets.push(set_name.into());
-        self
-    }
-
-    pub fn stage(&self) -> ScheduleStage {
-        self.stage
-    }
-
-    pub fn set_name(&self) -> Option<&str> {
-        self.set.as_deref()
-    }
-
-    pub fn after_dependencies(&self) -> &[String] {
-        &self.after
-    }
-
-    pub fn before_dependencies(&self) -> &[String] {
-        &self.before
-    }
-
-    pub fn after_set_dependencies(&self) -> &[String] {
-        &self.after_sets
-    }
-
-    pub fn before_set_dependencies(&self) -> &[String] {
-        &self.before_sets
-    }
-}
-
-impl Default for SystemConfig {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// Validation or planning failure for `SimpleScheduler`.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ScheduleError {
-    DuplicateSystem(String),
-    MissingDependency {
-        system: String,
-        dependency: String,
-    },
-    MissingSet {
-        system: String,
-        set: String,
-    },
-    CrossStageDependency {
-        system: String,
-        dependency: String,
-        system_stage: ScheduleStage,
-        dependency_stage: ScheduleStage,
-    },
-    DependencyCycle {
-        stage: ScheduleStage,
-        systems: Vec<String>,
-    },
-}
-
 struct SimpleSystemEntry {
     name: String,
     config: SystemConfig,
-    system: alloc::boxed::Box<dyn SimpleSystem>,
+    system: Box<dyn SimpleSystem>,
 }
 
 /// Scheduler for the Soroban-first `SimpleWorld` runtime.
@@ -818,38 +692,58 @@ mod tests {
         let env = Env::default();
         let mut world = SimpleWorld::new(&env);
         let mut scheduler = SimpleScheduler::new();
+        scheduler.add_systems((
+            named_system("spawn_a", test_system_a).in_stage(ScheduleStage::Startup),
+            named_system("spawn_b", test_system_b).in_stage(ScheduleStage::Update),
+        ));
+
+        assert_eq!(
+            scheduler
+                .stage_system_names(ScheduleStage::Startup)
+                .unwrap(),
+            alloc::vec!["spawn_a"]
+        );
+        assert_eq!(
+            scheduler.stage_system_names(ScheduleStage::Update).unwrap(),
+            alloc::vec!["spawn_b"]
+        );
+
+        scheduler.run_all(&mut world, &env).unwrap();
+        assert!(world.has_component(1, &symbol_short!("sys_a")));
+        assert!(world.has_component(2, &symbol_short!("sys_b")));
+    }
+
+    #[test]
+    fn test_simple_scheduler_execution_order_with_context_and_world_systems() {
+        let env = Env::default();
+        let mut world = SimpleWorld::new(&env);
+        let mut scheduler = SimpleScheduler::new();
 
         scheduler.add_systems((
-            named_system("spawn_a", |world: &mut SimpleWorld, env: &Env| {
+            named_system("spawn_entity", |world: &mut SimpleWorld, env: &Env| {
                 let entity = world.spawn_entity();
-                world.add_component(
-                    entity,
-                    symbol_short!("queued"),
-                    Bytes::from_array(env, &[1]),
-                );
+                world.add_component(entity, symbol_short!("seed"), Bytes::from_array(env, &[1]));
             })
-            .in_stage(ScheduleStage::Update)
-            .in_set("spawn"),
-            named_context_system("mark_seen", |context| {
+            .in_stage(ScheduleStage::Update),
+            named_context_system("mark_seed", |context| {
                 let entities = context
                     .world()
-                    .get_entities_with_component(&symbol_short!("queued"), context.env());
+                    .get_entities_with_component(&symbol_short!("seed"), context.env());
                 let env = context.env().clone();
                 for i in 0..entities.len() {
                     let entity = entities.get(i).unwrap();
-                    context.commands().add_sparse_component(
+                    context.commands().add_component(
                         entity,
-                        symbol_short!("seen"),
+                        symbol_short!("grown"),
                         Bytes::from_array(&env, &[1]),
                     );
                 }
             })
             .in_stage(ScheduleStage::Update)
-            .after_set("spawn"),
+            .after("spawn_entity"),
         ));
 
         scheduler.run_all(&mut world, &env).unwrap();
-        assert!(world.has_component(1, &symbol_short!("queued")));
-        assert!(world.has_component(1, &symbol_short!("seen")));
+        assert!(world.has_component(1, &symbol_short!("grown")));
     }
 }

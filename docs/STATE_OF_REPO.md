@@ -52,7 +52,7 @@ The following remain explicitly outside the stable guarantee:
 - the crate still exposes more total public surface than the stable contract actually guarantees
 - auth remains Beta
 - advanced proof tooling remains Experimental
-- some advanced/internal surfaces remain public even if they are no longer part of the preferred onboarding story
+- some root re-exports still preserve advanced capabilities that are intentionally not part of the smallest onboarding story
 
 ## Practical Reading Order
 

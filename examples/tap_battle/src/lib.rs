@@ -29,9 +29,8 @@ mod types;
 #[cfg(test)]
 mod test;
 
+use cougr_core::SimpleWorld;
 use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env};
-
-// This example intentionally uses the compatibility-preserving legacy ECS path.
 
 // Re-export types for external use
 pub use types::*;
@@ -52,15 +51,15 @@ impl TapBattleContract {
     /// * `pubkey` - SEC-1 uncompressed secp256r1 public key (65 bytes)
     pub fn register_passkey(env: Env, player: Address, pubkey: BytesN<65>) {
         // Create cougr-core ECS World for entity management
-        let mut world = cougr_core::legacy::World::new();
-        let _player_entity = world.spawn_empty();
+        let mut world = SimpleWorld::new(&env);
+        let _player_entity = world.spawn_entity();
 
         auth::register_passkey(&env, &player, &pubkey);
 
         // Store ECS entity count
         env.storage()
             .instance()
-            .set(&DataKey::EntityCount, &(world.entity_count() as u32));
+            .set(&DataKey::EntityCount, &(world.next_entity_id - 1));
     }
 
     /// Authenticate via passkey and create a gameplay session.

@@ -69,8 +69,9 @@ For new examples and new production contracts, prefer the modern Cougr runtime p
 - `SimpleQueryBuilder` for non-trivial world scans
 - table storage for hot-loop gameplay state
 
-For examples that intentionally stay on the older ECS model, use `cougr_core::legacy`
-explicitly rather than importing `World` from the root and blurring the onboarding story.
+For examples that intentionally preserve older patterns, keep them explicitly
+documented as compatibility or transition references rather than presenting
+them as the default onboarding path.
 
 ## Canonical References
 

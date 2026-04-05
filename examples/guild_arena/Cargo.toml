@@ -2,6 +2,7 @@
 name = "guild-arena"
 version = "0.1.0"
 edition = "2021"
+publish = false
 description = "PvP arena game with guild-based social recovery and multi-device support using Cougr-Core"
 license = "MIT OR Apache-2.0"
 

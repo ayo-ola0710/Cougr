@@ -5,7 +5,6 @@
 ### Added
 
 - `app` as the default gameplay runtime surface
-- `legacy` as the explicit compatibility namespace for the older `World` / `System` path
 - `auth`, `privacy`, and `ops` as product-level domain namespaces
 - `RuntimeWorld` and `RuntimeWorldMut` as shared Soroban-first backend contracts
 - stronger stage scheduling with ordering, sets, and validation
@@ -15,7 +14,7 @@
 ### Changed
 
 - the recommended onboarding path is now `app::GameApp` + `SimpleWorld` + `SimpleQueryBuilder`
-- canonical examples now emphasize the curated runtime story and explicit legacy boundaries
+- canonical examples now emphasize the curated runtime story and explicit maturity boundaries
 - `battleship` now uses stable privacy primitives from `zk::stable`
 - documentation now treats `SimpleWorld` and `ArchetypeWorld` as the defended Soroban-first backends
 
@@ -28,7 +27,7 @@
 ### Upgrade Notes
 
 - Prefer `app` over wiring scheduler/world primitives directly for new gameplay code
-- Prefer `legacy::World` over root `World` when intentionally staying on the older ECS model
+- If you still have pre-1.0 code built around removed runtime abstractions, port directly to `GameApp`, `SimpleWorld`, and `SimpleQuery`
 - Prefer `ops`, `privacy`, and `auth` in application code when you want domain-oriented imports
 - Treat root-level advanced re-exports as compatibility/advanced surfaces rather than the default learning path
 - See [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) for concrete migration mappings

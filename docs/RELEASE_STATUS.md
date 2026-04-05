@@ -10,7 +10,9 @@ It is intentionally shorter than the full release checklist.
 
 ## Current Assessment
 
-Cougr is now in a defendable `1.0.0` shape for its curated product surface.
+Cougr is close to a defendable `1.0.0` for its curated product surface, but
+publication quality still depends on maintaining strict scope control between
+the stable contract and the broader public repository.
 
 That claim is intentionally narrow:
 
@@ -47,10 +49,13 @@ These remain public and supported, but they are not the product-learning path an
 - migration to the curated path is documented, but not enforced
 - auth remains Beta
 - advanced proof tooling remains Experimental
+- example quality and manifest consistency still require tighter release discipline
 
 ## Release Readout
 
-From a release perspective, the repo has moved from "promising but fuzzy" to "narrow, explicit, and defendable."
+From a release perspective, the repo has moved from "promising but fuzzy" to
+"narrower and much more explicit," but it still needs disciplined final cleanup
+before publication.
 
 The remaining risk is mostly scope control:
 

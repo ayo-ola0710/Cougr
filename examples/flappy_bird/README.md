@@ -41,7 +41,6 @@ examples/flappy_bird/
 │   ├── lib.rs              # Main contract implementation
 │   ├── components.rs       # Custom game components (BirdState, PipeConfig)
 │   ├── systems.rs          # Game systems (gravity, collision, scoring)
-│   └── world_storage.rs    # World serialization helpers
 └── README.md               # This file
 ```
 

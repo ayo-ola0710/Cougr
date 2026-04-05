@@ -75,7 +75,7 @@ impl Bullet {
 | Position Tracking | Manual x/y fields | `EntityPosition` + `CougrPosition` |
 | Movement Logic | Per-entity methods | Velocity component + System |
 | Health Management | Ad-hoc fields | `Health` component with damage API |
-| Entity Creation | Manual construction | `World.spawn_empty()` + components |
+| Entity Creation | Manual construction | `SimpleWorld::spawn_entity()` + components |
 
 ---
 

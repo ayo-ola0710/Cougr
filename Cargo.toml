@@ -12,12 +12,11 @@ categories = ["game-engines", "data-structures", "wasm"]
 rust-version = "1.70.0"
 exclude = [
     ".github/**",
+    "examples/**",
     "public/**",
     "research/**",
     "skills/**",
     "test_snapshots/**",
-    "examples/**/target/**",
-    "examples/**/test_snapshots/**",
 ]
 
 [lib]

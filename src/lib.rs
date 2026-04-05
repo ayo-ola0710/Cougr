@@ -51,7 +51,7 @@ pub mod macros;
 // Public product domains
 pub mod accounts;
 pub mod archetype_world;
-pub mod change_tracker;
+mod change_tracker;
 pub mod commands;
 pub mod component;
 #[cfg(feature = "debug")]
@@ -60,10 +60,10 @@ pub mod debug;
 pub mod ecs;
 pub mod error;
 pub mod event;
-pub mod game_world;
-pub mod hooks;
-pub mod incremental;
-pub mod observers;
+mod game_world;
+mod hooks;
+mod incremental;
+mod observers;
 pub mod plugin;
 pub mod query;
 pub mod resource;
@@ -153,11 +153,12 @@ pub mod prelude {
 /// Advanced runtime primitives that remain supported but are not part of the
 /// smallest onboarding surface.
 pub mod runtime {
+    pub use super::observers::ComponentEvent;
     pub use super::{
         resource::Resource, ChangeTracker, Event, EventReader, EventWriter, HookRegistry,
         HookedWorld, ObservedWorld, ObserverRegistry, Plugin, PluginApp, PluginGroup, QueryStorage,
         RuntimeWorld, RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery,
         SimpleQueryBuilder, SimpleQueryCache, SimpleQueryState, SimpleScheduler, StorageWorld,
-        SystemConfig, TrackedWorld, WorldBackend,
+        SystemConfig, TrackedWorld, WorldBackend, WorldMetadata,
     };
 }

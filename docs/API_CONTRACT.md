@@ -107,16 +107,11 @@ Current top-level modules:
 - `auth`
 - `accounts`
 - `archetype_world`
-- `change_tracker`
 - `commands`
 - `component`
 - `debug` behind feature flag
 - `error`
 - `event`
-- `game_world`
-- `hooks`
-- `incremental`
-- `observers`
 - `ops`
 - `privacy`
 - `plugin`
@@ -124,13 +119,15 @@ Current top-level modules:
 - `resource`
 - `scheduler`
 - `simple_world`
-- `system`
 - `zk`
 
 Internal implementation modules such as hidden scheduler helpers, storage
 internals, and entity internals are no longer part of
 the intended default public surface. They may still exist in the repository,
 but the root crate is not meant to advertise them as onboarding entrypoints.
+Advanced runtime support such as hooks, observers, change tracking, and
+incremental storage is exposed through curated re-exports and `runtime`
+instead of direct top-level module entrypoints.
 
 ### Public re-exports
 

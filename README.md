@@ -18,6 +18,11 @@ Cougr is a Rust framework for building on-chain games on Stellar with an Entity 
 
 The repository includes the core library, a growing catalog of standalone game examples, and focused research notes for protocol and architecture work. The goal is to provide a practical foundation for teams building game logic that must remain structured, testable, and efficient under blockchain constraints.
 
+The publishable crate is intentionally narrower than the repository. The core
+library is the release artifact; examples, research notes, and CI scaffolding
+exist to support development and adoption without enlarging the shipped crate
+surface.
+
 ## Project Status
 
 Cougr now defines a `1.0.0` stable contract with a deliberately scoped surface. The crate still contains Beta and Experimental namespaces, but they are explicitly separated from the stable guarantee.

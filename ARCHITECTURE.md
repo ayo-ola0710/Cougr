@@ -6,7 +6,7 @@ High-level overview of how Cougr is organized. For usage, see [README.md](README
 
 ```
 ┌─────────────────────────────────────────────┐
-│              GameWorld                       │  Unified API: ECS + Auth + ZK
+│               app::GameApp                   │  Default runtime surface
 ├───────────┬───────────────┬─────────────────┤
 │  ECS      │  Accounts     │  Standards      │  ZK Proofs
 ├───────────┼───────────────┼─────────────────┼─────────────────┤
@@ -14,7 +14,12 @@ High-level overview of how Cougr is organized. For usage, see [README.md](README
 └─────────────────────────────────────────────┘
 ```
 
-**GameWorld** (`src/game_world.rs`) is the top-level integration layer. It wraps a `SimpleWorld` (ECS), a `CougrAccount` (auth), and provides ZK proof submission — one struct for a complete game contract.
+**GameApp** (`src/plugin.rs`) is the default onboarding layer. It owns a `SimpleWorld`,
+the scheduler, plugin registration, and runtime resources in one place.
+
+**GameWorld** (`src/game_world.rs`) remains available as a higher-level Beta integration
+wrapper for combining ECS, auth, and proof submission, but it is not the primary
+learning path for new users.
 
 ## ECS
 

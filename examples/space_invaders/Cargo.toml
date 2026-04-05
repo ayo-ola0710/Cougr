@@ -2,6 +2,7 @@
 name = "space_invaders"
 version = "0.1.0"
 edition = "2021"
+publish = false
 description = "Space Invaders on-chain game example using cougr-core"
 license = "MIT OR Apache-2.0"
 

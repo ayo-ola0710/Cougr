@@ -423,36 +423,6 @@ impl BattleState {
 // Player Marker Component
 // ============================================================================
 
-/// Player marker component - identifies the player entity
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-pub struct PlayerMarker;
-
-impl ComponentTrait for PlayerMarker {
-    fn component_type() -> Symbol {
-        symbol_short!("player")
-    }
-
-    fn serialize(&self, env: &Env) -> Bytes {
-        Bytes::from_array(env, &[1])
-    }
-
-    fn deserialize(_env: &Env, data: &Bytes) -> Option<Self> {
-        if data.len() != 1 {
-            return None;
-        }
-        Some(Self)
-    }
-
-    fn default_storage() -> ComponentStorage {
-        ComponentStorage::Sparse
-    }
-}
-
-// ============================================================================
-// Direction Component
-// ============================================================================
-
 /// Direction component wrapper for storage
 #[derive(Clone, Debug)]
 pub struct DirectionComponent {

@@ -3,9 +3,9 @@
 //! Tests empty world operations, non-existent entities, double operations,
 //! component data boundaries, and other corner cases.
 
-use cougr_core::observers::ComponentEvent;
 use cougr_core::{
-    CommandQueue, ComponentStorage, ObservedWorld, Plugin, PluginApp, SimpleQueryCache, SimpleWorld,
+    runtime::ComponentEvent, CommandQueue, ComponentStorage, ObservedWorld, Plugin, PluginApp,
+    SimpleQueryCache, SimpleWorld,
 };
 use soroban_sdk::{symbol_short, Bytes, Env};
 

@@ -146,21 +146,6 @@ pub fn update_player_creature(
     );
 }
 
-/// Get player facing direction
-#[allow(dead_code)]
-pub fn get_player_direction(
-    world: &SimpleWorld,
-    player_id: EntityId,
-    env: &Env,
-) -> Option<Direction> {
-    let dir_data = world.get_component(player_id, &symbol_short!("facing"))?;
-    DirectionComponent::deserialize(env, &dir_data).map(|d| d.direction)
-}
-
-// ============================================================================
-// Movement System
-// ============================================================================
-
 /// Move the player in a direction
 ///
 /// Returns:

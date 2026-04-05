@@ -90,6 +90,7 @@ impl DirtyTracker {
     }
 
     /// Get newly spawned entities.
+    #[cfg(test)]
     pub fn new_entities(&self) -> &[EntityId] {
         &self.new_entities
     }
