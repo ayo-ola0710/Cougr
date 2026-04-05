@@ -1,9 +1,11 @@
 #![no_std]
 
 use cougr_core::component::ComponentTrait;
+use cougr_core::privacy::stable::{
+    MerkleProofVerifier, OnChainMerkleProof, Sha256MerkleProofVerifier,
+};
 use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Map, Symbol,
-    Vec,
 };
 
 #[contracttype]
@@ -229,7 +231,7 @@ impl BattleshipContract {
         x: u32,
         y: u32,
         value: u32,
-        proof: Vec<BytesN<32>>,
+        proof: OnChainMerkleProof,
     ) {
         defender.require_auth();
 
@@ -258,7 +260,17 @@ impl BattleshipContract {
 
         // Verify Merkle proof
         let coord = Self::coord_to_index(x, y);
-        if !Self::verify_merkle_proof(&env, merkle_root, coord, value, &proof) {
+        if proof.leaf_index != coord {
+            panic!("Invalid proof");
+        }
+
+        let expected_leaf = Self::leaf_hash(&env, coord, value);
+        if proof.leaf != expected_leaf {
+            panic!("Invalid proof");
+        }
+
+        let verifier = Sha256MerkleProofVerifier;
+        if !verifier.verify(&env, &proof, merkle_root).unwrap_or(false) {
             panic!("Invalid proof");
         }
 
@@ -316,49 +328,19 @@ impl BattleshipContract {
         y * GRID_SIZE + x
     }
 
-    fn verify_merkle_proof(
-        env: &Env,
-        root: &BytesN<32>,
-        index: u32,
-        value: u32,
-        proof: &Vec<BytesN<32>>,
-    ) -> bool {
-        // Compute leaf hash
+    fn leaf_hash(env: &Env, index: u32, value: u32) -> BytesN<32> {
         let mut data = Bytes::new(env);
         data.append(&Bytes::from_array(env, &index.to_be_bytes()));
         data.append(&Bytes::from_array(env, &value.to_be_bytes()));
-        let mut current: BytesN<32> = env.crypto().sha256(&data).into();
+        let prehash: BytesN<32> = env.crypto().sha256(&data).into();
 
-        // Verify proof path
-        let mut idx = index;
-        for sibling in proof.iter() {
-            let mut combined = Bytes::new(env);
-            if idx.is_multiple_of(2) {
-                for i in 0..32 {
-                    combined.push_back(current.get(i).unwrap());
-                }
-                for i in 0..32 {
-                    combined.push_back(sibling.get(i).unwrap());
-                }
-            } else {
-                for i in 0..32 {
-                    combined.push_back(sibling.get(i).unwrap());
-                }
-                for i in 0..32 {
-                    combined.push_back(current.get(i).unwrap());
-                }
-            }
-            current = env.crypto().sha256(&combined).into();
-            idx /= 2;
-        }
-
-        // Compare with root
+        let mut leaf_input = Bytes::new(env);
+        leaf_input.push_back(0x00);
         for i in 0..32 {
-            if current.get(i).unwrap() != root.get(i).unwrap() {
-                return false;
-            }
+            leaf_input.push_back(prehash.get(i).unwrap());
         }
-        true
+
+        env.crypto().sha256(&leaf_input).into()
     }
 }
 

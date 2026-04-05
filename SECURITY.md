@@ -2,7 +2,7 @@
 
 ## Status
 
-Cougr is currently pre-`1.0` software. The repository contains stable ideas, but not every public subsystem should be treated as production-ready.
+Cougr now defines a `1.0.0` stable contract for a scoped subset of the crate. Not every public subsystem is part of that stable guarantee.
 
 Security-sensitive areas include:
 
@@ -18,13 +18,15 @@ Current guidance:
 
 | Area | Status | Guidance |
 |---|---|---|
-| ECS runtime and storage | Beta | Suitable for active evaluation and internal use with validation |
+| ECS runtime and storage | Stable | Part of the `1.0` contract when used through the documented onboarding and runtime surfaces |
 | Accounts and smart-account flows | Beta | Do not assume full production guarantees without project-specific review |
-| Privacy primitives | Beta | Commit-reveal and Merkle utilities are more mature than advanced proof flows |
+| Standards layer (`standards`) | Stable | Reusable contract primitives are part of the `1.0` stable contract |
+| Privacy primitives (`zk::stable`) | Stable | Commit-reveal, hidden-state codecs, and Merkle utilities are the stable privacy contract |
 | Advanced ZK verification | Experimental | Treat as non-stable until verification contracts and assumptions are fully hardened |
 
 The latest maturity definitions live in [docs/MATURITY_MODEL.md](docs/MATURITY_MODEL.md).
 The current threat-model baseline lives in [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
+The explicit compatibility story lives in [docs/COMPATIBILITY_PROMISES.md](docs/COMPATIBILITY_PROMISES.md).
 
 ## Threat Model Expectations
 
@@ -60,7 +62,7 @@ Until a dedicated security contact is published, use the maintainer channels ass
 
 ## Supported Versions
 
-Because Cougr is pre-`1.0`, only the latest mainline development state should be assumed relevant for fixes unless a release branch explicitly says otherwise.
+The latest stable release line and current mainline development state should be assumed relevant for fixes unless a maintenance policy says otherwise.
 
 ## Secure Contribution Expectations
 

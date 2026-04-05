@@ -1,6 +1,7 @@
 use crate::components::{Direction, DirectionComponent, Food, Position, SnakeSegment};
 use cougr_core::component::ComponentTrait;
 use cougr_core::simple_world::{EntityId, SimpleWorld};
+use cougr_core::SimpleQueryBuilder;
 use soroban_sdk::{symbol_short, Env, Vec};
 
 /// Segment data for sorting (entity_id, index, x, y)
@@ -10,7 +11,7 @@ type SegmentData = (EntityId, u32, i32, i32);
 /// Returns the new head position
 pub fn move_snake(world: &mut SimpleWorld, env: &Env, grid_size: i32) -> Option<Position> {
     // Find snake head
-    let head_entities = world.get_entities_with_component(&symbol_short!("snkhead"), env);
+    let head_entities = entities_with(world, env, symbol_short!("snkhead"));
     if head_entities.is_empty() {
         return None;
     }
@@ -47,7 +48,7 @@ pub fn move_snake(world: &mut SimpleWorld, env: &Env, grid_size: i32) -> Option<
 
 /// Move all body segments to follow the head
 fn move_body_segments(world: &mut SimpleWorld, env: &Env, old_head_x: i32, old_head_y: i32) {
-    let segment_entities = world.get_entities_with_component(&symbol_short!("snkseg"), env);
+    let segment_entities = entities_with(world, env, symbol_short!("snkseg"));
 
     // Collect segments with their indices as tuples of primitives
     let mut segments: Vec<SegmentData> = Vec::new(env);
@@ -115,7 +116,7 @@ fn move_body_segments(world: &mut SimpleWorld, env: &Env, old_head_x: i32, old_h
 /// Check if the snake collides with itself
 pub fn check_self_collision(world: &SimpleWorld, env: &Env) -> bool {
     // Get head position
-    let head_entities = world.get_entities_with_component(&symbol_short!("snkhead"), env);
+    let head_entities = entities_with(world, env, symbol_short!("snkhead"));
     if head_entities.is_empty() {
         return false;
     }
@@ -126,7 +127,7 @@ pub fn check_self_collision(world: &SimpleWorld, env: &Env) -> bool {
     };
 
     // Check against all body segments
-    let segment_entities = world.get_entities_with_component(&symbol_short!("snkseg"), env);
+    let segment_entities = entities_with(world, env, symbol_short!("snkseg"));
     for i in 0..segment_entities.len() {
         let entity_id = segment_entities.get(i).unwrap();
         if let Some(seg_pos) = get_position(world, entity_id, env) {
@@ -142,7 +143,7 @@ pub fn check_self_collision(world: &SimpleWorld, env: &Env) -> bool {
 /// Check if the snake head is on food
 pub fn check_food_collision(world: &SimpleWorld, env: &Env) -> Option<EntityId> {
     // Get head position
-    let head_entities = world.get_entities_with_component(&symbol_short!("snkhead"), env);
+    let head_entities = entities_with(world, env, symbol_short!("snkhead"));
     if head_entities.is_empty() {
         return None;
     }
@@ -150,7 +151,7 @@ pub fn check_food_collision(world: &SimpleWorld, env: &Env) -> Option<EntityId> 
     let head_pos = get_position(world, head_id, env)?;
 
     // Check against food entities
-    let food_entities = world.get_entities_with_component(&symbol_short!("food"), env);
+    let food_entities = entities_with(world, env, symbol_short!("food"));
     for i in 0..food_entities.len() {
         let food_id = food_entities.get(i).unwrap();
         if let Some(food_pos) = get_position(world, food_id, env) {
@@ -165,7 +166,7 @@ pub fn check_food_collision(world: &SimpleWorld, env: &Env) -> Option<EntityId> 
 
 /// Grow the snake by adding a new segment at the tail
 pub fn grow_snake(world: &mut SimpleWorld, env: &Env) {
-    let segment_entities = world.get_entities_with_component(&symbol_short!("snkseg"), env);
+    let segment_entities = entities_with(world, env, symbol_short!("snkseg"));
 
     // Find the highest segment index and tail position
     let mut max_index: u32 = 0;
@@ -173,7 +174,7 @@ pub fn grow_snake(world: &mut SimpleWorld, env: &Env) {
 
     // If no segments exist, find head position
     if segment_entities.is_empty() {
-        let head_entities = world.get_entities_with_component(&symbol_short!("snkhead"), env);
+        let head_entities = entities_with(world, env, symbol_short!("snkhead"));
         if !head_entities.is_empty() {
             let head_id = head_entities.get(0).unwrap();
             tail_pos = get_position(world, head_id, env);
@@ -211,7 +212,7 @@ pub fn grow_snake(world: &mut SimpleWorld, env: &Env) {
 /// Spawn food at a position that doesn't overlap with the snake
 pub fn spawn_food(world: &mut SimpleWorld, env: &Env, tick: u32, grid_size: i32) {
     // Remove any existing food
-    let food_entities = world.get_entities_with_component(&symbol_short!("food"), env);
+    let food_entities = entities_with(world, env, symbol_short!("food"));
     for i in 0..food_entities.len() {
         let food_id = food_entities.get(i).unwrap();
         world.despawn_entity(food_id);
@@ -219,8 +220,8 @@ pub fn spawn_food(world: &mut SimpleWorld, env: &Env, tick: u32, grid_size: i32)
 
     // Collect all occupied positions
     let mut occupied_count = 0;
-    let head_entities = world.get_entities_with_component(&symbol_short!("snkhead"), env);
-    let segment_entities = world.get_entities_with_component(&symbol_short!("snkseg"), env);
+    let head_entities = entities_with(world, env, symbol_short!("snkhead"));
+    let segment_entities = entities_with(world, env, symbol_short!("snkseg"));
 
     occupied_count += head_entities.len() + segment_entities.len();
 
@@ -282,7 +283,7 @@ pub fn spawn_food(world: &mut SimpleWorld, env: &Env, tick: u32, grid_size: i32)
 
 /// Update the snake's direction (with validation)
 pub fn update_direction(world: &mut SimpleWorld, env: &Env, new_direction: Direction) -> bool {
-    let head_entities = world.get_entities_with_component(&symbol_short!("snkhead"), env);
+    let head_entities = entities_with(world, env, symbol_short!("snkhead"));
     if head_entities.is_empty() {
         return false;
     }
@@ -323,6 +324,17 @@ fn get_direction(world: &SimpleWorld, entity_id: EntityId, env: &Env) -> Option<
 fn get_segment(world: &SimpleWorld, entity_id: EntityId, env: &Env) -> Option<SnakeSegment> {
     let data = world.get_component(entity_id, &symbol_short!("snkseg"))?;
     SnakeSegment::deserialize(env, &data)
+}
+
+fn entities_with(
+    world: &SimpleWorld,
+    env: &Env,
+    component_type: soroban_sdk::Symbol,
+) -> Vec<EntityId> {
+    SimpleQueryBuilder::new(env)
+        .with_component(component_type)
+        .build()
+        .execute(world, env)
 }
 
 #[cfg(test)]

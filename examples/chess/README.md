@@ -121,7 +121,7 @@ All components implement `cougr_core::component::ComponentTrait` for type-safe s
 
 ### Move Validation Circuit
 
-Uses `cougr_core::zk::experimental::CustomCircuitBuilder`:
+Uses `cougr_core::privacy::experimental::CustomCircuitBuilder`:
 
 ```rust
 let circuit = CustomCircuit::builder(vk)

@@ -111,6 +111,15 @@ let component = Component::new(Position::component_type(), position.serialize(&e
 | `spawn_food` | World, tick | - | Places food at unoccupied cell |
 | `update_direction` | World, Direction | bool | Validates and applies direction |
 
+### Recommended Runtime Path
+
+This example now follows the recommended Cougr runtime shape for Soroban:
+
+- `GameApp` is reconstructed from persisted `SimpleWorld` state per invocation
+- startup systems create the initial snake and food
+- tick logic runs through explicit schedule stages
+- component scans use `SimpleQueryBuilder`
+
 ---
 
 ## Prerequisites

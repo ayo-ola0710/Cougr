@@ -1,8 +1,8 @@
 #![no_std]
 
 use cougr_core::component::ComponentTrait;
-use cougr_core::zk::experimental::CustomCircuit;
-use cougr_core::zk::{Groth16Proof, VerificationKey};
+use cougr_core::privacy::experimental::CustomCircuit;
+use cougr_core::privacy::{Groth16Proof, VerificationKey};
 use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Map, Symbol,
 };

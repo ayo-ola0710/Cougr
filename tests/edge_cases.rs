@@ -194,7 +194,7 @@ fn test_plugin_app_run_with_no_systems() {
     let mut app = PluginApp::new(&env);
 
     // Should not panic
-    app.run(&env);
+    app.run(&env).unwrap();
     assert_eq!(app.system_count(), 0);
 }
 
@@ -205,7 +205,7 @@ fn test_plugin_app_run_with_no_entities() {
     app.add_system("noop", |_world: &mut SimpleWorld, _env: &Env| {});
 
     // Should not panic even with no entities
-    app.run(&env);
+    app.run(&env).unwrap();
 }
 
 // ---------------------------------------------------------------------------

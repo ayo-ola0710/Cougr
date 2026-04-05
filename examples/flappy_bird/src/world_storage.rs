@@ -1,5 +1,6 @@
+use cougr_core::{Component, EntityId, Resource, Storage};
 use soroban_sdk::{contracttype, Bytes, Env, Symbol, Vec};
-use cougr_core::{World, EntityId, Component, Resource, Storage};
+use cougr_core::legacy::World;
 
 /// Serialized representation of World components for Soroban storage
 /// We store each component separately since Storage struct isn't directly serializable

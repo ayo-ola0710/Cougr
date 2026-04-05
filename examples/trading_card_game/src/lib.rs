@@ -1,6 +1,6 @@
 #![no_std]
 
-use cougr_core::accounts::{BatchBuilder, GameAction, SessionBuilder};
+use cougr_core::auth::{BatchBuilder, GameAction, SessionBuilder};
 use cougr_core::component::ComponentTrait;
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, symbol_short, Address,

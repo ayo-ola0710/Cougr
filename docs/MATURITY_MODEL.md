@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines how Cougr classifies public surfaces before `1.0`.
+This document defines how Cougr classifies public surfaces at and after `1.0`.
 
 The goal is straightforward: stability, documentation, and compatibility promises must match the actual implementation.
 
@@ -29,7 +29,7 @@ Stable features must not contain:
 Beta features are:
 
 - usable and actively supported
-- expected to evolve before `1.0`
+- expected to evolve outside the stable guarantee
 - covered by tests, but not yet frozen in API or guarantees
 
 Beta is the right classification for modules that have real implementation value but still need one or more of:
@@ -58,9 +58,9 @@ Experimental is the default for features where:
 
 | Surface | Status | Notes |
 |---|---|---|
-| ECS runtime, worlds, storage, scheduling | Beta | Broadly usable, with a curated root facade and a smaller onboarding path |
-| Accounts and smart-account flows | Beta | Valuable direction, but auth kernel and session enforcement still need redesign |
-| Standards layer (`standards`) | Beta | Reusable and integration-tested, but still pre-`1.0` and not yet frozen |
+| ECS runtime, worlds, storage, scheduling | Stable | Frozen into the documented `1.0` contract for the curated root and runtime surfaces |
+| Accounts and smart-account flows | Beta | Kernel, intent typing, and replay domains are implemented, but the public auth contract is still intentionally unfrozen |
+| Standards layer (`standards`) | Stable | Reusable, documented, and validated as part of the `1.0` contract |
 | Commitments, commit-reveal, hidden-state encoding, and Merkle utilities (`zk::stable`) | Stable | Explicitly separated from experimental proof-verification helpers |
 | Advanced ZK verification and confidential abstractions | Experimental | Do not treat as stable production primitives yet |
 | Testing helpers (`zk::testing`, `MockAccount`) | Non-stable support surface | Intended only for tests or explicit test utility consumers |

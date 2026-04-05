@@ -6,6 +6,10 @@ Cougr is a monolithic-on-the-outside ECS framework for Soroban-compatible applic
 The public API is intentionally split into:
 
 - root re-exports for the onboarding path
+- `app` for the default gameplay runtime surface
+- `auth` for beta account and session flows
+- `privacy` for stable and experimental privacy surfaces
+- `ops` for stable operational standards
 - `accounts` for account abstraction and session flows
 - `zk::stable` for stable privacy primitives
 - `zk::experimental` for fast-moving proof-verification APIs
@@ -27,9 +31,11 @@ assert_eq!(pos.x, 1);
 
 # Stability
 
-- ECS runtime and storage: Beta
+- ECS runtime and storage: Stable
+- `app`: Stable
+- `standards`: Stable
 - Accounts: Beta
-- `zk::stable`: Stable subset
+- `zk::stable`: Stable
 - `zk::experimental`: Experimental
 "#]
 
@@ -52,6 +58,7 @@ pub mod component;
 #[cfg(feature = "debug")]
 #[doc(hidden)]
 pub mod debug;
+pub mod ecs;
 pub mod error;
 pub mod event;
 pub mod game_world;
@@ -64,7 +71,9 @@ pub mod resource;
 pub mod scheduler;
 pub mod simple_world;
 pub mod standards;
+#[doc(hidden)]
 pub mod system;
+#[doc(hidden)]
 pub mod world;
 pub mod zk;
 
@@ -73,31 +82,96 @@ mod entity;
 mod storage;
 
 // Root-level golden path re-exports.
-pub use archetype_world::{ArchetypeQueryCache, ArchetypeWorld};
+pub use archetype_world::{
+    ArchetypeQuery, ArchetypeQueryBuilder, ArchetypeQueryCache, ArchetypeQueryState, ArchetypeWorld,
+};
 pub use change_tracker::{ChangeTracker, TrackedWorld};
 pub use commands::CommandQueue;
 pub use component::{Component, ComponentId, ComponentStorage, ComponentTrait, Position};
+pub use ecs::{RuntimeWorld, RuntimeWorldMut, WorldBackend};
 pub use entity::{Entity, EntityId};
 pub use error::{CougrError, CougrResult};
 pub use event::{Event, EventReader, EventWriter};
+#[doc(hidden)]
 pub use game_world::GameWorld;
+#[doc(hidden)]
 pub use hooks::{HookRegistry, HookedWorld};
+#[doc(hidden)]
 pub use incremental::{StorageWorld, WorldMetadata};
+#[doc(hidden)]
 pub use observers::{ObservedWorld, ObserverRegistry};
-pub use plugin::{Plugin, PluginApp};
-pub use query::{Query, QueryState, SimpleQueryCache};
+pub use plugin::{GameApp, Plugin, PluginApp, PluginGroup};
+pub use query::{
+    Query, QueryState, QueryStorage, SimpleQuery, SimpleQueryBuilder, SimpleQueryCache,
+    SimpleQueryState,
+};
 pub use resource::Resource;
-pub use scheduler::{SimpleScheduler, SystemScheduler};
+pub use resource::ResourceTrait;
+pub use scheduler::{
+    ScheduleError, ScheduleStage, SimpleScheduler, SystemConfig, SystemGroup, SystemScheduler,
+};
 pub use simple_world::SimpleWorld;
+#[doc(hidden)]
 pub use storage::{SparseStorage, Storage, TableStorage};
-pub use system::{IntoSystem, MovementSystem, System, SystemParam};
+pub use system::{
+    context_system, named_app_system, named_context_system, named_system, world_system, AppSystem,
+    SimpleSystem, SystemContext, SystemSpec,
+};
+#[doc(hidden)]
 pub use world::World;
+
+/// Default gameplay runtime surface for new Cougr projects.
+pub mod app {
+    pub use super::{
+        context_system, named_app_system, named_context_system, named_system, world_system,
+        AppSystem, CommandQueue, GameApp, Plugin, PluginApp, PluginGroup, Resource, ResourceTrait,
+        RuntimeWorld, RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery,
+        SimpleQueryBuilder, SimpleScheduler, SimpleSystem, SimpleWorld, SystemConfig,
+        SystemContext, SystemGroup, SystemSpec,
+    };
+}
+
+/// Compatibility-preserving legacy ECS surface.
+///
+/// New Soroban projects should prefer [`app`] and the root onboarding exports.
+pub mod legacy {
+    pub use super::scheduler::SystemScheduler;
+    pub use super::system::{IntoSystem, MovementSystem, System, SystemParam};
+    pub use super::World;
+}
+
+/// Beta account and session surface.
+///
+/// This namespace mirrors [`accounts`] but makes its product role explicit.
+pub mod auth {
+    pub use super::accounts::*;
+}
+
+/// Privacy surface split by maturity tier.
+///
+/// New code should prefer [`privacy::stable`] for defended contracts and only
+/// opt into [`privacy::experimental`] knowingly.
+pub mod privacy {
+    pub use super::zk::{
+        experimental, stable, G1Point, G2Point, Groth16Proof, Scalar, VerificationKey, ZKError,
+    };
+}
+
+/// Stable operational and contract standards.
+///
+/// This namespace mirrors [`standards`] while making the adoption boundary
+/// clearer for application code.
+pub mod ops {
+    pub use super::standards::*;
+}
 
 /// Common ECS imports for the default onboarding path.
 pub mod prelude {
     pub use super::{
         ArchetypeWorld, CommandQueue, Component, ComponentStorage, ComponentTrait, EntityId,
-        Position, Query, Resource, SimpleWorld, World,
+        GameApp, PluginGroup, Position, Query, QueryStorage, Resource, RuntimeWorld,
+        RuntimeWorldMut, SimpleQuery, SimpleQueryBuilder, SimpleWorld, SystemContext, World,
+        WorldBackend,
     };
 }
 
@@ -106,9 +180,10 @@ pub mod prelude {
 pub mod runtime {
     pub use super::{
         resource::Resource, ChangeTracker, Event, EventReader, EventWriter, HookRegistry,
-        HookedWorld, ObservedWorld, ObserverRegistry, Plugin, PluginApp, QueryState,
-        SimpleQueryCache, SimpleScheduler, StorageWorld, System, SystemParam, SystemScheduler,
-        TrackedWorld,
+        HookedWorld, ObservedWorld, ObserverRegistry, Plugin, PluginApp, PluginGroup, QueryState,
+        QueryStorage, RuntimeWorld, RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery,
+        SimpleQueryBuilder, SimpleQueryCache, SimpleQueryState, SimpleScheduler, StorageWorld,
+        SystemConfig, SystemScheduler, TrackedWorld, WorldBackend,
     };
 }
 

@@ -132,7 +132,7 @@ fn test_observed_world_into_plugin_app() {
     let inner_world = observed.into_inner();
     let mut app = PluginApp::with_world(inner_world);
     app.add_system("physics", setup_physics_system);
-    app.run(&env);
+    app.run(&env).unwrap();
 
     // Physics applied: 10+5=15
     let pos = app
@@ -222,7 +222,7 @@ fn test_multiple_plugins_sharing_world() {
     assert!(app.world().has_component(1, &symbol_short!("a_comp")));
 
     // Run PluginB's system
-    app.run(&env);
+    app.run(&env).unwrap();
 
     // PluginB's system added its component
     assert!(app.world().has_component(1, &symbol_short!("b_comp")));
@@ -298,9 +298,9 @@ fn test_scheduler_with_command_queue_pattern() {
     scheduler.add_system("spawner", spawner_system);
 
     // Run 3 ticks — each spawns one entity
-    scheduler.run_all(&mut world, &env);
-    scheduler.run_all(&mut world, &env);
-    scheduler.run_all(&mut world, &env);
+    scheduler.run_all(&mut world, &env).unwrap();
+    scheduler.run_all(&mut world, &env).unwrap();
+    scheduler.run_all(&mut world, &env).unwrap();
 
     let spawned_entities = world.get_entities_with_component(&symbol_short!("spawned"), &env);
     assert_eq!(spawned_entities.len(), 3);

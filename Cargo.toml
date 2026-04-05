@@ -1,12 +1,44 @@
 [package]
 name = "cougr-core"
-version = "0.5.0"
+version = "1.0.0"
 edition = "2021"
 description = "Cougr - A Soroban-compatible ECS framework for on-chain gaming on Stellar"
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/salazarsebas/Cougr"
+homepage = "https://github.com/salazarsebas/Cougr"
 keywords = ["ecs", "game", "soroban", "blockchain", "stellar"]
 categories = ["game-engines", "data-structures", "wasm"]
 rust-version = "1.70.0"
+exclude = [
+    ".github/**",
+    "doocs/**",
+    "public/**",
+    "research/**",
+    "skills/**",
+    "src/archetype.rs",
+    "src/batching.rs",
+    "src/bundle.rs",
+    "src/change_detection.rs",
+    "src/entity/**",
+    "src/entity_disabling.rs",
+    "src/hierarchy.rs",
+    "src/intern.rs",
+    "src/label.rs",
+    "src/name.rs",
+    "src/never.rs",
+    "src/reflect/**",
+    "src/relationship/**",
+    "src/spawn.rs",
+    "src/storage/**",
+    "src/system/commands/**",
+    "src/traversal.rs",
+    "src/world/**",
+    "examples/**/build.txt",
+    "examples/**/clippy.txt",
+    "examples/**/clippy_output.txt",
+    "examples/**/deploy_output.txt",
+]
 
 [lib]
 crate-type = ["rlib"]

@@ -95,6 +95,6 @@ Important failure modes include:
 
 ## Maturity
 
-Status: Beta
+Status: Stable
 
-The standards are reusable and integration-tested, but still pre-`1.0`. Their API is intentionally designed and documented, yet still subject to refinement while Cougr finalizes its broader stable surface.
+The standards layer is part of Cougr's frozen `1.0` stable contract. Integrators should still supply their own caller-auth composition where required, but the module interfaces and documented failure semantics are now part of the defended public surface.

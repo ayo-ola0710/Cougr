@@ -64,7 +64,7 @@ impl SpaceInvadersContract {
     /// persists the game state on-chain.
     pub fn init_game(env: Env) {
         // Create cougr-core ECS World for entity management
-        let mut world = cougr_core::World::new();
+        let mut world = cougr_core::legacy::World::new();
 
         // Spawn player ship entity in ECS World
         let _ship_entity = world.spawn_empty();

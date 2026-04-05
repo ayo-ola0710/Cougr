@@ -64,8 +64,8 @@ impl EntityPosition {
     /// Convert to cougr-core Position for ECS integration
     pub fn to_cougr_position(&self) -> CougrPosition {
         CougrPosition {
-            x: self.x as u32,
-            y: self.y as u32,
+            x: self.x,
+            y: self.y,
         }
     }
 

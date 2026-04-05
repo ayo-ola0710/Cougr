@@ -60,6 +60,26 @@ Use examples by pattern, not only by genre:
 | Account abstraction patterns | `guild_arena` |
 | Larger multi-entity loops | `asteroids`, `space_invaders`, `pac_man` |
 
+## Preferred Runtime Shape
+
+For new examples and new production contracts, prefer the modern Cougr runtime path:
+
+- `GameApp` as the entrypoint
+- explicit stage placement for systems
+- `SimpleQueryBuilder` for non-trivial world scans
+- table storage for hot-loop gameplay state
+
+For examples that intentionally stay on the older ECS model, use `cougr_core::legacy`
+explicitly rather than importing `World` from the root and blurring the onboarding story.
+
+## Canonical References
+
+The maintained reference architectures for Cougr should be read in this order:
+
+- `snake`: canonical arcade loop and `GameApp` tick model
+- `battleship`: canonical hidden-information / commit-reveal flow using `privacy::stable` Merkle primitives
+- `guild_arena`: canonical account recovery and multi-device authorization flow
+
 ## Conventions
 
 - Keep each example self-contained.
@@ -77,4 +97,3 @@ Before adding a new example:
 4. add or update a CI workflow if the example should be validated automatically
 
 For contribution expectations across the repository, see [CONTRIBUTING.md](../CONTRIBUTING.md).
-

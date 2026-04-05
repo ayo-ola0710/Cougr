@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The goal is to make authorization explicit, modular, and replay-safe before any `1.0` API freeze.
+The goal is to make authorization explicit, modular, and replay-safe while keeping the `accounts` namespace outside Cougr's frozen `1.0` stable contract.
 
 ## Core Model
 

@@ -47,6 +47,10 @@ pub struct SimpleWorld {
     pub sparse_components: Map<(u32, Symbol), Bytes>,
     /// Tracks which component types each entity has.
     pub entity_components: Map<u32, Vec<Symbol>>,
+    /// Direct index for frequently queried table-backed components.
+    pub table_index: Map<Symbol, Vec<u32>>,
+    /// Direct index for all components regardless of backing storage.
+    pub all_index: Map<Symbol, Vec<u32>>,
     /// Version counter incremented on structural changes (add/remove/despawn).
     /// Used for query cache invalidation.
     pub version: u64,
@@ -59,6 +63,8 @@ impl SimpleWorld {
             components: Map::new(env),
             sparse_components: Map::new(env),
             entity_components: Map::new(env),
+            table_index: Map::new(env),
+            all_index: Map::new(env),
             version: 0,
         }
     }
@@ -72,6 +78,62 @@ impl SimpleWorld {
         let id = self.next_entity_id;
         self.next_entity_id += 1;
         id
+    }
+
+    fn index_contains(index: &Vec<u32>, entity_id: EntityId) -> bool {
+        for i in 0..index.len() {
+            if let Some(candidate) = index.get(i) {
+                if candidate == entity_id {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn push_index(index: &mut Map<Symbol, Vec<u32>>, component_type: &Symbol, entity_id: EntityId) {
+        let env = index.env();
+        let mut entities = index
+            .get(component_type.clone())
+            .unwrap_or_else(|| Vec::new(env));
+        if !Self::index_contains(&entities, entity_id) {
+            entities.push_back(entity_id);
+            index.set(component_type.clone(), entities);
+        }
+    }
+
+    fn remove_from_index(
+        index: &mut Map<Symbol, Vec<u32>>,
+        component_type: &Symbol,
+        entity_id: EntityId,
+    ) {
+        if let Some(entities) = index.get(component_type.clone()) {
+            let env = index.env();
+            let mut filtered = Vec::new(env);
+            for i in 0..entities.len() {
+                if let Some(candidate) = entities.get(i) {
+                    if candidate != entity_id {
+                        filtered.push_back(candidate);
+                    }
+                }
+            }
+
+            if filtered.is_empty() {
+                index.remove(component_type.clone());
+            } else {
+                index.set(component_type.clone(), filtered);
+            }
+        }
+    }
+
+    fn has_component_in_table(&self, entity_id: EntityId, component_type: &Symbol) -> bool {
+        self.components
+            .contains_key((entity_id, component_type.clone()))
+    }
+
+    fn has_component_in_sparse(&self, entity_id: EntityId, component_type: &Symbol) -> bool {
+        self.sparse_components
+            .contains_key((entity_id, component_type.clone()))
     }
 
     /// Add a component using the default **Table** storage.
@@ -88,15 +150,25 @@ impl SimpleWorld {
         storage: ComponentStorage,
     ) {
         self.version += 1;
+        let was_in_table = self.has_component_in_table(entity_id, &component_type);
+        let was_in_sparse = self.has_component_in_sparse(entity_id, &component_type);
+
         // Route to the correct map
         match storage {
             ComponentStorage::Table => {
                 self.components
                     .set((entity_id, component_type.clone()), data);
+                if was_in_sparse {
+                    self.sparse_components
+                        .remove((entity_id, component_type.clone()));
+                }
             }
             ComponentStorage::Sparse => {
                 self.sparse_components
                     .set((entity_id, component_type.clone()), data);
+                if was_in_table {
+                    self.components.remove((entity_id, component_type.clone()));
+                }
             }
         }
 
@@ -117,9 +189,19 @@ impl SimpleWorld {
             }
         }
         if !found {
-            types.push_back(component_type);
+            types.push_back(component_type.clone());
         }
         self.entity_components.set(entity_id, types);
+
+        Self::push_index(&mut self.all_index, &component_type, entity_id);
+        match storage {
+            ComponentStorage::Table => {
+                Self::push_index(&mut self.table_index, &component_type, entity_id);
+            }
+            ComponentStorage::Sparse => {
+                Self::remove_from_index(&mut self.table_index, &component_type, entity_id);
+            }
+        }
     }
 
     /// Get a component's data, checking both Table and Sparse maps transparently.
@@ -161,6 +243,8 @@ impl SimpleWorld {
                     self.entity_components.set(entity_id, new_types);
                 }
             }
+            Self::remove_from_index(&mut self.all_index, component_type, entity_id);
+            Self::remove_from_index(&mut self.table_index, component_type, entity_id);
             true
         } else {
             false
@@ -169,28 +253,14 @@ impl SimpleWorld {
 
     /// Check if an entity has a component in either Table or Sparse storage.
     pub fn has_component(&self, entity_id: EntityId, component_type: &Symbol) -> bool {
-        self.components
-            .contains_key((entity_id, component_type.clone()))
-            || self
-                .sparse_components
-                .contains_key((entity_id, component_type.clone()))
+        self.has_component_in_table(entity_id, component_type)
+            || self.has_component_in_sparse(entity_id, component_type)
     }
 
     pub fn get_entities_with_component(&self, component_type: &Symbol, env: &Env) -> Vec<EntityId> {
-        let mut entities = Vec::new(env);
-        for key in self.entity_components.keys().iter() {
-            if let Some(types) = self.entity_components.get(key) {
-                for i in 0..types.len() {
-                    if let Some(t) = types.get(i) {
-                        if &t == component_type {
-                            entities.push_back(key);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        entities
+        self.table_index
+            .get(component_type.clone())
+            .unwrap_or_else(|| Vec::new(env))
     }
 
     /// Get entities that have the given component in **Table** storage only.
@@ -200,13 +270,9 @@ impl SimpleWorld {
         component_type: &Symbol,
         env: &Env,
     ) -> Vec<EntityId> {
-        let mut entities = Vec::new(env);
-        for key in self.entity_components.keys().iter() {
-            if self.components.contains_key((key, component_type.clone())) {
-                entities.push_back(key);
-            }
-        }
-        entities
+        self.table_index
+            .get(component_type.clone())
+            .unwrap_or_else(|| Vec::new(env))
     }
 
     /// Get entities that have the given component in **either** Table or Sparse storage.
@@ -215,17 +281,29 @@ impl SimpleWorld {
         component_type: &Symbol,
         env: &Env,
     ) -> Vec<EntityId> {
-        let mut entities = Vec::new(env);
-        for key in self.entity_components.keys().iter() {
-            if self.components.contains_key((key, component_type.clone()))
-                || self
-                    .sparse_components
-                    .contains_key((key, component_type.clone()))
-            {
-                entities.push_back(key);
-            }
-        }
-        entities
+        self.all_index
+            .get(component_type.clone())
+            .unwrap_or_else(|| Vec::new(env))
+    }
+
+    /// Returns the number of entities indexed for a component in table storage only.
+    pub fn table_component_count(&self, component_type: &Symbol) -> usize {
+        self.table_index
+            .get(component_type.clone())
+            .map(|entities| entities.len())
+            .unwrap_or(0)
+            .try_into()
+            .unwrap()
+    }
+
+    /// Returns the number of entities indexed for a component across both storage classes.
+    pub fn component_count(&self, component_type: &Symbol) -> usize {
+        self.all_index
+            .get(component_type.clone())
+            .map(|entities| entities.len())
+            .unwrap_or(0)
+            .try_into()
+            .unwrap()
     }
 
     // ─── Typed convenience methods ────────────────────────────────
@@ -288,7 +366,9 @@ impl SimpleWorld {
             for i in 0..types.len() {
                 if let Some(t) = types.get(i) {
                     self.components.remove((entity_id, t.clone()));
-                    self.sparse_components.remove((entity_id, t));
+                    self.sparse_components.remove((entity_id, t.clone()));
+                    Self::remove_from_index(&mut self.all_index, &t, entity_id);
+                    Self::remove_from_index(&mut self.table_index, &t, entity_id);
                 }
             }
         }
@@ -378,6 +458,8 @@ mod tests {
 
         let entities = world.get_entities_with_component(&symbol_short!("pos"), &env);
         assert_eq!(entities.len(), 2);
+        assert_eq!(world.table_component_count(&symbol_short!("pos")), 2);
+        assert_eq!(world.component_count(&symbol_short!("pos")), 2);
     }
 
     #[test]
@@ -443,6 +525,29 @@ mod tests {
         assert!(world
             .sparse_components
             .contains_key((e1, symbol_short!("marker"))));
+        assert_eq!(world.table_component_count(&symbol_short!("marker")), 0);
+        assert_eq!(world.component_count(&symbol_short!("marker")), 1);
+    }
+
+    #[test]
+    fn test_indices_follow_storage_migration() {
+        let env = Env::default();
+        let mut world = SimpleWorld::new(&env);
+        let entity = world.spawn_entity();
+        let data = Bytes::from_array(&env, &[7]);
+
+        world.add_component(entity, symbol_short!("state"), data.clone());
+        assert_eq!(world.table_component_count(&symbol_short!("state")), 1);
+        assert_eq!(world.component_count(&symbol_short!("state")), 1);
+
+        world.add_component_with_storage(
+            entity,
+            symbol_short!("state"),
+            data,
+            ComponentStorage::Sparse,
+        );
+        assert_eq!(world.table_component_count(&symbol_short!("state")), 0);
+        assert_eq!(world.component_count(&symbol_short!("state")), 1);
     }
 
     #[test]

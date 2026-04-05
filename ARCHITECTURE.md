@@ -33,7 +33,7 @@ Supporting systems:
 - **Hooks** (`src/hooks.rs`) — callbacks on component add/remove
 - **Observers** (`src/observers.rs`) — event-driven reactions
 - **Commands** (`src/commands.rs`) — deferred mutations during system execution
-- **Scheduler** (`src/scheduler.rs`) — priority-based system ordering
+- **Scheduler** (`src/scheduler.rs`) — stage-based, dependency-aware system ordering
 - **Change tracker** (`src/change_tracker.rs`) — per-component dirty flags
 - **Plugins** (`src/plugin.rs`) — modular game logic bundles
 - **Incremental storage** (`src/incremental/`) — only persist dirty entities

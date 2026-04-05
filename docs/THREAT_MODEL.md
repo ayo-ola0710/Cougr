@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the current threat model baseline for Cougr before `1.0`.
+This document defines the current threat model baseline for Cougr at `1.0`.
 
 It is not a claim of formal verification or exhaustive review. It exists so the repository is explicit about what must be defended, where trust assumptions live, and which subsystems need extra scrutiny before production use.
 
@@ -67,7 +67,7 @@ Primary risks:
 Current posture:
 
 - accounts remain Beta
-- session semantics are usable, but the long-term auth kernel is still evolving
+- session semantics, replay domains, and typed intents are implemented, but the broader auth contract remains intentionally unfrozen inside the Beta `accounts` namespace
 
 ### Replay and Intent Reuse
 
@@ -79,8 +79,8 @@ Primary risks:
 
 Current posture:
 
-- replay-sensitive behavior must be reviewed integration by integration
-- roadmap phase 1 continues the deeper replay-protection work
+- replay-sensitive behavior is explicit in the kernel and storage model
+- integrations must still review how their own action semantics map onto Cougr's replay domains
 
 ### ECS State Integrity
 
@@ -93,7 +93,7 @@ Primary risks:
 Current posture:
 
 - ECS primitives are broadly usable
-- stable invariants are not yet frozen across the whole public surface
+- stable invariants are frozen for the documented `1.0` contract, while non-contract support surfaces remain out of scope
 
 ### Proof Verification and Privacy
 
@@ -125,6 +125,7 @@ This threat model works with:
 
 - [docs/MATURITY_MODEL.md](docs/MATURITY_MODEL.md)
 - [docs/API_CONTRACT.md](docs/API_CONTRACT.md)
+- [docs/UNSAFE_INVARIANTS.md](docs/UNSAFE_INVARIANTS.md)
 - [SECURITY.md](../SECURITY.md)
 
 Any future claim that a subsystem is Stable should be accompanied by tighter invariants, explicit failure modes, and threat-model updates where applicable.

@@ -67,6 +67,15 @@ Game logic is organized into systems:
 4. **Collision System**: Detects bird-pipe and bird-ground collisions
 5. **Score System**: Increments score when bird passes pipes
 
+### Runtime Shape
+
+This example follows the recommended Cougr Soroban runtime:
+
+- `GameApp` orchestrates each invocation
+- startup systems spawn the initial bird and pipe set
+- scheduled systems run in `PreUpdate`, `Update`, and `PostUpdate`
+- query-heavy scans use `SimpleQueryBuilder`
+
 ### Contract Functions
 
 - `init_game()`: Initialize a new game with bird and pipes

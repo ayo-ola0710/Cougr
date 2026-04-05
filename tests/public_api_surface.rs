@@ -16,7 +16,10 @@ use cougr_core::zk::experimental::{
     GameCircuit, MovementCircuit, RecursiveProofLayout,
 };
 use cougr_core::zk::stable::{encode_commit_reveal, CommitReveal, COMMIT_REVEAL_TYPE};
-use cougr_core::{Position, SimpleWorld};
+use cougr_core::{
+    ArchetypeQueryBuilder, GameApp, Position, QueryStorage, RuntimeWorld, RuntimeWorldMut,
+    ScheduleStage, SimpleQueryBuilder, SimpleWorld, SystemConfig, WorldBackend,
+};
 use soroban_sdk::{symbol_short, testutils::Address as _, Address, Bytes, BytesN, Env, Vec};
 
 #[test]
@@ -33,6 +36,168 @@ fn sanctioned_root_api_supports_basic_ecs_flow() {
 }
 
 #[test]
+fn sanctioned_root_api_supports_game_app_and_simple_query_flow() {
+    let env = Env::default();
+    let mut app = GameApp::new(&env);
+    app.add_system_with_config(
+        "spawn_player",
+        |world: &mut SimpleWorld, env: &Env| {
+            let entity = world.spawn_entity();
+            world.set_typed(env, entity, &Position::new(1, 2));
+        },
+        SystemConfig::new().in_stage(ScheduleStage::Update),
+    );
+
+    app.run(&env).unwrap();
+
+    let query = SimpleQueryBuilder::new(&env)
+        .with_component(symbol_short!("position"))
+        .build();
+    assert_eq!(query.storage(), QueryStorage::Table);
+    assert_eq!(query.execute(app.world(), &env).len(), 1);
+    assert_eq!(app.world().backend(), WorldBackend::Simple);
+}
+
+#[test]
+fn sanctioned_app_module_supports_runtime_registration_flow() {
+    let env = Env::default();
+    let mut app = cougr_core::app::GameApp::new(&env);
+    app.add_systems(cougr_core::app::named_context_system(
+        "spawn_player",
+        |context| {
+            let entity = context.world_mut().spawn_entity();
+            let env = context.env().clone();
+            context
+                .world_mut()
+                .set_typed(&env, entity, &Position::new(7, 8));
+        },
+    ));
+
+    app.run(&env).unwrap();
+
+    let query = cougr_core::app::SimpleQueryBuilder::new(&env)
+        .with_component(symbol_short!("position"))
+        .build();
+    assert_eq!(query.execute(app.world(), &env).len(), 1);
+}
+
+#[test]
+fn sanctioned_app_module_supports_grouped_system_registration() {
+    let env = Env::default();
+    let mut app = cougr_core::app::GameApp::new(&env);
+
+    app.add_systems((
+        cougr_core::app::named_system("spawn_player", |world: &mut SimpleWorld, env: &Env| {
+            let entity = world.spawn_entity();
+            world.set_typed(env, entity, &Position::new(1, 1));
+        })
+        .in_stage(ScheduleStage::Update)
+        .in_set("spawn"),
+        cougr_core::app::named_context_system("mark_spawned", |context| {
+            let query = cougr_core::app::SimpleQueryBuilder::new(context.env())
+                .with_component(symbol_short!("position"))
+                .build();
+            let entities = query.execute(context.world(), context.env());
+            let env = context.env().clone();
+            for i in 0..entities.len() {
+                let entity = entities.get(i).unwrap();
+                context.commands().add_component(
+                    entity,
+                    symbol_short!("tag"),
+                    Bytes::from_array(&env, &[1]),
+                );
+            }
+        })
+        .in_stage(ScheduleStage::Update)
+        .after_set("spawn"),
+    ));
+
+    app.run(&env).unwrap();
+
+    let query = cougr_core::app::SimpleQueryBuilder::new(&env)
+        .with_component(symbol_short!("position"))
+        .with_any_component(symbol_short!("tag"))
+        .include_sparse()
+        .build();
+    assert_eq!(query.execute(app.world(), &env).len(), 1);
+}
+
+#[test]
+fn sanctioned_root_api_supports_archetype_query_builder() {
+    let env = Env::default();
+    let mut world = cougr_core::ArchetypeWorld::new(&env);
+    let entity = world.spawn_entity();
+    world.set_typed(&env, entity, &Position::new(9, 9));
+
+    let results = ArchetypeQueryBuilder::new()
+        .with_component(symbol_short!("position"))
+        .build()
+        .execute(&world, &env);
+
+    assert_eq!(results.len(), 1);
+    assert_eq!(world.backend(), WorldBackend::Archetype);
+}
+
+fn exercise_runtime_world_mut<W: RuntimeWorldMut>(world: &mut W, env: &Env) {
+    let entity = world.spawn_entity();
+    world.set_typed(env, entity, &Position::new(9, 1));
+    assert!(world.has_typed::<Position>(entity));
+    let loaded: Position = world.get_typed(env, entity).unwrap();
+    assert_eq!(loaded.y, 1);
+}
+
+#[test]
+fn sanctioned_root_api_exposes_shared_runtime_mut_contract() {
+    let env = Env::default();
+    let mut simple = SimpleWorld::new(&env);
+    let mut archetype = cougr_core::ArchetypeWorld::new(&env);
+
+    exercise_runtime_world_mut(&mut simple, &env);
+    exercise_runtime_world_mut(&mut archetype, &env);
+}
+
+#[test]
+fn sanctioned_root_api_supports_plugin_groups() {
+    struct NoopA;
+    struct NoopB;
+
+    impl cougr_core::Plugin for NoopA {
+        fn name(&self) -> &'static str {
+            "noop_a"
+        }
+
+        fn build(&self, _app: &mut GameApp) {}
+    }
+
+    impl cougr_core::Plugin for NoopB {
+        fn name(&self) -> &'static str {
+            "noop_b"
+        }
+
+        fn build(&self, _app: &mut GameApp) {}
+    }
+
+    let env = Env::default();
+    let mut app = GameApp::new(&env);
+    app.add_plugins((NoopA, NoopB));
+    assert_eq!(app.plugin_count(), 2);
+}
+
+#[test]
+fn legacy_module_keeps_world_surface_explicit() {
+    let mut world = cougr_core::legacy::World::new();
+    let _entity = world.spawn_empty();
+    assert_eq!(world.entity_count(), 1);
+}
+
+#[test]
+fn root_still_keeps_advanced_surface_available_for_compatibility() {
+    let _ = core::mem::size_of::<Option<cougr_core::World>>();
+    let _ = core::mem::size_of::<Option<cougr_core::SystemScheduler>>();
+    let _ = core::mem::size_of::<Option<cougr_core::Storage>>();
+}
+
+#[test]
 fn stable_zk_namespace_exposes_stable_commit_reveal_flow() {
     let env = Env::default();
     let commitment = BytesN::from_array(&env, &[9u8; 32]);
@@ -42,6 +207,22 @@ fn stable_zk_namespace_exposes_stable_commit_reveal_flow() {
     assert_eq!(encoded.len(), 41);
 
     let _stable_component: Option<CommitReveal> = None;
+}
+
+#[test]
+fn privacy_namespace_exposes_split_maturity_explicitly() {
+    let env = Env::default();
+    let commitment = BytesN::from_array(&env, &[3u8; 32]);
+    let encoded = cougr_core::privacy::stable::encode_commit_reveal(&env, &commitment, 55, false);
+    assert_eq!(encoded.len(), 41);
+
+    let _exp_fn: fn(
+        &Env,
+        &cougr_core::privacy::VerificationKey,
+        &cougr_core::privacy::Groth16Proof,
+        &[cougr_core::privacy::Scalar],
+    ) -> Result<bool, cougr_core::privacy::ZKError> =
+        cougr_core::privacy::experimental::verify_groth16;
 }
 
 #[test]
@@ -127,6 +308,14 @@ fn accounts_namespace_exposes_curated_beta_entrypoints() {
 }
 
 #[test]
+fn auth_namespace_mirrors_beta_accounts_surface() {
+    let env = Env::default();
+    let _session_builder = cougr_core::auth::SessionBuilder::new(&env)
+        .allow_action(symbol_short!("move"))
+        .max_operations(3);
+}
+
+#[test]
 fn standards_namespace_exposes_reusable_contract_primitives() {
     let env = Env::default();
     let account = Address::generate(&env);
@@ -142,4 +331,10 @@ fn standards_namespace_exposes_reusable_contract_primitives() {
 
     let _error_marker = StandardsError::Paused;
     let _ = account;
+}
+
+#[test]
+fn ops_namespace_mirrors_standards_surface() {
+    let _guard = cougr_core::ops::ExecutionGuard::new(symbol_short!("exec"));
+    let _ownable = cougr_core::ops::Ownable::new(symbol_short!("own"));
 }

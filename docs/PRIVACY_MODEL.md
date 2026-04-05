@@ -2,11 +2,11 @@
 
 ## Purpose
 
-This document defines Cougr's privacy and proof-verification contract after phase 2.
+This document defines Cougr's privacy and proof-verification contract after the `1.0` release gate.
 
 Its job is to separate the stable privacy subset from experimental proof systems so
 that the repository can make a smaller, stronger claim about what is safe to depend
-on before `1.0`.
+on in the stable contract.
 
 ## Stable Privacy Surface
 
@@ -25,8 +25,8 @@ The stable privacy subset in Cougr is:
 
 These are exposed through:
 
-- `cougr_core::zk::stable`
-- `cougr_core::zk::stable`
+- `cougr_core::privacy::stable`
+- `cougr_core::zk::stable` as the compatibility alias
 
 ## Experimental Privacy Surface
 
@@ -44,13 +44,34 @@ The following remain Experimental:
 
 These are exposed through:
 
-- `cougr_core::zk::experimental`
-- `cougr_core::zk::experimental`
+- `cougr_core::privacy::experimental`
+- `cougr_core::zk::experimental` as the compatibility alias
 
 Compatibility note:
 
 Experimental modules may still be re-exported from `cougr_core::zk` for transition
-convenience, but they are not part of Cougr's stable privacy promise.
+convenience, but they are not part of Cougr's stable privacy promise. New application
+code should prefer `cougr_core::privacy::experimental` so the product-level intent is
+obvious at the import site.
+
+## `1.0` Privacy Freeze
+
+The frozen `1.0` privacy contract is exactly:
+
+- commitments
+- commit-reveal flows
+- hidden-state codec interfaces
+- Merkle inclusion verification
+- sparse Merkle utilities
+- the interface contracts re-exported from `cougr_core::privacy::stable`
+
+The following are explicitly excluded from the `1.0` stable privacy contract:
+
+- `zk::experimental`
+- proof-submission orchestration that depends on experimental verification
+- Groth16 verifier implementations
+- prebuilt advanced circuit helpers
+- state-channel, recursive, and fog-of-war orchestration helpers
 
 ## Privacy Maturity Table
 
