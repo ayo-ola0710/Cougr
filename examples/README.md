@@ -40,11 +40,13 @@ stellar contract build
 | `pac_man` | Maze action | Grid navigation and adversarial movement patterns |
 | `pokemon_mini` | Turn-based battle | Combat sequencing and match state transitions |
 | `pong` | Arcade | Minimal competitive loop and ECS fundamentals |
+| `proof_of_hunt` | Hidden-state exploration | stellar-zk style proof verification and x402 premium actions |
 | `rock_paper_scissors` | Commit-reveal | Hidden choices and reveal resolution |
 | `snake` | Arcade | Growth mechanics and collision rules |
 | `space_invaders` | Wave shooter | Formation movement and repeated tick systems |
 | `tap_battle` | Casual competitive | Lightweight action resolution and progression |
 | `tetris` | Puzzle | Piece state, rotation, and board clearing |
+| `treasure_hunt` | Hidden-state exploration | Off-chain Merkle map commitments with on-chain proof-gated discovery and sparse fog-of-war |
 | `tic_tac_toe` | Board | Small-state deterministic turn handling |
 | `trading_card_game` | Card / strategy | Structured turns, card effects, and state composition |
 
