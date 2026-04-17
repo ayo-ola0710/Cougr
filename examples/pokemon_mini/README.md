@@ -1,6 +1,6 @@
-# Pokémon Mini On-Chain Game
+# Pokemon Mini On-Chain Game
 
-A Pokémon-style mini game implemented as a Soroban smart contract using the **cougr-core** ECS framework on the Stellar blockchain.
+A Pokemon-style mini game implemented as a Soroban smart contract using the **cougr-core** ECS framework on the Stellar blockchain.
 
 ## Overview
 

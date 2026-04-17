@@ -33,7 +33,6 @@ stellar contract build
 | `battleship` | Board / hidden information | Commit-reveal and selective state disclosure |
 | `bomberman` | Grid action | Tile updates, hazards, and timed interactions |
 | `chess` | Board / strategy | Rule validation and proof-oriented move flow |
-| `dungeon_crawler` | Progression | Stateful exploration and encounter management |
 | `flappy_bird` | Arcade | Tight tick-loop updates and obstacle generation |
 | `geometry_dash` | Reflex | Deterministic timing and obstacle progression |
 | `guild_arena` | Account patterns | Social recovery and multi-device gameplay |
