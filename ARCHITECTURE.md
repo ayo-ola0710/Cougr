@@ -14,7 +14,7 @@ High-level overview of how Cougr is organized. For usage, see [README.md](README
 └─────────────────────────────────────────────┘
 ```
 
-**GameApp** (`src/plugin.rs`) is the default onboarding layer. It owns a `SimpleWorld`,
+**GameApp** (`src/plugin/mod.rs`) is the default onboarding layer. It owns a `SimpleWorld`,
 the scheduler, plugin registration, and runtime resources in one place.
 
 **GameWorld** (`src/game_world.rs`) remains available as a higher-level Beta integration
@@ -27,20 +27,20 @@ Two storage backends, same `ComponentTrait` interface:
 
 | Backend | File | Strategy | Best for |
 |---|---|---|---|
-| **SimpleWorld** | `src/simple_world.rs` | `Map<EntityId, Map<Symbol, Bytes>>` with dual Table/Sparse | General use, small entity counts |
+| **SimpleWorld** | `src/simple_world/` | `Map<(EntityId, Symbol), Bytes>` with dual Table/Sparse indexes | General use, small entity counts |
 | **ArchetypeWorld** | `src/archetype_world/` | Groups entities by component signature | Large entity counts, batch queries |
 
 Both support typed access (`get_typed<T>`, `set_typed<T>`) and raw access (`get_component`, `add_component`).
 
 Supporting systems:
 
-- **Query cache** (`src/query.rs`) — version-tagged, invalidates on world mutation
+- **Query cache** (`src/query/`) — version-tagged, invalidates on world mutation
 - **Hooks** (`src/hooks.rs`) — callbacks on component add/remove
 - **Observers** (`src/observers.rs`) — event-driven reactions
 - **Commands** (`src/commands.rs`) — deferred mutations during system execution
-- **Scheduler** (`src/scheduler.rs`) — stage-based, dependency-aware system ordering
+- **Scheduler** (`src/scheduler/`) — stage-based, dependency-aware system ordering
 - **Change tracker** (`src/change_tracker.rs`) — per-component dirty flags
-- **Plugins** (`src/plugin.rs`) — modular game logic bundles
+- **Plugins** (`src/plugin/`) — modular game logic bundles
 - **Incremental storage** (`src/incremental/`) — only persist dirty entities
 
 ### Component definition

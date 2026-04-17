@@ -1,14 +1,15 @@
 //! Cross-module integration tests.
 //!
 //! Tests interactions between multiple ECS subsystems working together:
-//! PluginApp + ObservedWorld, TrackedWorld + CommandQueue,
+//! GameApp + ObservedWorld, TrackedWorld + CommandQueue,
 //! SimpleQueryCache + TrackedWorld, etc.
 
 use core::sync::atomic::{AtomicU32, Ordering};
 use cougr_core::scheduler::SimpleScheduler;
 use cougr_core::{
-    runtime::ComponentEvent, CommandQueue, ObservedWorld, Plugin, PluginApp, SimpleQueryCache,
-    SimpleWorld, TrackedWorld,
+    query::SimpleQueryCache,
+    runtime::{ComponentEvent, ObservedWorld, TrackedWorld},
+    CommandQueue, GameApp, Plugin, SimpleWorld,
 };
 use soroban_sdk::{symbol_short, Bytes, Env};
 
@@ -128,9 +129,9 @@ fn test_observed_world_into_plugin_app() {
     let after_add = OBSERVER_FIRE_COUNT.load(Ordering::Relaxed);
     assert_eq!(after_add - before, 1); // only "pos" observer fires
 
-    // Extract world and feed into PluginApp
+    // Extract world and feed into GameApp
     let inner_world = observed.into_inner();
-    let mut app = PluginApp::with_world(inner_world);
+    let mut app = GameApp::with_world(inner_world);
     app.add_system("physics", setup_physics_system);
     app.run(&env).unwrap();
 
@@ -182,11 +183,10 @@ fn test_multiple_plugins_sharing_world() {
         fn name(&self) -> &'static str {
             "plugin_a"
         }
-        fn build(&self, app: &mut PluginApp) {
+        fn build(&self, app: &mut GameApp) {
             // Plugin A sets up initial entities
             let e = app.world_mut().spawn_entity();
-            // Must use the world's own Env (not a new Env::default())
-            let env = app.world().components.env().clone();
+            let env = app.world().env().clone();
             app.world_mut().add_component(
                 e,
                 symbol_short!("a_comp"),
@@ -200,7 +200,7 @@ fn test_multiple_plugins_sharing_world() {
         fn name(&self) -> &'static str {
             "plugin_b"
         }
-        fn build(&self, app: &mut PluginApp) {
+        fn build(&self, app: &mut GameApp) {
             app.add_system("b_system", |world: &mut SimpleWorld, env: &Env| {
                 // Plugin B's system reads entities from Plugin A
                 let entities = world.get_entities_with_component(&symbol_short!("a_comp"), env);
@@ -214,7 +214,7 @@ fn test_multiple_plugins_sharing_world() {
     }
 
     let env = Env::default();
-    let mut app = PluginApp::new(&env);
+    let mut app = GameApp::new(&env);
     app.add_plugin(PluginA);
     app.add_plugin(PluginB);
 
@@ -268,14 +268,9 @@ fn test_command_queue_sparse_storage_integration() {
     queue.add_sparse_component(e1, symbol_short!("tag"), Bytes::from_array(&env, &[2]));
     queue.apply(&mut world);
 
-    // "pos" in table storage
-    assert!(world.components.contains_key((e1, symbol_short!("pos"))));
-    // "tag" in sparse storage
-    assert!(world
-        .sparse_components
-        .contains_key((e1, symbol_short!("tag"))));
-
-    // Both accessible via has_component
+    assert_eq!(world.table_component_count(&symbol_short!("pos")), 1);
+    assert_eq!(world.table_component_count(&symbol_short!("tag")), 0);
+    assert_eq!(world.component_count(&symbol_short!("tag")), 1);
     assert!(world.has_component(e1, &symbol_short!("pos")));
     assert!(world.has_component(e1, &symbol_short!("tag")));
 }

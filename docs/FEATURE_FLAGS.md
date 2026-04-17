@@ -26,7 +26,7 @@ The maturity of the feature flag should be interpreted together with:
 - [API_CONTRACT.md](API_CONTRACT.md)
 - [COMPATIBILITY_PROMISES.md](COMPATIBILITY_PROMISES.md)
 
-In the product-level façade:
+In the product-level facade:
 
 - `auth` mirrors the Beta `accounts` surface
 - `privacy::stable` and `privacy::experimental` mirror the split inside `zk`

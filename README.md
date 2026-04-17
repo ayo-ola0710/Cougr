@@ -58,7 +58,7 @@ Runtime backend guidance:
 | Zero-knowledge tooling | Groth16 verification, curve helpers, commitments, Merkle structures, reusable circuits, and ECS-integrated proof flows |
 | Smart account patterns | Session keys, social recovery, multi-device authorization, and fallback authorization flows |
 | Contract standards | Ownable, Ownable2Step, AccessControl, Pausable, execution guards, recovery guards, delayed execution, and batch primitives |
-| Example contracts | 20+ example game projects and growing, each intended to show concrete patterns rather than isolated snippets |
+| Example contracts | A growing catalog of standalone game projects, each intended to show concrete patterns rather than isolated snippets |
 
 ## Quick Start
 
@@ -114,8 +114,6 @@ The most direct onboarding import is `cougr_core::app`.
 - grouped registration through `named_system(...)`, `named_context_system(...)`, and `add_systems(...)`
 - plugin-based composition without losing direct world access
 
-Use `PluginApp` only as a compatibility name; it aliases `GameApp`.
-
 ### Zero-Knowledge and Hidden State
 
 | Capability | Description |
@@ -151,13 +149,13 @@ For new integrations, prefer the explicit domain alias `ops` when importing thes
 
 ## Example Projects
 
-The `examples/` directory contains 20+ standalone game contracts and is expected to keep growing. Examples are useful both as runnable references and as design patterns for structuring new projects on top of Cougr.
+The `examples/` directory contains a growing set of standalone game contracts. Examples are useful both as runnable references and as design patterns for structuring new projects on top of Cougr.
 
 | Category | Representative examples | Primary focus |
 |---|---|---|
 | Arcade and action | `pong`, `snake`, `flappy_bird`, `space_invaders`, `asteroids` | Core ECS gameplay loops and state updates |
 | Board and strategy | `tic_tac_toe`, `chess`, `battleship` | Turn management, hidden information, and deterministic rules |
-| Puzzle and progression | `tetris`, `geometry_dash`, `dungeon_crawler` | Stateful progression and constrained execution flows |
+| Puzzle and progression | `tetris`, `geometry_dash` | Stateful progression and constrained execution flows |
 | Experimental account patterns | `guild_arena`, `rock_paper_scissors` | Recovery, multi-device usage, and commit-reveal mechanics |
 
 For the current catalog, see [examples/README.md](examples/README.md).

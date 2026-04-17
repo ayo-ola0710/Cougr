@@ -43,7 +43,6 @@ The following surfaces are supported but intentionally not frozen:
 - higher-level ECS helpers outside the frozen root/runtime contract
 - `auth`
 - `accounts`
-- `game_world`
 - proof-submission orchestration that depends on experimental verification flows
 
 For Beta surfaces, maintainers commit to:

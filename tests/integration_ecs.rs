@@ -4,7 +4,7 @@
 
 use cougr_core::scheduler::SimpleScheduler;
 use cougr_core::{
-    CommandQueue, ComponentStorage, Plugin, PluginApp, SimpleQueryCache, SimpleWorld,
+    query::SimpleQueryCache, CommandQueue, ComponentStorage, GameApp, Plugin, SimpleWorld,
 };
 use soroban_sdk::{symbol_short, Bytes, Env};
 
@@ -104,7 +104,7 @@ fn test_plugin_app_lifecycle() {
         fn name(&self) -> &'static str {
             "physics"
         }
-        fn build(&self, app: &mut PluginApp) {
+        fn build(&self, app: &mut GameApp) {
             app.add_system("physics", physics_system);
         }
     }
@@ -114,13 +114,13 @@ fn test_plugin_app_lifecycle() {
         fn name(&self) -> &'static str {
             "scoring"
         }
-        fn build(&self, app: &mut PluginApp) {
+        fn build(&self, app: &mut GameApp) {
             app.add_system("scoring", scoring_system);
         }
     }
 
     let env = Env::default();
-    let mut app = PluginApp::new(&env);
+    let mut app = GameApp::new(&env);
     app.add_plugin(PhysicsPlugin);
     app.add_plugin(ScoringPlugin);
 

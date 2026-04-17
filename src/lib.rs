@@ -60,7 +60,6 @@ pub mod debug;
 pub mod ecs;
 pub mod error;
 pub mod event;
-mod game_world;
 mod hooks;
 mod incremental;
 mod observers;
@@ -74,44 +73,29 @@ mod system;
 pub mod zk;
 
 // Root-level golden path re-exports.
-pub use archetype_world::{
-    ArchetypeQuery, ArchetypeQueryBuilder, ArchetypeQueryCache, ArchetypeQueryState, ArchetypeWorld,
-};
-pub use change_tracker::{ChangeTracker, TrackedWorld};
+pub use archetype_world::{ArchetypeQuery, ArchetypeQueryBuilder, ArchetypeWorld};
 pub use commands::CommandQueue;
 pub use component::{Component, ComponentId, ComponentStorage, ComponentTrait, Position};
 pub use ecs::{RuntimeWorld, RuntimeWorldMut, WorldBackend};
 pub use error::{CougrError, CougrResult};
 pub use event::{Event, EventReader, EventWriter};
-#[doc(hidden)]
-pub use game_world::GameWorld;
-#[doc(hidden)]
-pub use hooks::{HookRegistry, HookedWorld};
-#[doc(hidden)]
-pub use incremental::{StorageWorld, WorldMetadata};
-#[doc(hidden)]
-pub use observers::{ObservedWorld, ObserverRegistry};
-pub use plugin::{GameApp, Plugin, PluginApp, PluginGroup};
-pub use query::{
-    QueryStorage, SimpleQuery, SimpleQueryBuilder, SimpleQueryCache, SimpleQueryState,
-};
+pub use plugin::{GameApp, Plugin, PluginGroup};
+pub use query::{QueryStorage, SimpleQuery, SimpleQueryBuilder};
 pub use resource::Resource;
 pub use resource::ResourceTrait;
 pub use scheduler::{ScheduleError, ScheduleStage, SimpleScheduler, SystemConfig, SystemGroup};
 pub use simple_world::SimpleWorld;
-pub use system::{
-    context_system, named_app_system, named_context_system, named_system, world_system, AppSystem,
-    SimpleSystem, SystemContext, SystemSpec,
-};
 
 /// Default gameplay runtime surface for new Cougr projects.
 pub mod app {
     pub use super::{
+        CommandQueue, GameApp, Plugin, PluginGroup, Resource, ResourceTrait, RuntimeWorld,
+        RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery, SimpleQueryBuilder,
+        SimpleScheduler, SimpleWorld, SystemConfig, SystemGroup,
+    };
+    pub use crate::system::{
         context_system, named_app_system, named_context_system, named_system, world_system,
-        AppSystem, CommandQueue, GameApp, Plugin, PluginApp, PluginGroup, Resource, ResourceTrait,
-        RuntimeWorld, RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery,
-        SimpleQueryBuilder, SimpleScheduler, SimpleSystem, SimpleWorld, SystemConfig,
-        SystemContext, SystemGroup, SystemSpec,
+        AppSystem, SimpleSystem, SystemContext, SystemSpec,
     };
 }
 
@@ -146,8 +130,9 @@ pub mod prelude {
     pub use super::{
         ArchetypeWorld, CommandQueue, Component, ComponentStorage, ComponentTrait, GameApp,
         PluginGroup, Position, QueryStorage, Resource, RuntimeWorld, RuntimeWorldMut, SimpleQuery,
-        SimpleQueryBuilder, SimpleWorld, SystemContext, WorldBackend,
+        SimpleQueryBuilder, SimpleWorld, WorldBackend,
     };
+    pub use crate::system::SystemContext;
 }
 
 /// Advanced runtime primitives that remain supported but are not part of the
@@ -155,10 +140,19 @@ pub mod prelude {
 pub mod runtime {
     pub use super::observers::ComponentEvent;
     pub use super::{
-        resource::Resource, ChangeTracker, Event, EventReader, EventWriter, HookRegistry,
-        HookedWorld, ObservedWorld, ObserverRegistry, Plugin, PluginApp, PluginGroup, QueryStorage,
-        RuntimeWorld, RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery,
-        SimpleQueryBuilder, SimpleQueryCache, SimpleQueryState, SimpleScheduler, StorageWorld,
-        SystemConfig, TrackedWorld, WorldBackend, WorldMetadata,
+        archetype_world::{ArchetypeQueryCache, ArchetypeQueryState},
+        change_tracker::{ChangeTracker, TrackedWorld},
+        hooks::{HookRegistry, HookedWorld},
+        incremental::{StorageWorld, WorldMetadata},
+        observers::{ObservedWorld, ObserverRegistry},
+        query::{SimpleQueryCache, SimpleQueryState},
+        resource::Resource,
+        system::{
+            context_system, named_app_system, named_context_system, named_system, world_system,
+            AppSystem, SimpleSystem, SystemContext, SystemSpec,
+        },
+        Event, EventReader, EventWriter, Plugin, PluginGroup, QueryStorage, RuntimeWorld,
+        RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery, SimpleQueryBuilder,
+        SimpleScheduler, SystemConfig, WorldBackend,
     };
 }

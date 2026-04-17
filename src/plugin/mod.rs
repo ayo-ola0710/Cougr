@@ -47,8 +47,7 @@ pub trait PluginGroup {
 ///
 /// `GameApp` is the recommended entrypoint for new Cougr projects:
 /// it owns the `SimpleWorld`, the validated `SimpleScheduler`, and hook
-/// registration in one place. `PluginApp` remains available as an alias for
-/// backward compatibility with existing projects.
+/// registration in one place.
 ///
 /// # Example
 /// ```no_run
@@ -371,6 +370,3 @@ impl GameApp {
         self.scheduler.system_count()
     }
 }
-
-/// Backwards-compatible alias for the previous app entrypoint name.
-pub type PluginApp = GameApp;

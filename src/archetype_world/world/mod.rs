@@ -15,12 +15,12 @@ use soroban_sdk::{contracttype, Bytes, Env, Map, Symbol, Vec};
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct ArchetypeWorld {
-    pub next_entity_id: u32,
-    pub next_archetype_id: u32,
-    pub archetypes: Map<u32, Archetype>,
-    pub archetype_index: Map<Vec<Symbol>, u32>,
-    pub entity_archetype: Map<u32, u32>,
-    pub version: u64,
+    pub(crate) next_entity_id: u32,
+    pub(crate) next_archetype_id: u32,
+    pub(crate) archetypes: Map<u32, Archetype>,
+    pub(crate) archetype_index: Map<Vec<Symbol>, u32>,
+    pub(crate) entity_archetype: Map<u32, u32>,
+    pub(crate) version: u64,
 }
 
 impl ArchetypeWorld {
@@ -208,6 +208,11 @@ impl ArchetypeWorld {
 
     pub fn version(&self) -> u64 {
         self.version
+    }
+
+    /// Returns the next entity ID that will be assigned on spawn.
+    pub fn next_entity_id(&self) -> EntityId {
+        self.next_entity_id
     }
 
     pub fn to_simple_world(&self, env: &Env) -> SimpleWorld {

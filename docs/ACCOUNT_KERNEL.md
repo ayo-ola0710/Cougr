@@ -108,12 +108,12 @@ Current fields:
 - session key id, when applicable
 - remaining operations, when applicable
 
-## GameWorld Integration
+## Integration Note
 
-`GameWorld` now exposes:
+The account kernel is now consumed through the curated `accounts` / `auth`
+surface directly.
 
-- direct owner auth via `execute_authorized`
-- explicit kernel execution via `execute_intent`
-- explicit session execution via `execute_with_active_session`
-
-This removes the old dependency on implicit session-to-owner fallback from the primary auth path.
+The previous `GameWorld` wrapper was removed so the crate does not freeze an
+extra orchestration layer before publication. Authorization should be composed
+explicitly at the application layer around `GameApp`, `SimpleWorld`, and the
+account primitives.

@@ -250,11 +250,8 @@ mod tests {
         queue.apply(&mut world);
 
         assert!(world.has_component(e1, &symbol_short!("tag")));
-        // Verify it's in sparse, not table
-        assert!(!world.components.contains_key((e1, symbol_short!("tag"))));
-        assert!(world
-            .sparse_components
-            .contains_key((e1, symbol_short!("tag"))));
+        assert_eq!(world.table_component_count(&symbol_short!("tag")), 0);
+        assert_eq!(world.component_count(&symbol_short!("tag")), 1);
     }
 
     #[test]

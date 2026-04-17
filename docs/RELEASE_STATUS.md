@@ -33,7 +33,6 @@ That claim is intentionally narrow:
 ## What Is Deliberately Not Frozen
 
 - `auth` / `accounts`
-- `game_world`
 
 These remain public and supported, but they are not the product-learning path and they are not the strongest compatibility promise in the repo.
 

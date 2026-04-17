@@ -105,7 +105,7 @@ impl SpaceInvadersContract {
         // Store ECS world entity count (1 ship + 32 invaders)
         env.storage()
             .instance()
-            .set(&DataKey::EntityCount, &(world.next_entity_id - 1));
+            .set(&DataKey::EntityCount, &(world.next_entity_id() - 1));
 
         // Initialize empty bullet lists
         let player_bullets: Vec<Bullet> = Vec::new(&env);

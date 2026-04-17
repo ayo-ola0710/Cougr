@@ -47,13 +47,11 @@ Concrete frozen root-level contract:
 - `ArchetypeWorld`
 - `CommandQueue`
 - `Component`, `ComponentTrait`, `ComponentStorage`, `ComponentId`
-- `SimpleQuery`, `SimpleQueryBuilder`, `SimpleQueryState`
+- `SimpleQuery`, `SimpleQueryBuilder`
 - `RuntimeWorld`, `RuntimeWorldMut`, `WorldBackend`
-- `SystemContext`
-- `SystemSpec`
 - `Resource`
-- `ChangeTracker`, `TrackedWorld`
-- `Plugin`, `PluginGroup`, `GameApp`, `PluginApp`
+- `runtime::ChangeTracker`, `runtime::TrackedWorld`
+- `Plugin`, `PluginGroup`, `GameApp`
 - `ScheduleStage`, `SystemConfig`, `SimpleScheduler`, `SystemGroup`
 - `prelude`
 - `runtime`
@@ -72,7 +70,6 @@ Concrete frozen root-level contract:
 These surfaces are useful and implemented, but should continue to be presented as Beta:
 
 - `accounts`
-- `game_world`
 - higher-level query helpers
 - higher-level scheduler helpers
 - proof-submission helpers in `zk`
@@ -136,8 +133,8 @@ Current top-level re-exports emphasize:
 - worlds: `SimpleWorld`, `ArchetypeWorld`
 - backend contracts: `RuntimeWorld`, `RuntimeWorldMut`, `WorldBackend`
 - ECS data: `Component`, `ComponentId`, `ComponentStorage`, `ComponentTrait`, `Position`, `Resource`
-- orchestration: `CommandQueue`, `HookRegistry`, `ObserverRegistry`, `PluginApp`, schedulers
-- queries and systems: `SimpleQuery`, `SimpleQueryState`, `SystemContext`, `SystemSpec`, declarative runtime system helpers
+- orchestration: `CommandQueue`, `GameApp`, schedulers
+- queries: `SimpleQuery`, `SimpleQueryBuilder`
 - domain access through explicit namespaces: `auth`, `privacy`, `ops`, `accounts`, `zk::stable`, `zk::experimental`
 
 ### Public top-level helper functions
@@ -154,7 +151,7 @@ The sanctioned onboarding path is the curated root surface itself:
 - `ArchetypeWorld`
 - `CommandQueue`
 - `GameApp`
-- `named_system`, `named_context_system`, `add_systems`
+- `app::{named_system, named_context_system}` and `add_systems`
 
 ## Compatibility Exceptions
 
@@ -176,7 +173,8 @@ The `1.0` freeze is intentionally narrower than the full public module graph:
 - `privacy` is the clearest domain namespace for privacy adoption, with stability determined by submodule
 - `ops` is the clearest stable namespace for operational standards in application code
 - root re-exports and `prelude` are the default onboarding path
-- `runtime` is a supported stable namespace for advanced ECS integrations
+- `runtime` is the supported namespace for advanced ECS integrations that are not part of the smallest onboarding contract
+- `query` and `archetype_world` retain their cache/state helpers outside the smallest root onboarding surface
 - `standards` is a supported stable namespace
 - `accounts` remains a public Beta namespace
 - `zk::stable` is the only privacy namespace treated as Stable

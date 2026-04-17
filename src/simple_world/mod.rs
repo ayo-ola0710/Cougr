@@ -44,20 +44,20 @@ pub type EntityId = u32;
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct SimpleWorld {
-    pub next_entity_id: u32,
+    pub(crate) next_entity_id: u32,
     /// Table component data keyed by (entity_id, component_type).
-    pub components: Map<(u32, Symbol), Bytes>,
+    pub(crate) components: Map<(u32, Symbol), Bytes>,
     /// Sparse component data keyed by (entity_id, component_type).
-    pub sparse_components: Map<(u32, Symbol), Bytes>,
+    pub(crate) sparse_components: Map<(u32, Symbol), Bytes>,
     /// Tracks which component types each entity has.
-    pub entity_components: Map<u32, Vec<Symbol>>,
+    pub(crate) entity_components: Map<u32, Vec<Symbol>>,
     /// Direct index for frequently queried table-backed components.
-    pub table_index: Map<Symbol, Vec<u32>>,
+    pub(crate) table_index: Map<Symbol, Vec<u32>>,
     /// Direct index for all components regardless of backing storage.
-    pub all_index: Map<Symbol, Vec<u32>>,
+    pub(crate) all_index: Map<Symbol, Vec<u32>>,
     /// Version counter incremented on structural changes (add/remove/despawn).
     /// Used for query cache invalidation.
-    pub version: u64,
+    pub(crate) version: u64,
 }
 
 impl SimpleWorld {
@@ -76,6 +76,16 @@ impl SimpleWorld {
     /// Returns the current world version for cache invalidation.
     pub fn version(&self) -> u64 {
         self.version
+    }
+
+    /// Returns the next entity ID that will be assigned on spawn.
+    pub fn next_entity_id(&self) -> EntityId {
+        self.next_entity_id
+    }
+
+    /// Returns the environment backing this world storage.
+    pub fn env(&self) -> &Env {
+        self.components.env()
     }
 
     pub fn spawn_entity(&mut self) -> EntityId {

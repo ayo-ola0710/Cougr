@@ -25,7 +25,6 @@ The current defended product story is:
 The following remain intentionally non-frozen:
 
 - `auth` / `accounts`
-- `game_world`
 
 These are supported, but they are not the primary product-learning path.
 

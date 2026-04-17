@@ -23,7 +23,6 @@ The following namespaces remain supported but intentionally outside the stable g
 
 - `auth`
 - `accounts`
-- `game_world`
 - higher-level proof-submission orchestration tied to experimental verification
 
 ## Excluded From Compatibility Guarantees
@@ -54,11 +53,13 @@ The decision is recorded in [PRIVACY_MODEL.md](PRIVACY_MODEL.md) and [adr/0003-p
 
 ## Root Surface Decision
 
-The root crate continues to expose some advanced or compatibility-oriented re-exports,
-but documentation should prefer:
+The root crate is intentionally narrower than the full module graph.
+Documentation should prefer:
 
 - `app` for gameplay runtime
 - `auth`, `privacy`, and `ops` for product-level domain adoption
+- `runtime` for advanced ECS composition
+- `query` / `archetype_world` for cache and state helpers that are not part of the smallest onboarding surface
 
 ## Notes
 

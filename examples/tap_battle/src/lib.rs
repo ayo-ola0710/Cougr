@@ -59,7 +59,7 @@ impl TapBattleContract {
         // Store ECS entity count
         env.storage()
             .instance()
-            .set(&DataKey::EntityCount, &(world.next_entity_id - 1));
+            .set(&DataKey::EntityCount, &(world.next_entity_id() - 1));
     }
 
     /// Authenticate via passkey and create a gameplay session.
