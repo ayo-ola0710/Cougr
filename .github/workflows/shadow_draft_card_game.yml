@@ -1,71 +1,28 @@
-name: Shadow Draft Card Game Example
+name: Shadow Draft Card Game CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main, develop]
     paths:
       - 'examples/shadow_draft_card_game/**'
-      - 'src/**'
+      - '!examples/shadow_draft_card_game/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/shadow_draft_card_game.yml'
   pull_request:
-    branches: [ "main" ]
+    branches: [main, develop]
     paths:
       - 'examples/shadow_draft_card_game/**'
-      - 'src/**'
+      - '!examples/shadow_draft_card_game/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/shadow_draft_card_game.yml'
+
+concurrency:
+  group: shadow-draft-card-game-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build_and_test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: stable
-        targets: wasm32-unknown-unknown, wasm32v1-none
-
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libdbus-1-dev pkg-config
-
-    - name: Cache dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-shadow-draft-${{ hashFiles('**/Cargo.toml') }}
-
-    - name: Install Stellar CLI
-      run: |
-        curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | bash -s -- --user
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-    - name: Install stellar-zk
-      run: |
-        STELLAR_ZK_VERSION=0.1.2 curl -fsSL https://raw.githubusercontent.com/salazarsebas/stellar-zk/main/scripts/install.sh | bash
-        echo "$HOME/.stellar-zk/bin" >> $GITHUB_PATH
-
-    - name: Check Formatting
-      run: |
-        cd examples/shadow_draft_card_game
-        cargo fmt --check
-
-    - name: Lint (Clippy)
-      run: |
-        cd examples/shadow_draft_card_game
-        cargo clippy --all-targets --all-features -- -D warnings
-
-    - name: Run Tests
-      run: |
-        cd examples/shadow_draft_card_game
-        cargo test
-
-    - name: Build Contract (Stellar CLI)
-      run: |
-        cd examples/shadow_draft_card_game
-        stellar contract build
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Shadow Draft Card Game CI
+      working_directory: examples/shadow_draft_card_game
