@@ -3,10 +3,7 @@
 extern crate alloc;
 use alloc::vec::Vec as RustVec;
 
-use cougr_core::zk::{
-    groth16,
-    types::{Groth16Proof, Scalar, VerificationKey},
-};
+use cougr_core::zk::{experimental, Groth16Proof, Scalar, VerificationKey};
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, panic_with_error, symbol_short, Address,
     Bytes, BytesN, Env, Symbol, Vec,
@@ -440,8 +437,8 @@ impl ShadowDraftCardGame {
                 rust_inputs.push(play.public_inputs.get_unchecked(i as u32));
             }
 
-            let valid =
-                groth16::verify_groth16(&env, &vk, &play.proof, &rust_inputs).unwrap_or(false);
+            let valid = experimental::verify_groth16(&env, &vk, &play.proof, &rust_inputs)
+                .unwrap_or(false);
             if !valid {
                 panic_with_error!(&env, GameError::InvalidProof);
             }
