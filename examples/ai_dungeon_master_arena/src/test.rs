@@ -1,8 +1,51 @@
 #![cfg(test)]
 
 use super::*;
-use cougr_core::zk::testing::{mock_proof, mock_scalar, mock_verification_key};
-use soroban_sdk::{testutils::Address as _, Address, Env, Vec};
+use cougr_core::zk::{G1Point, G2Point, Groth16Proof, Scalar, VerificationKey};
+use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, Vec};
+
+fn mock_g1_point(env: &Env) -> G1Point {
+    G1Point {
+        bytes: BytesN::from_array(env, &[0u8; 64]),
+    }
+}
+
+fn mock_g2_point(env: &Env) -> G2Point {
+    G2Point {
+        bytes: BytesN::from_array(env, &[0u8; 128]),
+    }
+}
+
+fn mock_scalar(env: &Env, value: u64) -> Scalar {
+    let mut bytes = [0u8; 32];
+    bytes[24..32].copy_from_slice(&value.to_be_bytes());
+    Scalar {
+        bytes: BytesN::from_array(env, &bytes),
+    }
+}
+
+fn mock_proof(env: &Env) -> Groth16Proof {
+    Groth16Proof {
+        a: mock_g1_point(env),
+        b: mock_g2_point(env),
+        c: mock_g1_point(env),
+    }
+}
+
+fn mock_verification_key(env: &Env, num_public_inputs: u32) -> VerificationKey {
+    let mut ic = Vec::new(env);
+    for _ in 0..=num_public_inputs {
+        ic.push_back(mock_g1_point(env));
+    }
+
+    VerificationKey {
+        alpha: mock_g1_point(env),
+        beta: mock_g2_point(env),
+        gamma: mock_g2_point(env),
+        delta: mock_g2_point(env),
+        ic,
+    }
+}
 
 #[test]
 fn test_arena_lifecycle() {

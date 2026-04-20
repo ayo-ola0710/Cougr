@@ -46,8 +46,16 @@ impl FlappyBirdContract {
                 let bird_vel = Velocity::new(0, 0);
                 let bird_state = BirdState::new(true);
 
-                world.add_component(entity_id, symbol_short!("position"), bird_pos.serialize(env));
-                world.add_component(entity_id, symbol_short!("velocity"), bird_vel.serialize(env));
+                world.add_component(
+                    entity_id,
+                    symbol_short!("position"),
+                    bird_pos.serialize(env),
+                );
+                world.add_component(
+                    entity_id,
+                    symbol_short!("velocity"),
+                    bird_vel.serialize(env),
+                );
                 world.add_component(
                     entity_id,
                     symbol_short!("birdstate"),
@@ -149,8 +157,7 @@ impl FlappyBirdContract {
         app.add_system_with_config(
             "movement",
             systems::update_positions,
-            SystemConfig::new()
-                .in_stage(ScheduleStage::Update),
+            SystemConfig::new().in_stage(ScheduleStage::Update),
         );
         app.add_system_with_config(
             "pipe_movement",

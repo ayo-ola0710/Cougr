@@ -1,9 +1,8 @@
-use soroban_sdk::{contracttype, symbol_short, Bytes, Env, Symbol};
+use soroban_sdk::{contracttype, Bytes, Env};
 
 /// ComponentTrait from cougr-core
 /// Components must implement serialization for on-chain storage
 pub trait ComponentTrait {
-    fn component_type() -> Symbol;
     fn serialize(&self, env: &Env) -> Bytes;
     fn deserialize(env: &Env, data: &Bytes) -> Option<Self>
     where
@@ -24,10 +23,6 @@ impl BirdState {
 }
 
 impl ComponentTrait for BirdState {
-    fn component_type() -> Symbol {
-        symbol_short!("birdstate")
-    }
-
     fn serialize(&self, env: &Env) -> Bytes {
         let mut bytes = Bytes::new(env);
         let value: u8 = if self.is_alive { 1 } else { 0 };
@@ -62,10 +57,6 @@ impl PipeConfig {
 }
 
 impl ComponentTrait for PipeConfig {
-    fn component_type() -> Symbol {
-        symbol_short!("pipeconf")
-    }
-
     fn serialize(&self, env: &Env) -> Bytes {
         let mut bytes = Bytes::new(env);
         let gap_size_bytes = Bytes::from_array(env, &self.gap_size.to_be_bytes());
@@ -112,10 +103,6 @@ impl PipeMarker {
 }
 
 impl ComponentTrait for PipeMarker {
-    fn component_type() -> Symbol {
-        symbol_short!("pipemark")
-    }
-
     fn serialize(&self, env: &Env) -> Bytes {
         let mut bytes = Bytes::new(env);
         let value: u8 = if self.passed { 1 } else { 0 };

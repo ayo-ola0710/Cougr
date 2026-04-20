@@ -65,8 +65,7 @@ pub(crate) mod interfaces;
 pub(crate) mod merkle;
 pub mod stable;
 pub(crate) mod systems;
-#[cfg(test)]
-pub(crate) mod testing;
+pub mod testing;
 pub(crate) mod traits;
 pub(crate) mod types;
 

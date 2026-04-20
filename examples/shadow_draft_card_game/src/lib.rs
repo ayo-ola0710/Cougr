@@ -437,8 +437,8 @@ impl ShadowDraftCardGame {
                 rust_inputs.push(play.public_inputs.get_unchecked(i as u32));
             }
 
-            let valid = experimental::verify_groth16(&env, &vk, &play.proof, &rust_inputs)
-                .unwrap_or(false);
+            let valid =
+                experimental::verify_groth16(&env, &vk, &play.proof, &rust_inputs).unwrap_or(false);
             if !valid {
                 panic_with_error!(&env, GameError::InvalidProof);
             }

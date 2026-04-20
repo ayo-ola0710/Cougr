@@ -1,8 +1,47 @@
 use super::*;
-use cougr_core::zk::testing::{mock_proof, mock_verification_key};
+use cougr_core::zk::{G1Point, G2Point, Groth16Proof, Scalar, VerificationKey};
 use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, Vec};
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
+
+fn mock_g1_point(env: &Env) -> G1Point {
+    G1Point {
+        bytes: BytesN::from_array(env, &[0u8; 64]),
+    }
+}
+
+fn mock_g2_point(env: &Env) -> G2Point {
+    G2Point {
+        bytes: BytesN::from_array(env, &[0u8; 128]),
+    }
+}
+
+fn mock_proof(env: &Env) -> Groth16Proof {
+    Groth16Proof {
+        a: mock_g1_point(env),
+        b: mock_g2_point(env),
+        c: mock_g1_point(env),
+    }
+}
+
+fn mock_verification_key(env: &Env, num_public_inputs: u32) -> VerificationKey {
+    let mut ic = Vec::new(env);
+    for _ in 0..=num_public_inputs {
+        ic.push_back(mock_g1_point(env));
+    }
+
+    VerificationKey {
+        alpha: mock_g1_point(env),
+        beta: mock_g2_point(env),
+        gamma: mock_g2_point(env),
+        delta: mock_g2_point(env),
+        ic,
+    }
+}
+
+fn empty_public_inputs(env: &Env) -> Vec<Scalar> {
+    Vec::new(env)
+}
 
 fn setup() -> (Env, ShadowDraftCardGameClient<'static>, Address, Address) {
     let env = Env::default();
@@ -30,7 +69,7 @@ fn make_play(env: &Env, card_id: u32, nonce: &BytesN<16>) -> PlayInput {
         card_id,
         nonce: nonce.clone(),
         proof: mock_proof(env),
-        public_inputs: Vec::new(env),
+        public_inputs: empty_public_inputs(env),
     }
 }
 
@@ -220,7 +259,7 @@ fn test_invalid_card_id_rejected() {
                 card_id: bad_id,
                 nonce: n1,
                 proof: mock_proof(&env),
-                public_inputs: Vec::new(&env),
+                public_inputs: empty_public_inputs(&env),
             }
         )
         .is_err());

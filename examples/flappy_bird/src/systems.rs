@@ -16,10 +16,6 @@ impl Position {
 }
 
 impl ComponentTrait for Position {
-    fn component_type() -> Symbol {
-        symbol_short!("position")
-    }
-
     fn serialize(&self, env: &Env) -> Bytes {
         let mut bytes = Bytes::new(env);
         let x_bytes = Bytes::from_array(env, &self.x.to_be_bytes());
@@ -62,10 +58,6 @@ impl Velocity {
 }
 
 impl ComponentTrait for Velocity {
-    fn component_type() -> Symbol {
-        symbol_short!("velocity")
-    }
-
     fn serialize(&self, env: &Env) -> Bytes {
         let mut bytes = Bytes::new(env);
         let x_bytes = Bytes::from_array(env, &self.x.to_be_bytes());
@@ -323,11 +315,7 @@ pub fn update_score(world: &mut SimpleWorld, env: &Env) -> u32 {
     score_increase
 }
 
-fn entities_with(
-    world: &SimpleWorld,
-    env: &Env,
-    component_type: Symbol,
-) -> soroban_sdk::Vec<u32> {
+fn entities_with(world: &SimpleWorld, env: &Env, component_type: Symbol) -> soroban_sdk::Vec<u32> {
     SimpleQueryBuilder::new(env)
         .with_component(component_type)
         .build()
