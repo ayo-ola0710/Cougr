@@ -37,11 +37,7 @@ pub fn collect_metrics(world: &SimpleWorld, env: &Env) -> StorageMetrics {
         }
     }
 
-    let avg = if entity_count > 0 {
-        total_components / entity_count
-    } else {
-        0
-    };
+    let avg = total_components.checked_div(entity_count).unwrap_or(0);
 
     let unique_types = unique_component_types(world, env);
 
