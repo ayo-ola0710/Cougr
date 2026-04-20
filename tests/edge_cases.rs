@@ -3,12 +3,11 @@
 //! Tests empty world operations, non-existent entities, double operations,
 //! component data boundaries, and other corner cases.
 
-use cougr_core::commands::CommandQueue;
-use cougr_core::component::ComponentStorage;
-use cougr_core::observers::{ComponentEvent, ObservedWorld};
-use cougr_core::plugin::{Plugin, PluginApp};
-use cougr_core::query::SimpleQueryCache;
-use cougr_core::simple_world::SimpleWorld;
+use cougr_core::{
+    query::SimpleQueryCache,
+    runtime::{ComponentEvent, ObservedWorld},
+    CommandQueue, ComponentStorage, GameApp, Plugin, SimpleWorld,
+};
 use soroban_sdk::{symbol_short, Bytes, Env};
 
 // ---------------------------------------------------------------------------
@@ -149,22 +148,6 @@ fn test_large_bytes_component_data() {
 // Version Counter Edge Cases
 // ---------------------------------------------------------------------------
 
-#[test]
-fn test_version_at_large_values() {
-    let env = Env::default();
-    let mut world = SimpleWorld::new(&env);
-
-    // Manually set version to near-max
-    world.version = u64::MAX - 5;
-
-    let e = world.spawn_entity();
-    world.add_component(e, symbol_short!("pos"), Bytes::from_array(&env, &[1]));
-    assert_eq!(world.version(), u64::MAX - 4);
-
-    world.add_component(e, symbol_short!("vel"), Bytes::from_array(&env, &[2]));
-    assert_eq!(world.version(), u64::MAX - 3);
-}
-
 // ---------------------------------------------------------------------------
 // Plugin Edge Cases
 // ---------------------------------------------------------------------------
@@ -176,13 +159,13 @@ fn test_double_plugin_registration() {
         fn name(&self) -> &'static str {
             "my_plugin"
         }
-        fn build(&self, app: &mut PluginApp) {
+        fn build(&self, app: &mut GameApp) {
             app.add_system("sys", |_world: &mut SimpleWorld, _env: &Env| {});
         }
     }
 
     let env = Env::default();
-    let mut app = PluginApp::new(&env);
+    let mut app = GameApp::new(&env);
     app.add_plugin(MyPlugin);
     app.add_plugin(MyPlugin); // duplicate
 
@@ -193,21 +176,21 @@ fn test_double_plugin_registration() {
 #[test]
 fn test_plugin_app_run_with_no_systems() {
     let env = Env::default();
-    let mut app = PluginApp::new(&env);
+    let mut app = GameApp::new(&env);
 
     // Should not panic
-    app.run(&env);
+    app.run(&env).unwrap();
     assert_eq!(app.system_count(), 0);
 }
 
 #[test]
 fn test_plugin_app_run_with_no_entities() {
     let env = Env::default();
-    let mut app = PluginApp::new(&env);
+    let mut app = GameApp::new(&env);
     app.add_system("noop", |_world: &mut SimpleWorld, _env: &Env| {});
 
     // Should not panic even with no entities
-    app.run(&env);
+    app.run(&env).unwrap();
 }
 
 // ---------------------------------------------------------------------------
@@ -338,10 +321,8 @@ fn test_sparse_to_table_component_switch() {
         Bytes::from_array(&env, &[1]),
         ComponentStorage::Sparse,
     );
-    assert!(world
-        .sparse_components
-        .contains_key((e, symbol_short!("comp"))));
-    assert!(!world.components.contains_key((e, symbol_short!("comp"))));
+    assert_eq!(world.table_component_count(&symbol_short!("comp")), 0);
+    assert_eq!(world.component_count(&symbol_short!("comp")), 1);
 
     // Add again as table (overwrites)
     world.add_component_with_storage(
@@ -352,13 +333,11 @@ fn test_sparse_to_table_component_switch() {
     );
 
     // Now in table storage
-    assert!(world.components.contains_key((e, symbol_short!("comp"))));
-
-    // But sparse entry still exists (add doesn't clean up old storage)
-    // has_component sees table first
+    assert_eq!(world.table_component_count(&symbol_short!("comp")), 1);
+    assert_eq!(world.component_count(&symbol_short!("comp")), 1);
     assert!(world.has_component(e, &symbol_short!("comp")));
     let val = world.get_component(e, &symbol_short!("comp")).unwrap();
-    assert_eq!(val.get(0).unwrap(), 2); // table value wins (checked first)
+    assert_eq!(val.get(0).unwrap(), 2);
 }
 
 #[test]
@@ -371,7 +350,7 @@ fn test_multiple_spawns_produce_sequential_ids() {
     for (i, entity_id) in ids.iter().enumerate().take(20) {
         assert_eq!(*entity_id, (i as u32) + 1);
     }
-    assert_eq!(world.next_entity_id, 21);
+    assert_eq!(world.next_entity_id(), 21);
 }
 
 extern crate alloc;

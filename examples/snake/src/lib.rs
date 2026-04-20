@@ -1,5 +1,3 @@
-#![no_std]
-
 //! # Snake On-Chain Game
 //!
 //! This example demonstrates how to build an on-chain Snake game using the
@@ -24,11 +22,16 @@
 //! - Entity management optimized for Soroban's constraints
 //! - A consistent architecture for game logic
 
+#![no_std]
+extern crate alloc;
+
 mod components;
 mod systems;
 
+use alloc::rc::Rc;
 use components::{ComponentTrait, Direction, DirectionComponent, Position, SnakeHead};
-use cougr_core::SimpleWorld;
+use core::cell::Cell;
+use cougr_core::{GameApp, ScheduleStage, SimpleQueryBuilder, SimpleWorld, SystemConfig};
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Env, Vec};
 
 /// Default grid size for the game (10x10)
@@ -63,27 +66,36 @@ impl SnakeContract {
 
     /// Initialize a new game with custom grid size
     pub fn init_game_with_size(env: Env, grid_size: i32) {
-        let mut world = SimpleWorld::new(&env);
+        let head_id = Rc::new(Cell::new(0u32));
+        let mut app = GameApp::new(&env);
+        app.add_startup_system("spawn_snake", {
+            let head_id = head_id.clone();
+            move |world: &mut SimpleWorld, env: &Env| {
+                let center = grid_size / 2;
+                let entity_id = world.spawn_entity();
+                let head_pos = Position::new(center, center);
+                let head = SnakeHead;
+                let direction = DirectionComponent::new(Direction::Right);
 
-        // Calculate center position
-        let center = grid_size / 2;
-
-        // Spawn snake head at center
-        let head_id = world.spawn_entity();
-        let head_pos = Position::new(center, center);
-        let head = SnakeHead;
-        let direction = DirectionComponent::new(Direction::Right);
-
-        world.add_component(head_id, symbol_short!("position"), head_pos.serialize(&env));
-        world.add_component(head_id, symbol_short!("snkhead"), head.serialize(&env));
-        world.add_component(
-            head_id,
-            symbol_short!("direction"),
-            direction.serialize(&env),
-        );
-
-        // Spawn initial food
-        systems::spawn_food(&mut world, &env, 0, grid_size);
+                world.add_component(
+                    entity_id,
+                    symbol_short!("position"),
+                    head_pos.serialize(env),
+                );
+                world.add_component(entity_id, symbol_short!("snkhead"), head.serialize(env));
+                world.add_component(
+                    entity_id,
+                    symbol_short!("direction"),
+                    direction.serialize(env),
+                );
+                head_id.set(entity_id);
+            }
+        });
+        app.add_startup_system("spawn_food", move |world: &mut SimpleWorld, env: &Env| {
+            systems::spawn_food(world, env, 0, grid_size);
+        });
+        app.run_startup(&env).unwrap();
+        let world = app.into_world();
 
         // Create game state
         let game_state = GameState {
@@ -91,7 +103,7 @@ impl SnakeContract {
             game_over: false,
             tick_count: 0,
             grid_size,
-            snake_head_id: head_id,
+            snake_head_id: head_id.get(),
         };
 
         // Store in contract storage
@@ -169,25 +181,63 @@ impl SnakeContract {
         }
 
         // Load world
-        let mut world: SimpleWorld = env
+        let world: SimpleWorld = env
             .storage()
             .persistent()
             .get(&symbol_short!("world"))
             .unwrap();
 
-        // Move snake
-        let move_result = systems::move_snake(&mut world, &env, game_state.grid_size);
+        let hit_wall = Rc::new(Cell::new(false));
+        let self_collision = Rc::new(Cell::new(false));
+        let food_eaten = Rc::new(Cell::new(0u32));
 
-        if move_result.is_none() {
+        let mut app = GameApp::with_world(world);
+        app.add_system_with_config(
+            "move_snake",
+            {
+                let hit_wall = hit_wall.clone();
+                move |world: &mut SimpleWorld, env: &Env| {
+                    if systems::move_snake(world, env, game_state.grid_size).is_none() {
+                        hit_wall.set(true);
+                    }
+                }
+            },
+            SystemConfig::new().in_stage(ScheduleStage::Update),
+        );
+        app.add_system_with_config(
+            "self_collision",
+            {
+                let self_collision = self_collision.clone();
+                move |world: &mut SimpleWorld, env: &Env| {
+                    self_collision.set(systems::check_self_collision(world, env));
+                }
+            },
+            SystemConfig::new().in_stage(ScheduleStage::PostUpdate),
+        );
+        app.add_system_with_config(
+            "food_collision",
+            {
+                let food_eaten = food_eaten.clone();
+                move |world: &mut SimpleWorld, env: &Env| {
+                    food_eaten.set(systems::check_food_collision(world, env).unwrap_or(0));
+                }
+            },
+            SystemConfig::new()
+                .in_stage(ScheduleStage::PostUpdate)
+                .after("self_collision"),
+        );
+        app.run(&env).unwrap();
+        let mut world = app.into_world();
+
+        if hit_wall.get() {
             // Hit wall
             game_state.game_over = true;
         } else {
-            // Check self collision
-            if systems::check_self_collision(&world, &env) {
+            if self_collision.get() {
                 game_state.game_over = true;
             } else {
-                // Check food collision
-                if let Some(food_id) = systems::check_food_collision(&world, &env) {
+                let food_id = food_eaten.get();
+                if food_id != 0 {
                     // Remove eaten food
                     world.despawn_entity(food_id);
 
@@ -272,11 +322,15 @@ impl SnakeContract {
             .get(&symbol_short!("world"))
             .unwrap();
 
-        let head_count = world
-            .get_entities_with_component(&symbol_short!("snkhead"), &env)
+        let head_count = SimpleQueryBuilder::new(&env)
+            .with_component(symbol_short!("snkhead"))
+            .build()
+            .execute(&world, &env)
             .len();
-        let segment_count = world
-            .get_entities_with_component(&symbol_short!("snkseg"), &env)
+        let segment_count = SimpleQueryBuilder::new(&env)
+            .with_component(symbol_short!("snkseg"))
+            .build()
+            .execute(&world, &env)
             .len();
 
         head_count + segment_count
@@ -290,7 +344,10 @@ impl SnakeContract {
             .get(&symbol_short!("world"))
             .unwrap();
 
-        let food_entities = world.get_entities_with_component(&symbol_short!("food"), &env);
+        let food_entities = SimpleQueryBuilder::new(&env)
+            .with_component(symbol_short!("food"))
+            .build()
+            .execute(&world, &env);
         if food_entities.is_empty() {
             return (-1, -1); // No food
         }
@@ -330,7 +387,10 @@ impl SnakeContract {
         }
 
         // Get all segments and sort by index
-        let segment_entities = world.get_entities_with_component(&symbol_short!("snkseg"), &env);
+        let segment_entities = SimpleQueryBuilder::new(&env)
+            .with_component(symbol_short!("snkseg"))
+            .build()
+            .execute(&world, &env);
         let mut segments: Vec<(u32, i32, i32)> = Vec::new(&env);
 
         for i in 0..segment_entities.len() {

@@ -1,7 +1,9 @@
 use soroban_sdk::{Address, Env};
 
 use super::error::AccountError;
-use super::traits::CougrAccount;
+use super::intent::{AuthResult, SignedIntent};
+use super::kernel::AccountKernel;
+use super::traits::{CougrAccount, IntentAccount};
 use super::types::{AccountCapabilities, GameAction};
 
 /// A Classic Stellar account (G-address).
@@ -36,6 +38,16 @@ impl CougrAccount for ClassicAccount {
     fn authorize(&self, _env: &Env, _action: &GameAction) -> Result<(), AccountError> {
         self.address.require_auth();
         Ok(())
+    }
+}
+
+impl IntentAccount for ClassicAccount {
+    fn authorize_intent(
+        &mut self,
+        env: &Env,
+        intent: &SignedIntent,
+    ) -> Result<AuthResult, AccountError> {
+        AccountKernel::new(self.address.clone()).authorize(env, intent)
     }
 }
 

@@ -1,55 +1,28 @@
-name: Guild Arena CI
+name: Guild Arena Example CI
 
 on:
   push:
     branches: [main, develop]
     paths:
       - "examples/guild_arena/**"
+      - "!examples/guild_arena/**/*.md"
+      - ".github/workflows/example_reusable.yml"
       - ".github/workflows/guild_arena.yml"
   pull_request:
     branches: [main, develop]
     paths:
       - "examples/guild_arena/**"
+      - "!examples/guild_arena/**/*.md"
+      - ".github/workflows/example_reusable.yml"
       - ".github/workflows/guild_arena.yml"
 
-env:
-  CARGO_TERM_COLOR: always
+concurrency:
+  group: guild-arena-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci:
-    name: CI
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: examples/guild_arena
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32v1-none
-          components: rustfmt, clippy
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: examples/guild_arena
-
-      - name: Check formatting
-        run: cargo fmt --check
-
-      - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-      - name: Build
-        run: cargo build
-
-      - name: Test
-        run: cargo test
-
-      - name: Install Stellar CLI
-        run: brew install stellar-cli
-
-      - name: Stellar contract build
-        run: stellar contract build
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Guild Arena Example CI
+      working_directory: examples/guild_arena

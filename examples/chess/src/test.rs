@@ -1,5 +1,5 @@
 use super::*;
-use cougr_core::zk::types::{G1Point, G2Point};
+use cougr_core::zk::{G1Point, G2Point};
 use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, Vec};
 
 fn setup_game() -> (Env, ChessContractClient<'static>, Address, Address) {

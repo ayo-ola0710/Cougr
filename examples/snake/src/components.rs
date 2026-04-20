@@ -3,7 +3,9 @@
 //! This module demonstrates how to create custom game components that integrate
 //! with the cougr-core ECS framework for Soroban smart contracts.
 
-pub use cougr_core::component::{Component, ComponentStorage, ComponentTrait};
+#[cfg(test)]
+pub use cougr_core::component::Component;
+pub use cougr_core::component::{ComponentStorage, ComponentTrait};
 use soroban_sdk::{contracttype, symbol_short, Bytes, Env, Symbol};
 
 /// Position component - represents a point on the grid
@@ -22,7 +24,7 @@ impl Position {
     }
 
     /// Convert to a cougr-core Component for storage
-    #[allow(dead_code)]
+    #[cfg(test)]
     pub fn to_component(&self, env: &Env) -> Component {
         Component::new(Self::component_type(), self.serialize(env))
     }
@@ -133,12 +135,6 @@ impl DirectionComponent {
     pub fn new(direction: Direction) -> Self {
         Self { direction }
     }
-
-    /// Convert to a cougr-core Component for storage
-    #[allow(dead_code)]
-    pub fn to_component(&self, env: &Env) -> Component {
-        Component::new(Self::component_type(), self.serialize(env))
-    }
 }
 
 impl ComponentTrait for DirectionComponent {
@@ -171,14 +167,6 @@ impl ComponentTrait for DirectionComponent {
 /// is the snake's head in the ECS world.
 #[derive(Clone, Debug)]
 pub struct SnakeHead;
-
-impl SnakeHead {
-    /// Convert to a cougr-core Component for storage
-    #[allow(dead_code)]
-    pub fn to_component(&self, env: &Env) -> Component {
-        Component::new(Self::component_type(), self.serialize(env))
-    }
-}
 
 impl ComponentTrait for SnakeHead {
     fn component_type() -> Symbol {
@@ -213,12 +201,6 @@ pub struct SnakeSegment {
 impl SnakeSegment {
     pub fn new(index: u32) -> Self {
         Self { index }
-    }
-
-    /// Convert to a cougr-core Component for storage
-    #[allow(dead_code)]
-    pub fn to_component(&self, env: &Env) -> Component {
-        Component::new(Self::component_type(), self.serialize(env))
     }
 }
 
@@ -256,14 +238,6 @@ impl ComponentTrait for SnakeSegment {
 /// A marker component used to identify food entities in the game world.
 #[derive(Clone, Debug)]
 pub struct Food;
-
-impl Food {
-    /// Convert to a cougr-core Component for storage
-    #[allow(dead_code)]
-    pub fn to_component(&self, env: &Env) -> Component {
-        Component::new(Self::component_type(), self.serialize(env))
-    }
-}
 
 impl ComponentTrait for Food {
     fn component_type() -> Symbol {

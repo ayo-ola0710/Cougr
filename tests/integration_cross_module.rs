@@ -1,17 +1,16 @@
 //! Cross-module integration tests.
 //!
 //! Tests interactions between multiple ECS subsystems working together:
-//! PluginApp + ObservedWorld, TrackedWorld + CommandQueue,
+//! GameApp + ObservedWorld, TrackedWorld + CommandQueue,
 //! SimpleQueryCache + TrackedWorld, etc.
 
 use core::sync::atomic::{AtomicU32, Ordering};
-use cougr_core::change_tracker::TrackedWorld;
-use cougr_core::commands::CommandQueue;
-use cougr_core::observers::{ComponentEvent, ObservedWorld};
-use cougr_core::plugin::{Plugin, PluginApp};
-use cougr_core::query::SimpleQueryCache;
 use cougr_core::scheduler::SimpleScheduler;
-use cougr_core::simple_world::SimpleWorld;
+use cougr_core::{
+    query::SimpleQueryCache,
+    runtime::{ComponentEvent, ObservedWorld, TrackedWorld},
+    CommandQueue, GameApp, Plugin, SimpleWorld,
+};
 use soroban_sdk::{symbol_short, Bytes, Env};
 
 // ---------------------------------------------------------------------------
@@ -130,11 +129,11 @@ fn test_observed_world_into_plugin_app() {
     let after_add = OBSERVER_FIRE_COUNT.load(Ordering::Relaxed);
     assert_eq!(after_add - before, 1); // only "pos" observer fires
 
-    // Extract world and feed into PluginApp
+    // Extract world and feed into GameApp
     let inner_world = observed.into_inner();
-    let mut app = PluginApp::with_world(inner_world);
+    let mut app = GameApp::with_world(inner_world);
     app.add_system("physics", setup_physics_system);
-    app.run(&env);
+    app.run(&env).unwrap();
 
     // Physics applied: 10+5=15
     let pos = app
@@ -184,11 +183,10 @@ fn test_multiple_plugins_sharing_world() {
         fn name(&self) -> &'static str {
             "plugin_a"
         }
-        fn build(&self, app: &mut PluginApp) {
+        fn build(&self, app: &mut GameApp) {
             // Plugin A sets up initial entities
             let e = app.world_mut().spawn_entity();
-            // Must use the world's own Env (not a new Env::default())
-            let env = app.world().components.env().clone();
+            let env = app.world().env().clone();
             app.world_mut().add_component(
                 e,
                 symbol_short!("a_comp"),
@@ -202,7 +200,7 @@ fn test_multiple_plugins_sharing_world() {
         fn name(&self) -> &'static str {
             "plugin_b"
         }
-        fn build(&self, app: &mut PluginApp) {
+        fn build(&self, app: &mut GameApp) {
             app.add_system("b_system", |world: &mut SimpleWorld, env: &Env| {
                 // Plugin B's system reads entities from Plugin A
                 let entities = world.get_entities_with_component(&symbol_short!("a_comp"), env);
@@ -216,7 +214,7 @@ fn test_multiple_plugins_sharing_world() {
     }
 
     let env = Env::default();
-    let mut app = PluginApp::new(&env);
+    let mut app = GameApp::new(&env);
     app.add_plugin(PluginA);
     app.add_plugin(PluginB);
 
@@ -224,7 +222,7 @@ fn test_multiple_plugins_sharing_world() {
     assert!(app.world().has_component(1, &symbol_short!("a_comp")));
 
     // Run PluginB's system
-    app.run(&env);
+    app.run(&env).unwrap();
 
     // PluginB's system added its component
     assert!(app.world().has_component(1, &symbol_short!("b_comp")));
@@ -270,14 +268,9 @@ fn test_command_queue_sparse_storage_integration() {
     queue.add_sparse_component(e1, symbol_short!("tag"), Bytes::from_array(&env, &[2]));
     queue.apply(&mut world);
 
-    // "pos" in table storage
-    assert!(world.components.contains_key((e1, symbol_short!("pos"))));
-    // "tag" in sparse storage
-    assert!(world
-        .sparse_components
-        .contains_key((e1, symbol_short!("tag"))));
-
-    // Both accessible via has_component
+    assert_eq!(world.table_component_count(&symbol_short!("pos")), 1);
+    assert_eq!(world.table_component_count(&symbol_short!("tag")), 0);
+    assert_eq!(world.component_count(&symbol_short!("tag")), 1);
     assert!(world.has_component(e1, &symbol_short!("pos")));
     assert!(world.has_component(e1, &symbol_short!("tag")));
 }
@@ -300,9 +293,9 @@ fn test_scheduler_with_command_queue_pattern() {
     scheduler.add_system("spawner", spawner_system);
 
     // Run 3 ticks — each spawns one entity
-    scheduler.run_all(&mut world, &env);
-    scheduler.run_all(&mut world, &env);
-    scheduler.run_all(&mut world, &env);
+    scheduler.run_all(&mut world, &env).unwrap();
+    scheduler.run_all(&mut world, &env).unwrap();
+    scheduler.run_all(&mut world, &env).unwrap();
 
     let spawned_entities = world.get_entities_with_component(&symbol_short!("spawned"), &env);
     assert_eq!(spawned_entities.len(), 3);

@@ -21,16 +21,36 @@ use super::types::{Groth16Proof, Scalar, VerificationKey};
 /// - `Ok(true)` if the proof is valid
 /// - `Ok(false)` if the pairing check fails
 /// - `Err(ZKError)` if inputs are malformed
+///
+/// # Verification Contract
+///
+/// This verifier treats the following as explicit contract guarantees:
+/// - `vk.ic.len()` must equal `public_inputs.len() + 1`
+/// - malformed verification-key shape returns `InvalidVerificationKey`
+/// - mismatched pairing input lengths return `InvalidInput`
+///
+/// This verifier does **not** currently promise stronger normalization or
+/// subgroup-validation guarantees beyond what Soroban's BN254 host types
+/// enforce when decoding points and scalars. For that reason the Groth16
+/// verification flow remains part of Cougr's experimental privacy surface.
+pub fn validate_groth16_contract(
+    vk: &VerificationKey,
+    public_inputs: &[Scalar],
+) -> Result<(), ZKError> {
+    if vk.ic.is_empty() || vk.ic.len() as usize != public_inputs.len() + 1 {
+        return Err(ZKError::InvalidVerificationKey);
+    }
+
+    Ok(())
+}
+
 pub fn verify_groth16(
     env: &Env,
     vk: &VerificationKey,
     proof: &Groth16Proof,
     public_inputs: &[Scalar],
 ) -> Result<bool, ZKError> {
-    // IC must have exactly public_inputs.len() + 1 elements
-    if vk.ic.len() as usize != public_inputs.len() + 1 {
-        return Err(ZKError::InvalidVerificationKey);
-    }
+    validate_groth16_contract(vk, public_inputs)?;
 
     // Compute vk_x = IC[0] + sum(public_inputs[i] * IC[i+1])
     let mut vk_x = vk.ic.get(0).ok_or(ZKError::InvalidVerificationKey)?;
@@ -149,5 +169,28 @@ mod tests {
         // 0 public inputs but IC has 0 elements (needs 1)
         let result = verify_groth16(&env, &vk, &proof, &[]);
         assert_eq!(result, Err(ZKError::InvalidVerificationKey));
+    }
+
+    #[test]
+    fn test_validate_groth16_contract_accepts_matching_lengths() {
+        let env = Env::default();
+        let g1 = make_g1(&env);
+        let g2 = make_g2(&env);
+        let mut ic = Vec::new(&env);
+        ic.push_back(g1.clone());
+        ic.push_back(g1);
+
+        let vk = VerificationKey {
+            alpha: make_g1(&env),
+            beta: g2.clone(),
+            gamma: g2.clone(),
+            delta: g2,
+            ic,
+        };
+
+        let scalar = Scalar {
+            bytes: BytesN::from_array(&env, &[0u8; 32]),
+        };
+        assert_eq!(validate_groth16_contract(&vk, &[scalar]), Ok(()));
     }
 }

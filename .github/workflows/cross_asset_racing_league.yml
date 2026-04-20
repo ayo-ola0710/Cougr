@@ -1,64 +1,28 @@
-name: Cross-Asset Racing League CI
+name: Cross-Asset Racing League Example CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'examples/cross_asset_racing_league/**'
+      - '!examples/cross_asset_racing_league/**/*.md'
+      - '.github/workflows/example_reusable.yml'
       - '.github/workflows/cross_asset_racing_league.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'examples/cross_asset_racing_league/**'
+      - '!examples/cross_asset_racing_league/**/*.md'
+      - '.github/workflows/example_reusable.yml'
       - '.github/workflows/cross_asset_racing_league.yml'
 
-env:
-  CARGO_TERM_COLOR: always
+concurrency:
+  group: cross-asset-racing-league-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Rust
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
-
-      - name: Install Rust target for Soroban
-        run: |
-          source $HOME/.cargo/env
-          rustup target add wasm32v1-none
-
-      - name: Install Stellar CLI with Homebrew
-        run: |
-          brew update
-          brew install stellar-cli
-          stellar --version
-
-      - name: cargo fmt --check
-        run: |
-          source $HOME/.cargo/env
-          cargo fmt --check
-        working-directory: examples/cross_asset_racing_league
-
-      - name: cargo clippy (deny warnings)
-        run: |
-          source $HOME/.cargo/env
-          cargo clippy --all-targets --all-features -- -D warnings
-        working-directory: examples/cross_asset_racing_league
-
-      - name: cargo test
-        run: |
-          source $HOME/.cargo/env
-          cargo test
-        working-directory: examples/cross_asset_racing_league
-
-      - name: stellar contract build
-        run: |
-          source $HOME/.cargo/env
-          stellar contract build
-        working-directory: examples/cross_asset_racing_league
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Cross-Asset Racing League Example CI
+      working_directory: examples/cross_asset_racing_league

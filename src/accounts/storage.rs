@@ -13,12 +13,28 @@ const SESSION_KEYS_PREFIX: &str = "sess_keys";
 /// contract invocations (unlike `ContractAccount`'s in-memory storage).
 ///
 /// # Example
-/// ```ignore
-/// // Store a session key
-/// SessionStorage::store(&env, &player_address, &session_key);
+/// ```no_run
+/// use cougr_core::accounts::{SessionKey, SessionScope, SessionStorage};
+/// use soroban_sdk::{symbol_short, testutils::Address as _, Address, BytesN, Env, Vec};
 ///
-/// // Load it back
-/// let key = SessionStorage::load(&env, &player_address, &key_id);
+/// let env = Env::default();
+/// let player_address = Address::generate(&env);
+/// let key_id = BytesN::from_array(&env, &[7u8; 32]);
+/// let session_key = SessionKey {
+///     key_id: key_id.clone(),
+///     scope: SessionScope {
+///         allowed_actions: Vec::from_array(&env, [symbol_short!("move")]),
+///         max_operations: 10,
+///         expires_at: 1_000,
+///     },
+///     created_at: 0,
+///     operations_used: 0,
+///     next_nonce: 0,
+/// };
+///
+/// SessionStorage::store(&env, &player_address, &session_key);
+/// let loaded = SessionStorage::load(&env, &player_address, &key_id);
+/// assert!(loaded.is_some());
 /// ```
 pub struct SessionStorage;
 
@@ -122,6 +138,39 @@ impl SessionStorage {
         Ok(())
     }
 
+    /// Consume one authorized session action and advance its nonce.
+    pub fn consume_authorized_session(
+        env: &Env,
+        account: &Address,
+        key_id: &BytesN<32>,
+    ) -> Result<SessionKey, AccountError> {
+        let keys = Self::load_all(env, account);
+        let mut new_keys: Vec<SessionKey> = Vec::new(env);
+        let mut updated: Option<SessionKey> = None;
+
+        for i in 0..keys.len() {
+            if let Some(mut k) = keys.get(i) {
+                if &k.key_id == key_id {
+                    if env.ledger().timestamp() >= k.scope.expires_at {
+                        return Err(AccountError::SessionExpired);
+                    }
+                    if k.operations_used >= k.scope.max_operations {
+                        return Err(AccountError::SessionBudgetExceeded);
+                    }
+                    k.operations_used += 1;
+                    k.next_nonce += 1;
+                    updated = Some(k.clone());
+                }
+                new_keys.push_back(k);
+            }
+        }
+
+        let updated = updated.ok_or(AccountError::SessionRevoked)?;
+        let storage_key = Self::storage_key(env, account);
+        env.storage().persistent().set(&storage_key, &new_keys);
+        Ok(updated)
+    }
+
     /// Remove all expired session keys for an account.
     /// Returns the number of keys removed.
     pub fn cleanup_expired(env: &Env, account: &Address) -> u32 {
@@ -156,6 +205,21 @@ impl SessionStorage {
     fn storage_key(env: &Env, account: &Address) -> (Symbol, Address) {
         (Symbol::new(env, SESSION_KEYS_PREFIX), account.clone())
     }
+
+    pub(crate) fn is_action_allowed(
+        scope: &crate::accounts::types::SessionScope,
+        action: &Symbol,
+    ) -> bool {
+        if scope.allowed_actions.is_empty() {
+            return true;
+        }
+        for i in 0..scope.allowed_actions.len() {
+            if scope.allowed_actions.get(i).unwrap() == *action {
+                return true;
+            }
+        }
+        false
+    }
 }
 
 #[cfg(test)]
@@ -182,6 +246,7 @@ mod tests {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         }
     }
 

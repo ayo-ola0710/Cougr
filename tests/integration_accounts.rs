@@ -3,11 +3,10 @@
 //! Tests session key lifecycle, BatchBuilder with MockAccount,
 //! SessionStorage persistence, recovery flow, and DeviceManager.
 
-use cougr_core::accounts::error::AccountError;
-use cougr_core::accounts::multi_device::{DeviceManager, DevicePolicy, MultiDeviceProvider};
-use cougr_core::accounts::recovery::{RecoverableAccount, RecoveryConfig, RecoveryProvider};
-use cougr_core::accounts::storage::SessionStorage;
-use cougr_core::accounts::types::{SessionKey, SessionScope};
+use cougr_core::accounts::{
+    AccountError, DeviceManager, DevicePolicy, MultiDeviceProvider, RecoverableAccount,
+    RecoveryConfig, RecoveryProvider, SessionKey, SessionScope, SessionStorage,
+};
 use soroban_sdk::{
     contract, contractimpl, symbol_short, testutils::Address as _, vec, Address, BytesN, Env,
 };
@@ -40,6 +39,7 @@ fn test_session_key_lifecycle() {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
 
         // 2. Store
@@ -64,6 +64,7 @@ fn test_session_key_lifecycle() {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
         SessionStorage::store(&env, &addr, &key2);
 
@@ -102,6 +103,7 @@ fn test_session_storage_multiple_accounts() {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
         let key2 = SessionKey {
             key_id: BytesN::from_array(&env, &[2u8; 32]),
@@ -112,6 +114,7 @@ fn test_session_storage_multiple_accounts() {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         };
 
         // Store keys for different accounts

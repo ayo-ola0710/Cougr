@@ -33,4 +33,14 @@ pub enum ZKError {
     MaxDepthExceeded = 22,
     /// Leaf data is invalid or malformed.
     InvalidLeaf = 23,
+    /// A state transition violates the explicit phase-3 orchestration contract.
+    InvalidStateTransition = 24,
+    /// A transition arrived after its allowed dispute or reveal window.
+    DeadlineExpired = 25,
+    /// The requested operation cannot proceed because the channel is already closed.
+    ChannelClosed = 26,
+    /// A fog-of-war exploration target lies outside the allowed visibility window.
+    InvalidVisibility = 27,
+    /// A recursive composition descriptor is malformed or exceeds declared bounds.
+    InvalidProofComposition = 28,
 }

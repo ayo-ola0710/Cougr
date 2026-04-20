@@ -1,9 +1,44 @@
 #![no_std]
-#![allow(unsafe_code)]
+#![doc = r#"
+Cougr is a monolithic-on-the-outside ECS framework for Soroban-compatible applications.
+
+The public API is intentionally split into:
+
+- root re-exports for the onboarding path
+- `app` for the default gameplay runtime surface
+- `auth` for beta account and session flows
+- `privacy` for stable and experimental privacy surfaces
+- `ops` for stable operational standards
+- `accounts` for account abstraction and session flows
+- `zk::stable` for stable privacy primitives
+- `zk::experimental` for fast-moving proof-verification APIs
+
+# Golden Path
+
+```rust
+use cougr_core::{ComponentTrait, Position, SimpleWorld};
+use soroban_sdk::Env;
+
+let env = Env::default();
+let mut world = SimpleWorld::new(&env);
+let entity = world.spawn_entity();
+world.set_typed(&env, entity, &Position::new(1, 2));
+
+let pos: Position = world.get_typed(&env, entity).unwrap();
+assert_eq!(pos.x, 1);
+```
+
+# Stability
+
+- ECS runtime and storage: Stable
+- `app`: Stable
+- `standards`: Stable
+- Accounts: Beta
+- `zk::stable`: Stable
+- `zk::experimental`: Experimental
+"#]
 
 extern crate alloc;
-
-use soroban_sdk::{Symbol, Vec};
 
 // Global allocator for WASM
 #[global_allocator]
@@ -13,124 +48,111 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 #[macro_use]
 pub mod macros;
 
-// Core ECS types adapted for Soroban
+// Public product domains
 pub mod accounts;
 pub mod archetype_world;
-pub mod change_tracker;
+mod change_tracker;
 pub mod commands;
 pub mod component;
-pub mod components;
 #[cfg(feature = "debug")]
+#[doc(hidden)]
 pub mod debug;
-pub mod entity;
+pub mod ecs;
 pub mod error;
 pub mod event;
-pub mod game_world;
-pub mod hooks;
-pub mod incremental;
-pub mod observers;
+mod hooks;
+mod incremental;
+mod observers;
 pub mod plugin;
 pub mod query;
 pub mod resource;
 pub mod scheduler;
 pub mod simple_world;
-pub mod storage;
-pub mod system;
-pub mod systems;
-pub mod world;
+pub mod standards;
+mod system;
 pub mod zk;
 
-// Re-export core types
-pub use archetype_world::{ArchetypeQueryCache, ArchetypeWorld};
-pub use change_tracker::{ChangeTracker, TrackedWorld};
+// Root-level golden path re-exports.
+pub use archetype_world::{ArchetypeQuery, ArchetypeQueryBuilder, ArchetypeWorld};
 pub use commands::CommandQueue;
-pub use component::{Component, ComponentId, ComponentStorage, ComponentTrait};
-pub use components::Position;
-pub use entity::{Entity, EntityId};
+pub use component::{Component, ComponentId, ComponentStorage, ComponentTrait, Position};
+pub use ecs::{RuntimeWorld, RuntimeWorldMut, WorldBackend};
 pub use error::{CougrError, CougrResult};
 pub use event::{Event, EventReader, EventWriter};
-pub use game_world::GameWorld;
-pub use hooks::{HookRegistry, HookedWorld};
-pub use incremental::{StorageWorld, WorldMetadata};
-pub use observers::{ObservedWorld, ObserverRegistry};
-pub use plugin::{Plugin, PluginApp};
-pub use query::{Query, QueryState, SimpleQueryCache};
+pub use plugin::{GameApp, Plugin, PluginGroup};
+pub use query::{QueryStorage, SimpleQuery, SimpleQueryBuilder};
 pub use resource::Resource;
-pub use scheduler::{SimpleScheduler, SystemScheduler};
+pub use resource::ResourceTrait;
+pub use scheduler::{ScheduleError, ScheduleStage, SimpleScheduler, SystemConfig, SystemGroup};
 pub use simple_world::SimpleWorld;
-pub use storage::{SparseStorage, Storage, TableStorage};
-pub use system::{IntoSystem, System, SystemParam};
-pub use systems::MovementSystem;
-pub use world::World;
 
-// Library functions for ECS operations
-pub fn create_world() -> World {
-    World::new()
-}
-
-pub fn spawn_entity(world: &mut World, components: Vec<Component>) -> EntityId {
-    let entity = world.spawn(components);
-    entity.id()
-}
-
-pub fn add_component(world: &mut World, entity_id: EntityId, component: Component) -> bool {
-    world.add_component_to_entity(entity_id, component);
-    true
-}
-
-pub fn remove_component(world: &mut World, entity_id: EntityId, component_type: Symbol) -> bool {
-    world.remove_component_from_entity(entity_id, &component_type)
-}
-
-pub fn get_component(
-    world: &World,
-    entity_id: EntityId,
-    component_type: Symbol,
-) -> Option<Component> {
-    world.get_component(entity_id, &component_type)
-}
-
-pub fn query_entities(
-    _world: &World,
-    _component_types: Vec<Symbol>,
-    env: &soroban_sdk::Env,
-) -> Vec<EntityId> {
-    // Since we can't easily convert Vec<Symbol> to &[Symbol] in Soroban,
-    // we'll need to restructure this. For now, return empty result.
-    Vec::new(env)
-}
-
-// Predule for common types
-pub mod prelude {
+/// Default gameplay runtime surface for new Cougr projects.
+pub mod app {
     pub use super::{
-        component::{Component, ComponentId, ComponentStorage},
-        entity::{Entity, EntityId},
-        event::{Event, EventReader, EventWriter},
-        query::{Query, QueryState},
-        resource::Resource,
-        storage::{SparseStorage, Storage, TableStorage},
-        system::{IntoSystem, System, SystemParam},
-        world::World,
+        CommandQueue, GameApp, Plugin, PluginGroup, Resource, ResourceTrait, RuntimeWorld,
+        RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery, SimpleQueryBuilder,
+        SimpleScheduler, SimpleWorld, SystemConfig, SystemGroup,
+    };
+    pub use crate::system::{
+        context_system, named_app_system, named_context_system, named_system, world_system,
+        AppSystem, SimpleSystem, SystemContext, SystemSpec,
     };
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use soroban_sdk::Env;
+/// Beta account and session surface.
+///
+/// This namespace mirrors [`accounts`] but makes its product role explicit.
+pub mod auth {
+    pub use super::accounts::*;
+}
 
-    #[test]
-    fn test_world_creation() {
-        let _env = Env::default();
-        let world = World::new();
-        assert_eq!(world.entity_count(), 0);
-    }
+/// Privacy surface split by maturity tier.
+///
+/// New code should prefer [`privacy::stable`] for defended contracts and only
+/// opt into [`privacy::experimental`] knowingly.
+pub mod privacy {
+    pub use super::zk::{
+        experimental, stable, G1Point, G2Point, Groth16Proof, Scalar, VerificationKey, ZKError,
+    };
+}
 
-    #[test]
-    fn test_entity_spawn() {
-        let _env = Env::default();
-        let mut world = World::new();
-        let _entity = world.spawn_empty();
-        assert_eq!(world.entity_count(), 1);
-    }
+/// Stable operational and contract standards.
+///
+/// This namespace mirrors [`standards`] while making the adoption boundary
+/// clearer for application code.
+pub mod ops {
+    pub use super::standards::*;
+}
+
+/// Common ECS imports for the default onboarding path.
+pub mod prelude {
+    pub use super::simple_world::EntityId;
+    pub use super::{
+        ArchetypeWorld, CommandQueue, Component, ComponentStorage, ComponentTrait, GameApp,
+        PluginGroup, Position, QueryStorage, Resource, RuntimeWorld, RuntimeWorldMut, SimpleQuery,
+        SimpleQueryBuilder, SimpleWorld, WorldBackend,
+    };
+    pub use crate::system::SystemContext;
+}
+
+/// Advanced runtime primitives that remain supported but are not part of the
+/// smallest onboarding surface.
+pub mod runtime {
+    pub use super::observers::ComponentEvent;
+    pub use super::{
+        archetype_world::{ArchetypeQueryCache, ArchetypeQueryState},
+        change_tracker::{ChangeTracker, TrackedWorld},
+        hooks::{HookRegistry, HookedWorld},
+        incremental::{StorageWorld, WorldMetadata},
+        observers::{ObservedWorld, ObserverRegistry},
+        query::{SimpleQueryCache, SimpleQueryState},
+        resource::Resource,
+        system::{
+            context_system, named_app_system, named_context_system, named_system, world_system,
+            AppSystem, SimpleSystem, SystemContext, SystemSpec,
+        },
+        Event, EventReader, EventWriter, Plugin, PluginGroup, QueryStorage, RuntimeWorld,
+        RuntimeWorldMut, ScheduleError, ScheduleStage, SimpleQuery, SimpleQueryBuilder,
+        SimpleScheduler, SystemConfig, WorldBackend,
+    };
 }

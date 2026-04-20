@@ -11,13 +11,18 @@ use super::types::GameAction;
 /// and then returned for execution by the caller.
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
+/// # use cougr_core::accounts::{BatchBuilder, CougrAccount, GameAction};
+/// # use soroban_sdk::{symbol_short, Bytes, Env};
+/// # fn run<A: CougrAccount>(env: &Env, account: &A) -> Result<(), cougr_core::accounts::AccountError> {
 /// let mut batch = BatchBuilder::new();
-/// batch.add(GameAction { system_name: symbol_short!("move"), data: ... });
-/// batch.add(GameAction { system_name: symbol_short!("attack"), data: ... });
+/// batch.add(GameAction { system_name: symbol_short!("move"), data: Bytes::new(env) });
+/// batch.add(GameAction { system_name: symbol_short!("attack"), data: Bytes::new(env) });
 ///
-/// let executed = batch.execute(&env, &account)?;
-/// // Now apply each action to the world
+/// let executed = batch.execute(env, account)?;
+/// assert_eq!(executed.len(), 2);
+/// # Ok(())
+/// # }
 /// ```
 pub struct BatchBuilder {
     actions: Vec<GameAction>,

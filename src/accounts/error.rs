@@ -22,4 +22,12 @@ pub enum AccountError {
     DeviceLimitReached = 34,
     DeviceNotFound = 35,
     RecoveryAlreadyActive = 36,
+    NonceMismatch = 37,
+    ActionNotAllowed = 38,
+    SessionBudgetExceeded = 39,
+    IntentExpired = 40,
+    InvalidIntent = 41,
+    SignerMismatch = 42,
+    SessionRevoked = 43,
+    SignerNotRegistered = 44,
 }

@@ -1,5 +1,5 @@
 use super::*;
-use cougr_core::zk::merkle::MerkleTree;
+use cougr_core::zk::MerkleTree;
 extern crate alloc;
 use alloc::vec::Vec as StdVec;
 use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, Vec};

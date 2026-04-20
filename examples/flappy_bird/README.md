@@ -41,7 +41,6 @@ examples/flappy_bird/
 │   ├── lib.rs              # Main contract implementation
 │   ├── components.rs       # Custom game components (BirdState, PipeConfig)
 │   ├── systems.rs          # Game systems (gravity, collision, scoring)
-│   └── world_storage.rs    # World serialization helpers
 └── README.md               # This file
 ```
 
@@ -66,6 +65,15 @@ Game logic is organized into systems:
 3. **Pipe Movement System**: Moves pipes horizontally
 4. **Collision System**: Detects bird-pipe and bird-ground collisions
 5. **Score System**: Increments score when bird passes pipes
+
+### Runtime Shape
+
+This example follows the recommended Cougr Soroban runtime:
+
+- `GameApp` orchestrates each invocation
+- startup systems spawn the initial bird and pipe set
+- scheduled systems run in `PreUpdate`, `Update`, and `PostUpdate`
+- query-heavy scans use `SimpleQueryBuilder`
 
 ### Contract Functions
 

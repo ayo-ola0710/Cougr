@@ -40,7 +40,7 @@ use soroban_sdk::{contract, contractimpl, Env, Vec};
 
 // Import cougr-core ECS framework components
 // These are actively used for entity management and position tracking
-use cougr_core::components::Position as CougrPosition;
+use cougr_core::{Position as CougrPosition, SimpleWorld};
 
 // Re-export game state types for external use
 pub use game_state::{
@@ -64,10 +64,10 @@ impl SpaceInvadersContract {
     /// persists the game state on-chain.
     pub fn init_game(env: Env) {
         // Create cougr-core ECS World for entity management
-        let mut world = cougr_core::create_world();
+        let mut world = SimpleWorld::new(&env);
 
         // Spawn player ship entity in ECS World
-        let _ship_entity = world.spawn_empty();
+        let _ship_entity = world.spawn_entity();
 
         // Create initial game state with Ship component
         let state = GameState::new();
@@ -88,7 +88,7 @@ impl SpaceInvadersContract {
 
             for col in 0..INVADER_COLS {
                 // Spawn invader entity in cougr-core World
-                let _invader_entity = world.spawn_empty();
+                let _invader_entity = world.spawn_entity();
 
                 let x = (col as i32 * 4) + 4;
                 let y = (row as i32 * 3) + 2;
@@ -105,7 +105,7 @@ impl SpaceInvadersContract {
         // Store ECS world entity count (1 ship + 32 invaders)
         env.storage()
             .instance()
-            .set(&DataKey::EntityCount, &(world.entity_count() as u32));
+            .set(&DataKey::EntityCount, &(world.next_entity_id() - 1));
 
         // Initialize empty bullet lists
         let player_bullets: Vec<Bullet> = Vec::new(&env);

@@ -1,5 +1,6 @@
 use super::*;
-use soroban_sdk::{testutils::Address as _, Address, Bytes, BytesN, Env, Vec};
+use cougr_core::privacy::stable::{to_on_chain_proof, MerkleTree, OnChainMerkleProof};
+use soroban_sdk::{testutils::Address as _, Address, Bytes, BytesN, Env};
 
 fn setup_game() -> (Env, BattleshipContractClient<'static>, Address, Address) {
     let env = Env::default();
@@ -12,62 +13,22 @@ fn setup_game() -> (Env, BattleshipContractClient<'static>, Address, Address) {
     (env, client, player_a, player_b)
 }
 
-fn compute_merkle_root(env: &Env, board: &[u32; 100]) -> (BytesN<32>, Vec<Vec<BytesN<32>>>) {
-    let mut leaves = Vec::new(env);
+fn build_merkle_tree(env: &Env, board: &[u32; 100]) -> (BytesN<32>, MerkleTree) {
+    let mut leaves = [[0u8; 32]; 100];
     for (idx, &value) in board.iter().enumerate() {
         let mut data = Bytes::new(env);
         data.append(&Bytes::from_array(env, &(idx as u32).to_be_bytes()));
         data.append(&Bytes::from_array(env, &value.to_be_bytes()));
-        leaves.push_back(env.crypto().sha256(&data).into());
+        let leaf: BytesN<32> = env.crypto().sha256(&data).into();
+        leaves[idx] = leaf.to_array();
     }
 
-    // Build Merkle tree (simplified for 100 leaves -> 128 padded)
-    let mut tree: Vec<Vec<BytesN<32>>> = Vec::new(env);
-    let mut current_level = leaves.clone();
-
-    // Pad to power of 2
-    let zero_hash: BytesN<32> = env.crypto().sha256(&Bytes::new(env)).into();
-    while current_level.len() < 128 {
-        current_level.push_back(zero_hash.clone());
-    }
-
-    tree.push_back(current_level.clone());
-
-    // Build tree levels
-    while current_level.len() > 1 {
-        let mut next_level = Vec::new(env);
-        for i in (0..current_level.len()).step_by(2) {
-            let left = current_level.get(i).unwrap();
-            let right = current_level.get(i + 1).unwrap();
-
-            let mut combined = Bytes::new(env);
-            for j in 0..32 {
-                combined.push_back(left.get(j).unwrap());
-            }
-            for j in 0..32 {
-                combined.push_back(right.get(j).unwrap());
-            }
-            next_level.push_back(env.crypto().sha256(&combined).into());
-        }
-        tree.push_back(next_level.clone());
-        current_level = next_level;
-    }
-
-    (current_level.get(0).unwrap(), tree)
+    let tree = MerkleTree::from_leaves(env, &leaves).unwrap();
+    (tree.root_bytes(env), tree)
 }
 
-fn get_merkle_proof(env: &Env, tree: &Vec<Vec<BytesN<32>>>, index: u32) -> Vec<BytesN<32>> {
-    let mut proof = Vec::new(env);
-    let mut idx = index;
-
-    for level in 0..(tree.len() - 1) {
-        let sibling_idx = if idx % 2 == 0 { idx + 1 } else { idx - 1 };
-        let level_vec = tree.get(level).unwrap();
-        proof.push_back(level_vec.get(sibling_idx).unwrap());
-        idx /= 2;
-    }
-
-    proof
+fn get_merkle_proof(env: &Env, tree: &MerkleTree, index: u32) -> OnChainMerkleProof {
+    to_on_chain_proof(&tree.proof(index).unwrap(), env)
 }
 
 fn make_commitment(env: &Env, board: &[u32; 100], salt: &BytesN<32>) -> BytesN<32> {
@@ -104,7 +65,7 @@ fn test_commit_board() {
     board_a[0] = 1; // Ship at (0,0)
     let salt_a = BytesN::from_array(&env, &[1u8; 32]);
     let commitment_a = make_commitment(&env, &board_a, &salt_a);
-    let (root_a, _) = compute_merkle_root(&env, &board_a);
+    let (root_a, _) = build_merkle_tree(&env, &board_a);
 
     client.commit_board(&player_a, &commitment_a, &root_a);
 
@@ -115,7 +76,7 @@ fn test_commit_board() {
     board_b[1] = 1;
     let salt_b = BytesN::from_array(&env, &[2u8; 32]);
     let commitment_b = make_commitment(&env, &board_b, &salt_b);
-    let (root_b, _) = compute_merkle_root(&env, &board_b);
+    let (root_b, _) = build_merkle_tree(&env, &board_b);
 
     client.commit_board(&player_b, &commitment_b, &root_b);
 
@@ -131,7 +92,7 @@ fn test_attack_and_reveal_miss() {
     client.new_game(&player_a, &player_b);
 
     // Setup boards
-    let mut board_a = [0u32; 100];
+    let board_a = [0u32; 100];
     let mut board_b = [0u32; 100];
     board_b[10] = 1; // Ship at (0,1)
 
@@ -141,8 +102,8 @@ fn test_attack_and_reveal_miss() {
     let commitment_a = make_commitment(&env, &board_a, &salt_a);
     let commitment_b = make_commitment(&env, &board_b, &salt_b);
 
-    let (root_a, tree_a) = compute_merkle_root(&env, &board_a);
-    let (root_b, tree_b) = compute_merkle_root(&env, &board_b);
+    let (root_a, _tree_a) = build_merkle_tree(&env, &board_a);
+    let (root_b, tree_b) = build_merkle_tree(&env, &board_b);
 
     client.commit_board(&player_a, &commitment_a, &root_a);
     client.commit_board(&player_b, &commitment_b, &root_b);
@@ -169,7 +130,7 @@ fn test_attack_and_reveal_hit() {
 
     client.new_game(&player_a, &player_b);
 
-    let mut board_a = [0u32; 100];
+    let board_a = [0u32; 100];
     let mut board_b = [0u32; 100];
     board_b[0] = 1; // Ship at (0,0)
 
@@ -179,8 +140,8 @@ fn test_attack_and_reveal_hit() {
     let commitment_a = make_commitment(&env, &board_a, &salt_a);
     let commitment_b = make_commitment(&env, &board_b, &salt_b);
 
-    let (root_a, _) = compute_merkle_root(&env, &board_a);
-    let (root_b, tree_b) = compute_merkle_root(&env, &board_b);
+    let (root_a, _) = build_merkle_tree(&env, &board_a);
+    let (root_b, tree_b) = build_merkle_tree(&env, &board_b);
 
     client.commit_board(&player_a, &commitment_a, &root_a);
     client.commit_board(&player_b, &commitment_b, &root_b);
@@ -204,7 +165,7 @@ fn test_invalid_proof_rejected() {
 
     client.new_game(&player_a, &player_b);
 
-    let mut board_a = [0u32; 100];
+    let board_a = [0u32; 100];
     let mut board_b = [0u32; 100];
     board_b[0] = 1;
 
@@ -214,8 +175,8 @@ fn test_invalid_proof_rejected() {
     let commitment_a = make_commitment(&env, &board_a, &salt_a);
     let commitment_b = make_commitment(&env, &board_b, &salt_b);
 
-    let (root_a, _) = compute_merkle_root(&env, &board_a);
-    let (root_b, tree_b) = compute_merkle_root(&env, &board_b);
+    let (root_a, _) = build_merkle_tree(&env, &board_a);
+    let (root_b, tree_b) = build_merkle_tree(&env, &board_b);
 
     client.commit_board(&player_a, &commitment_a, &root_a);
     client.commit_board(&player_b, &commitment_b, &root_b);
@@ -244,8 +205,8 @@ fn test_cannot_attack_same_cell_twice() {
     let commitment_a = make_commitment(&env, &board_a, &salt_a);
     let commitment_b = make_commitment(&env, &board_b, &salt_b);
 
-    let (root_a, tree_a) = compute_merkle_root(&env, &board_a);
-    let (root_b, tree_b) = compute_merkle_root(&env, &board_b);
+    let (root_a, tree_a) = build_merkle_tree(&env, &board_a);
+    let (root_b, tree_b) = build_merkle_tree(&env, &board_b);
 
     client.commit_board(&player_a, &commitment_a, &root_a);
     client.commit_board(&player_b, &commitment_b, &root_b);
@@ -281,8 +242,8 @@ fn test_turn_enforcement() {
     let commitment_a = make_commitment(&env, &board_a, &salt_a);
     let commitment_b = make_commitment(&env, &board_b, &salt_b);
 
-    let (root_a, _) = compute_merkle_root(&env, &board_a);
-    let (root_b, _) = compute_merkle_root(&env, &board_b);
+    let (root_a, _) = build_merkle_tree(&env, &board_a);
+    let (root_b, _) = build_merkle_tree(&env, &board_b);
 
     client.commit_board(&player_a, &commitment_a, &root_a);
     client.commit_board(&player_b, &commitment_b, &root_b);
@@ -308,8 +269,8 @@ fn test_win_condition() {
     let commitment_a = make_commitment(&env, &board_a, &salt_a);
     let commitment_b = make_commitment(&env, &board_b, &salt_b);
 
-    let (root_a, _) = compute_merkle_root(&env, &board_a);
-    let (root_b, tree_b) = compute_merkle_root(&env, &board_b);
+    let (root_a, _) = build_merkle_tree(&env, &board_a);
+    let (root_b, tree_b) = build_merkle_tree(&env, &board_b);
 
     client.commit_board(&player_a, &commitment_a, &root_a);
     client.commit_board(&player_b, &commitment_b, &root_b);
@@ -361,8 +322,8 @@ fn test_turn_switching() {
     let commitment_a = make_commitment(&env, &board_a, &salt_a);
     let commitment_b = make_commitment(&env, &board_b, &salt_b);
 
-    let (root_a, tree_a) = compute_merkle_root(&env, &board_a);
-    let (root_b, tree_b) = compute_merkle_root(&env, &board_b);
+    let (root_a, tree_a) = build_merkle_tree(&env, &board_a);
+    let (root_b, tree_b) = build_merkle_tree(&env, &board_b);
 
     client.commit_board(&player_a, &commitment_a, &root_a);
     client.commit_board(&player_b, &commitment_b, &root_b);

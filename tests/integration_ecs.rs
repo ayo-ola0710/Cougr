@@ -2,12 +2,10 @@
 //!
 //! Tests full game-loop patterns: spawn -> add components -> run systems -> query -> verify.
 
-use cougr_core::commands::CommandQueue;
-use cougr_core::component::ComponentStorage;
-use cougr_core::plugin::{Plugin, PluginApp};
-use cougr_core::query::SimpleQueryCache;
 use cougr_core::scheduler::SimpleScheduler;
-use cougr_core::simple_world::SimpleWorld;
+use cougr_core::{
+    query::SimpleQueryCache, CommandQueue, ComponentStorage, GameApp, Plugin, SimpleWorld,
+};
 use soroban_sdk::{symbol_short, Bytes, Env};
 
 // ---------------------------------------------------------------------------
@@ -106,7 +104,7 @@ fn test_plugin_app_lifecycle() {
         fn name(&self) -> &'static str {
             "physics"
         }
-        fn build(&self, app: &mut PluginApp) {
+        fn build(&self, app: &mut GameApp) {
             app.add_system("physics", physics_system);
         }
     }
@@ -116,13 +114,13 @@ fn test_plugin_app_lifecycle() {
         fn name(&self) -> &'static str {
             "scoring"
         }
-        fn build(&self, app: &mut PluginApp) {
+        fn build(&self, app: &mut GameApp) {
             app.add_system("scoring", scoring_system);
         }
     }
 
     let env = Env::default();
-    let mut app = PluginApp::new(&env);
+    let mut app = GameApp::new(&env);
     app.add_plugin(PhysicsPlugin);
     app.add_plugin(ScoringPlugin);
 
@@ -139,7 +137,7 @@ fn test_plugin_app_lifecycle() {
         .add_component(e1, symbol_short!("scored"), Bytes::from_array(&env, &[1]));
 
     // Run all systems
-    app.run(&env);
+    app.run(&env).unwrap();
 
     // Physics updated pos: 10+5=15
     let pos = app
@@ -204,7 +202,7 @@ fn test_multi_system_pipeline() {
     world.add_component(e2, symbol_short!("pos"), Bytes::from_array(&env, &[99]));
     world.add_component(e2, symbol_short!("dead"), Bytes::from_array(&env, &[1]));
 
-    scheduler.run_all(&mut world, &env);
+    scheduler.run_all(&mut world, &env).unwrap();
 
     // e1 physics applied: 10+5=15
     let pos = world.get_component(e1, &symbol_short!("pos")).unwrap();
@@ -356,14 +354,14 @@ fn test_scheduler_system_ordering() {
     scheduler.add_system("scoring", scoring_system);
 
     // Tick 1
-    scheduler.run_all(&mut world, &env);
+    scheduler.run_all(&mut world, &env).unwrap();
     let pos = world.get_component(e, &symbol_short!("pos")).unwrap();
     assert_eq!(pos.get(0).unwrap(), 15);
     let score = world.get_component(e, &symbol_short!("score")).unwrap();
     assert_eq!(score.get(0).unwrap(), 1);
 
     // Tick 2
-    scheduler.run_all(&mut world, &env);
+    scheduler.run_all(&mut world, &env).unwrap();
     let pos = world.get_component(e, &symbol_short!("pos")).unwrap();
     assert_eq!(pos.get(0).unwrap(), 20); // 15 + 5
     let score = world.get_component(e, &symbol_short!("score")).unwrap();

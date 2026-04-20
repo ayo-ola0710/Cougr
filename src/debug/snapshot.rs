@@ -15,7 +15,7 @@ pub struct WorldSnapshot {
     /// Number of entities.
     pub entity_count: u32,
     /// Map from entity ID to a list of (component_type, data) pairs.
-    pub entity_states: Map<EntityId, soroban_sdk::Vec<(Symbol, Bytes)>>,
+    pub entity_states: Map<u32, soroban_sdk::Vec<(Symbol, Bytes)>>,
 }
 
 /// Diff between two snapshots (runtime-only, uses `alloc::vec::Vec`).
@@ -34,7 +34,7 @@ pub struct WorldDiff {
 
 /// Take a snapshot of the current world state.
 pub fn take_snapshot(world: &SimpleWorld, env: &Env) -> WorldSnapshot {
-    let mut entity_states: Map<EntityId, soroban_sdk::Vec<(Symbol, Bytes)>> = Map::new(env);
+    let mut entity_states: Map<u32, soroban_sdk::Vec<(Symbol, Bytes)>> = Map::new(env);
 
     for eid in world.entity_components.keys().iter() {
         if let Some(types) = world.entity_components.get(eid) {

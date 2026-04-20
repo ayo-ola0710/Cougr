@@ -8,10 +8,7 @@ use soroban_sdk::{
 };
 
 // Use cougr_core for component traits and ZK types (which align with stellar-zk)
-use cougr_core::zk::{
-    groth16,
-    types::{Groth16Proof, Scalar, VerificationKey},
-};
+use cougr_core::zk::{experimental, Groth16Proof, Scalar, VerificationKey};
 
 // --- Components ---
 
@@ -224,8 +221,8 @@ impl AIDungeonMasterArenaContract {
         }
 
         // Use stellar-zk compatible verification logic from cougr-core
-        let is_valid =
-            groth16::verify_groth16(&env, &vk, &proof_input.proof, &rust_inputs).unwrap_or(false);
+        let is_valid = experimental::verify_groth16(&env, &vk, &proof_input.proof, &rust_inputs)
+            .unwrap_or(false);
 
         if is_valid {
             let mut proof_state: ProofStateComponent =

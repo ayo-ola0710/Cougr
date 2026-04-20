@@ -189,10 +189,16 @@ macro_rules! __cougr_deserialize_field {
 /// The symbol name must be at most 9 characters (Soroban `symbol_short!` limit).
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
+/// use cougr_core::impl_component;
+/// use soroban_sdk::contracttype;
+///
 /// #[contracttype]
 /// #[derive(Clone, Debug)]
-/// pub struct Position { pub x: i32, pub y: i32 }
+/// pub struct Position {
+///     pub x: i32,
+///     pub y: i32,
+/// }
 ///
 /// impl_component!(Position, "position", Table, { x: i32, y: i32 });
 /// ```
@@ -237,7 +243,9 @@ macro_rules! impl_component {
 /// Marker components have no data and serialize to a single byte `[1]`.
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
+/// use cougr_core::impl_marker_component;
+///
 /// pub struct SnakeHead;
 ///
 /// impl_marker_component!(SnakeHead, "snkhead", Sparse);
@@ -273,12 +281,19 @@ macro_rules! impl_marker_component {
 /// Generates serialization/deserialization using big-endian byte encoding.
 ///
 /// # Example
-/// ```ignore
+/// ```no_run
+/// use cougr_core::impl_resource;
+/// use soroban_sdk::contracttype;
+///
 /// #[contracttype]
 /// #[derive(Clone)]
-/// pub struct GameState { pub score: i32, pub level: i32, pub is_game_over: bool }
+/// pub struct GameState {
+///     pub score: i32,
+///     pub level: i32,
+///     pub is_game_over: bool,
+/// }
 ///
-/// impl_resource!(GameState, "gamestate", { score: i32, level: i32, is_game_over: bool });
+/// impl_resource!(GameState, "gamestat", { score: i32, level: i32, is_game_over: bool });
 /// ```
 #[macro_export]
 macro_rules! impl_resource {

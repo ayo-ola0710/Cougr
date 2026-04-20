@@ -15,11 +15,15 @@ pub type OnRemoveHook = fn(entity_id: EntityId, component_type: &Symbol);
 /// such as updating indexes or cleaning up related state.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use cougr_core::runtime::HookRegistry;
+/// use soroban_sdk::{symbol_short, Bytes, Symbol};
+///
+/// fn on_add(_entity_id: u32, _ctype: &Symbol, _data: &Bytes) {}
+///
 /// let mut hooks = HookRegistry::new();
-/// hooks.on_add(symbol_short!("pos"), |entity_id, ctype, data| {
-///     // React to position being added
-/// });
+/// hooks.on_add(symbol_short!("pos"), on_add);
+/// assert_eq!(hooks.add_hook_count(), 1);
 /// ```
 pub struct HookRegistry {
     add_hooks: Vec<(Symbol, OnAddHook)>,
@@ -86,12 +90,20 @@ impl Default for HookRegistry {
 /// this wrapper carries a separate `HookRegistry` alongside the world.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use cougr_core::runtime::HookedWorld;
+/// use cougr_core::SimpleWorld;
+/// use soroban_sdk::{symbol_short, Bytes, Env, Symbol};
+///
+/// fn on_add(_entity_id: u32, _ctype: &Symbol, _data: &Bytes) {}
+///
 /// let env = Env::default();
 /// let world = SimpleWorld::new(&env);
 /// let mut hooked = HookedWorld::new(world);
-/// hooked.hooks_mut().on_add(symbol_short!("pos"), |eid, ct, d| { /* ... */ });
-/// hooked.add_component(entity_id, symbol_short!("pos"), data);
+/// let entity_id = hooked.spawn_entity();
+/// hooked.hooks_mut().on_add(symbol_short!("pos"), on_add);
+/// hooked.add_component(entity_id, symbol_short!("pos"), Bytes::new(&env));
+/// assert!(hooked.has_component(entity_id, &symbol_short!("pos")));
 /// ```
 pub struct HookedWorld {
     world: SimpleWorld,

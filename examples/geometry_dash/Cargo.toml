@@ -2,6 +2,7 @@
 name = "geometry_dash"
 version = "0.1.0"
 edition = "2021"
+publish = false
 authors = ["Cougr Contributors"]
 description = "Geometry Dash on-chain game example using cougr-core ECS framework"
 

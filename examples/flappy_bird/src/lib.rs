@@ -1,10 +1,13 @@
 #![no_std]
+extern crate alloc;
 
 mod components;
 mod systems;
 
+use alloc::rc::Rc;
 use components::{BirdState, ComponentTrait, PipeConfig, PipeMarker};
-use cougr_core::SimpleWorld;
+use core::cell::Cell;
+use cougr_core::{GameApp, ScheduleStage, SimpleQueryBuilder, SimpleWorld, SystemConfig};
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Env, Vec};
 use systems::{Position, Velocity};
 
@@ -33,35 +36,48 @@ pub struct FlappyBirdContract;
 impl FlappyBirdContract {
     /// Initialize a new game
     pub fn init_game(env: Env) {
-        let mut world = SimpleWorld::new(&env);
+        let bird_id = Rc::new(Cell::new(0u32));
+        let mut app = GameApp::new(&env);
+        app.add_startup_system("spawn_bird", {
+            let bird_id = bird_id.clone();
+            move |world: &mut SimpleWorld, env: &Env| {
+                let entity_id = world.spawn_entity();
+                let bird_pos = Position::new(INIT_BIRD_X, INIT_BIRD_Y);
+                let bird_vel = Velocity::new(0, 0);
+                let bird_state = BirdState::new(true);
 
-        // Spawn bird entity
-        let bird_id = world.spawn_entity();
-
-        // Add bird components
-        let bird_pos = Position::new(INIT_BIRD_X, INIT_BIRD_Y);
-        let bird_vel = Velocity::new(0, 0);
-        let bird_state = BirdState::new(true);
-
-        world.add_component(bird_id, symbol_short!("position"), bird_pos.serialize(&env));
-        world.add_component(bird_id, symbol_short!("velocity"), bird_vel.serialize(&env));
-        world.add_component(
-            bird_id,
-            symbol_short!("birdstate"),
-            bird_state.serialize(&env),
-        );
-
-        // Spawn initial pipes
-        Self::spawn_pipe(&mut world, &env, SPAWN_X, 150);
-        Self::spawn_pipe(&mut world, &env, SPAWN_X + PIPE_SPACING, 200);
-        Self::spawn_pipe(&mut world, &env, SPAWN_X + PIPE_SPACING * 2, 250);
+                world.add_component(
+                    entity_id,
+                    symbol_short!("position"),
+                    bird_pos.serialize(env),
+                );
+                world.add_component(
+                    entity_id,
+                    symbol_short!("velocity"),
+                    bird_vel.serialize(env),
+                );
+                world.add_component(
+                    entity_id,
+                    symbol_short!("birdstate"),
+                    bird_state.serialize(env),
+                );
+                bird_id.set(entity_id);
+            }
+        });
+        app.add_startup_system("spawn_pipes", move |world: &mut SimpleWorld, env: &Env| {
+            Self::spawn_pipe(world, env, SPAWN_X, 150);
+            Self::spawn_pipe(world, env, SPAWN_X + PIPE_SPACING, 200);
+            Self::spawn_pipe(world, env, SPAWN_X + PIPE_SPACING * 2, 250);
+        });
+        app.run_startup(&env).unwrap();
+        let world = app.into_world();
 
         // Save game state
         let game_state = GameState {
             score: 0,
             game_over: false,
             tick_count: 0,
-            bird_entity_id: bird_id,
+            bird_entity_id: bird_id.get(),
             next_pipe_spawn: 3 * 50, // Spawn new pipe every 50 ticks
         };
 
@@ -123,26 +139,63 @@ impl FlappyBirdContract {
         }
 
         // Load world
-        let mut world: SimpleWorld = env
+        let world: SimpleWorld = env
             .storage()
             .persistent()
             .get(&symbol_short!("world"))
             .unwrap();
 
-        // Apply game systems
-        systems::apply_gravity(&mut world, &env);
-        systems::update_positions(&mut world, &env);
-        systems::move_pipes(&mut world, &env);
+        let collision = Rc::new(Cell::new(false));
+        let score_increase = Rc::new(Cell::new(0u32));
 
-        // Check collisions
-        let collision = systems::check_collisions(&mut world, &env);
-        if collision {
+        let mut app = GameApp::with_world(world);
+        app.add_system_with_config(
+            "gravity",
+            systems::apply_gravity,
+            SystemConfig::new().in_stage(ScheduleStage::PreUpdate),
+        );
+        app.add_system_with_config(
+            "movement",
+            systems::update_positions,
+            SystemConfig::new().in_stage(ScheduleStage::Update),
+        );
+        app.add_system_with_config(
+            "pipe_movement",
+            systems::move_pipes,
+            SystemConfig::new()
+                .in_stage(ScheduleStage::Update)
+                .after("movement"),
+        );
+        app.add_system_with_config(
+            "collision",
+            {
+                let collision = collision.clone();
+                move |world: &mut SimpleWorld, env: &Env| {
+                    collision.set(systems::check_collisions(world, env));
+                }
+            },
+            SystemConfig::new().in_stage(ScheduleStage::PostUpdate),
+        );
+        app.add_system_with_config(
+            "score",
+            {
+                let score_increase = score_increase.clone();
+                move |world: &mut SimpleWorld, env: &Env| {
+                    score_increase.set(systems::update_score(world, env));
+                }
+            },
+            SystemConfig::new()
+                .in_stage(ScheduleStage::PostUpdate)
+                .after("collision"),
+        );
+        app.run(&env).unwrap();
+        let mut world = app.into_world();
+
+        if collision.get() {
             game_state.game_over = true;
         }
 
-        // Update score
-        let score_increase = systems::update_score(&mut world, &env);
-        game_state.score += score_increase;
+        game_state.score += score_increase.get();
 
         // Spawn new pipes
         game_state.tick_count += 1;
@@ -233,7 +286,10 @@ impl FlappyBirdContract {
     }
 
     fn remove_offscreen_pipes(world: &mut SimpleWorld, env: &Env) {
-        let pipe_entities = world.get_entities_with_component(&symbol_short!("pipemark"), env);
+        let pipe_entities = SimpleQueryBuilder::new(env)
+            .with_component(symbol_short!("pipemark"))
+            .build()
+            .execute(world, env);
         let mut to_remove = Vec::new(env);
 
         for i in 0..pipe_entities.len() {

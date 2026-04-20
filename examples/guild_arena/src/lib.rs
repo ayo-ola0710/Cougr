@@ -4,8 +4,10 @@ use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Symbol, Vec,
 };
 
-use cougr_core::accounts::multi_device::{DeviceManager, DevicePolicy, MultiDeviceProvider};
-use cougr_core::accounts::recovery::{RecoverableAccount, RecoveryConfig, RecoveryProvider};
+use cougr_core::auth::{
+    DeviceManager, DevicePolicy, MultiDeviceProvider, RecoverableAccount, RecoveryConfig,
+    RecoveryProvider,
+};
 use cougr_core::component::ComponentTrait;
 
 // --- Components ---

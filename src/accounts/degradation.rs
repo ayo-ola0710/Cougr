@@ -113,6 +113,7 @@ mod tests {
             },
             created_at: 0,
             operations_used: 0,
+            next_nonce: 0,
         }
     }
 

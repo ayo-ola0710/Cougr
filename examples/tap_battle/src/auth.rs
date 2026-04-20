@@ -8,8 +8,7 @@
 
 use soroban_sdk::{symbol_short, Address, Bytes, BytesN, Env, Symbol};
 
-use cougr_core::accounts::secp256r1_auth::{verify_secp256r1, Secp256r1Key, Secp256r1Storage};
-use cougr_core::accounts::session_builder::SessionBuilder;
+use cougr_core::auth::{verify_secp256r1, Secp256r1Key, Secp256r1Storage, SessionBuilder};
 
 use crate::types::*;
 

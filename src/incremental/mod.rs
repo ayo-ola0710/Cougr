@@ -21,5 +21,4 @@ pub mod dirty_tracker;
 pub mod keys;
 pub mod storage_world;
 
-pub use dirty_tracker::DirtyTracker;
 pub use storage_world::{StorageWorld, WorldMetadata};

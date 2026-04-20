@@ -1,67 +1,28 @@
-name: Guild Treasury Wars CI
+name: Guild Treasury Wars Example CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'examples/guild_treasury_wars/**'
+      - '!examples/guild_treasury_wars/**/*.md'
+      - '.github/workflows/example_reusable.yml'
       - '.github/workflows/guild_treasury_wars.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'examples/guild_treasury_wars/**'
+      - '!examples/guild_treasury_wars/**/*.md'
+      - '.github/workflows/example_reusable.yml'
       - '.github/workflows/guild_treasury_wars.yml'
 
-env:
-  CARGO_TERM_COLOR: always
+concurrency:
+  group: guild-treasury-wars-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Rust
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
-      - name: Install Rust target for Soroban
-        run: |
-          source $HOME/.cargo/env
-          rustup target add wasm32v1-none
-      - name: Install Stellar CLI with Homebrew
-        run: |
-          brew update
-          brew install stellar-cli
-          stellar --version
-      - name: Check formatting
-        run: |
-          source $HOME/.cargo/env
-          cargo fmt --check
-        working-directory: examples/guild_treasury_wars
-
-      - name: Run Clippy lints
-        run: |
-          source $HOME/.cargo/env
-          cargo clippy --all-targets --all-features -- -D warnings
-        working-directory: examples/guild_treasury_wars
-
-      - name: Build Cargo project
-        run: |
-          source $HOME/.cargo/env
-          cargo build --verbose
-        working-directory: examples/guild_treasury_wars
-
-      - name: Build Soroban contract
-        run: |
-          source $HOME/.cargo/env
-          stellar contract build --verbose
-        working-directory: examples/guild_treasury_wars
-
-      - name: Run Cargo tests
-        run: |
-          source $HOME/.cargo/env
-          cargo test --verbose
-        working-directory: examples/guild_treasury_wars
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Guild Treasury Wars Example CI
+      working_directory: examples/guild_treasury_wars

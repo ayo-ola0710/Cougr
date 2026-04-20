@@ -33,7 +33,6 @@ stellar contract build
 | `battleship` | Board / hidden information | Commit-reveal and selective state disclosure |
 | `bomberman` | Grid action | Tile updates, hazards, and timed interactions |
 | `chess` | Board / strategy | Rule validation and proof-oriented move flow |
-| `dungeon_crawler` | Progression | Stateful exploration and encounter management |
 | `flappy_bird` | Arcade | Tight tick-loop updates and obstacle generation |
 | `geometry_dash` | Reflex | Deterministic timing and obstacle progression |
 | `guild_arena` | Account patterns | Social recovery and multi-device gameplay |
@@ -62,6 +61,27 @@ Use examples by pattern, not only by genre:
 | Account abstraction patterns | `guild_arena` |
 | Larger multi-entity loops | `asteroids`, `space_invaders`, `pac_man` |
 
+## Preferred Runtime Shape
+
+For new examples and new production contracts, prefer the modern Cougr runtime path:
+
+- `GameApp` as the entrypoint
+- explicit stage placement for systems
+- `SimpleQueryBuilder` for non-trivial world scans
+- table storage for hot-loop gameplay state
+
+For examples that intentionally preserve older patterns, keep them explicitly
+documented as compatibility or transition references rather than presenting
+them as the default onboarding path.
+
+## Canonical References
+
+The maintained reference architectures for Cougr should be read in this order:
+
+- `snake`: canonical arcade loop and `GameApp` tick model
+- `battleship`: canonical hidden-information / commit-reveal flow using `privacy::stable` Merkle primitives
+- `guild_arena`: canonical account recovery and multi-device authorization flow
+
 ## Conventions
 
 - Keep each example self-contained.
@@ -79,4 +99,3 @@ Before adding a new example:
 4. add or update a CI workflow if the example should be validated automatically
 
 For contribution expectations across the repository, see [CONTRIBUTING.md](../CONTRIBUTING.md).
-

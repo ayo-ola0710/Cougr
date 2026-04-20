@@ -1,5 +1,5 @@
 use crate::components::{BirdState, ComponentTrait, PipeConfig, PipeMarker};
-use cougr_core::SimpleWorld;
+use cougr_core::{SimpleQueryBuilder, SimpleWorld};
 use soroban_sdk::{symbol_short, Bytes, Env, Symbol};
 
 // Define our own Position and Velocity types that match cougr-core's but with ComponentTrait
@@ -16,10 +16,6 @@ impl Position {
 }
 
 impl ComponentTrait for Position {
-    fn component_type() -> Symbol {
-        symbol_short!("position")
-    }
-
     fn serialize(&self, env: &Env) -> Bytes {
         let mut bytes = Bytes::new(env);
         let x_bytes = Bytes::from_array(env, &self.x.to_be_bytes());
@@ -62,10 +58,6 @@ impl Velocity {
 }
 
 impl ComponentTrait for Velocity {
-    fn component_type() -> Symbol {
-        symbol_short!("velocity")
-    }
-
     fn serialize(&self, env: &Env) -> Bytes {
         let mut bytes = Bytes::new(env);
         let x_bytes = Bytes::from_array(env, &self.x.to_be_bytes());
@@ -106,7 +98,7 @@ pub const PIPE_WIDTH: i32 = 50;
 /// Apply gravity to bird velocity
 pub fn apply_gravity(world: &mut SimpleWorld, env: &Env) {
     // Find bird entity (entity with BirdState component)
-    let bird_entities = world.get_entities_with_component(&symbol_short!("birdstate"), env);
+    let bird_entities = entities_with(world, env, symbol_short!("birdstate"));
 
     for i in 0..bird_entities.len() {
         let entity_id = bird_entities.get(i).unwrap();
@@ -130,7 +122,7 @@ pub fn apply_gravity(world: &mut SimpleWorld, env: &Env) {
 
 /// Update positions based on velocities
 pub fn update_positions(world: &mut SimpleWorld, env: &Env) {
-    let entities_with_velocity = world.get_entities_with_component(&symbol_short!("velocity"), env);
+    let entities_with_velocity = entities_with(world, env, symbol_short!("velocity"));
 
     for i in 0..entities_with_velocity.len() {
         let entity_id = entities_with_velocity.get(i).unwrap();
@@ -163,7 +155,7 @@ pub fn update_positions(world: &mut SimpleWorld, env: &Env) {
 
 /// Move pipes left
 pub fn move_pipes(world: &mut SimpleWorld, env: &Env) {
-    let pipe_entities = world.get_entities_with_component(&symbol_short!("pipemark"), env);
+    let pipe_entities = entities_with(world, env, symbol_short!("pipemark"));
 
     for i in 0..pipe_entities.len() {
         let entity_id = pipe_entities.get(i).unwrap();
@@ -187,7 +179,7 @@ pub fn move_pipes(world: &mut SimpleWorld, env: &Env) {
 /// Check collisions between bird and pipes/ground
 pub fn check_collisions(world: &mut SimpleWorld, env: &Env) -> bool {
     // Find bird position and state
-    let bird_entities = world.get_entities_with_component(&symbol_short!("birdstate"), env);
+    let bird_entities = entities_with(world, env, symbol_short!("birdstate"));
     if bird_entities.is_empty() {
         return false;
     }
@@ -232,7 +224,7 @@ pub fn check_collisions(world: &mut SimpleWorld, env: &Env) -> bool {
     }
 
     // Check pipe collisions
-    let pipe_entities = world.get_entities_with_component(&symbol_short!("pipemark"), env);
+    let pipe_entities = entities_with(world, env, symbol_short!("pipemark"));
     for i in 0..pipe_entities.len() {
         let pipe_id = pipe_entities.get(i).unwrap();
 
@@ -281,7 +273,7 @@ pub fn update_score(world: &mut SimpleWorld, env: &Env) -> u32 {
     let mut score_increase = 0;
 
     // Find bird position
-    let bird_entities = world.get_entities_with_component(&symbol_short!("birdstate"), env);
+    let bird_entities = entities_with(world, env, symbol_short!("birdstate"));
     if bird_entities.is_empty() {
         return 0;
     }
@@ -296,7 +288,7 @@ pub fn update_score(world: &mut SimpleWorld, env: &Env) -> u32 {
     };
 
     // Check each pipe
-    let pipe_entities = world.get_entities_with_component(&symbol_short!("pipemark"), env);
+    let pipe_entities = entities_with(world, env, symbol_short!("pipemark"));
     for i in 0..pipe_entities.len() {
         let pipe_id = pipe_entities.get(i).unwrap();
 
@@ -321,4 +313,11 @@ pub fn update_score(world: &mut SimpleWorld, env: &Env) -> u32 {
     }
 
     score_increase
+}
+
+fn entities_with(world: &SimpleWorld, env: &Env, component_type: Symbol) -> soroban_sdk::Vec<u32> {
+    SimpleQueryBuilder::new(env)
+        .with_component(component_type)
+        .build()
+        .execute(world, env)
 }

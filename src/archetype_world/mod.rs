@@ -15,5 +15,8 @@ pub mod query;
 pub mod world;
 
 pub use archetype::{Archetype, ArchetypeId};
-pub use query::{archetype_query, ArchetypeQueryCache};
+pub use query::{
+    archetype_query, ArchetypeQuery, ArchetypeQueryBuilder, ArchetypeQueryCache,
+    ArchetypeQueryState,
+};
 pub use world::ArchetypeWorld;

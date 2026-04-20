@@ -1,55 +1,28 @@
-name: Arkanoid CI
+name: Arkanoid Example CI
 
 on:
   push:
     branches: [main, develop]
     paths:
       - 'examples/arkanoid/**'
+      - '!examples/arkanoid/**/*.md'
+      - '.github/workflows/example_reusable.yml'
       - '.github/workflows/arkanoid.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'examples/arkanoid/**'
+      - '!examples/arkanoid/**/*.md'
+      - '.github/workflows/example_reusable.yml'
       - '.github/workflows/arkanoid.yml'
 
-env:
-  CARGO_TERM_COLOR: always
+concurrency:
+  group: arkanoid-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci:
-    name: CI
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: examples/arkanoid
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32v1-none
-          components: rustfmt, clippy
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: examples/arkanoid
-
-      - name: Check formatting
-        run: cargo fmt --check
-
-      - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-      - name: Build
-        run: cargo build
-
-      - name: Test
-        run: cargo test
-
-      - name: Install Stellar CLI
-        run: brew install stellar-cli
-
-      - name: Stellar contract build
-        run: stellar contract build
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Arkanoid Example CI
+      working_directory: examples/arkanoid

@@ -6,15 +6,20 @@ High-level overview of how Cougr is organized. For usage, see [README.md](README
 
 ```
 ┌─────────────────────────────────────────────┐
-│              GameWorld                       │  Unified API: ECS + Auth + ZK
+│               app::GameApp                   │  Default runtime surface
 ├───────────┬───────────────┬─────────────────┤
-│  ECS      │  Accounts     │  ZK Proofs      │
-├───────────┼───────────────┼─────────────────┤
+│  ECS      │  Accounts     │  Standards      │  ZK Proofs
+├───────────┼───────────────┼─────────────────┼─────────────────┤
 │  soroban-sdk 25.1.0  (no_std, WASM)         │
 └─────────────────────────────────────────────┘
 ```
 
-**GameWorld** (`src/game_world.rs`) is the top-level integration layer. It wraps a `SimpleWorld` (ECS), a `CougrAccount` (auth), and provides ZK proof submission — one struct for a complete game contract.
+**GameApp** (`src/plugin/mod.rs`) is the default onboarding layer. It owns a `SimpleWorld`,
+the scheduler, plugin registration, and runtime resources in one place.
+
+**GameWorld** (`src/game_world.rs`) remains available as a higher-level Beta integration
+wrapper for combining ECS, auth, and proof submission, but it is not the primary
+learning path for new users.
 
 ## ECS
 
@@ -22,20 +27,20 @@ Two storage backends, same `ComponentTrait` interface:
 
 | Backend | File | Strategy | Best for |
 |---|---|---|---|
-| **SimpleWorld** | `src/simple_world.rs` | `Map<EntityId, Map<Symbol, Bytes>>` with dual Table/Sparse | General use, small entity counts |
+| **SimpleWorld** | `src/simple_world/` | `Map<(EntityId, Symbol), Bytes>` with dual Table/Sparse indexes | General use, small entity counts |
 | **ArchetypeWorld** | `src/archetype_world/` | Groups entities by component signature | Large entity counts, batch queries |
 
 Both support typed access (`get_typed<T>`, `set_typed<T>`) and raw access (`get_component`, `add_component`).
 
 Supporting systems:
 
-- **Query cache** (`src/query.rs`) — version-tagged, invalidates on world mutation
+- **Query cache** (`src/query/`) — version-tagged, invalidates on world mutation
 - **Hooks** (`src/hooks.rs`) — callbacks on component add/remove
 - **Observers** (`src/observers.rs`) — event-driven reactions
 - **Commands** (`src/commands.rs`) — deferred mutations during system execution
-- **Scheduler** (`src/scheduler.rs`) — priority-based system ordering
+- **Scheduler** (`src/scheduler/`) — stage-based, dependency-aware system ordering
 - **Change tracker** (`src/change_tracker.rs`) — per-component dirty flags
-- **Plugins** (`src/plugin.rs`) — modular game logic bundles
+- **Plugins** (`src/plugin/`) — modular game logic bundles
 - **Incremental storage** (`src/incremental/`) — only persist dirty entities
 
 ### Component definition
@@ -71,6 +76,20 @@ CougrAccount (trait)
 Key traits: `CougrAccount`, `SessionKeyProvider`, `RecoveryProvider`, `MultiDeviceProvider`.
 
 `SessionBuilder` provides a fluent API for constructing scoped session keys. `authorize_with_fallback` handles graceful degradation from session keys to direct authorization.
+
+## Standards (`src/standards/`)
+
+Reusable contract standards for integrations that need explicit operational controls:
+
+- `Ownable` and `Ownable2Step` for owner-managed authority
+- `AccessControl` for role-based authorization with delegated admins
+- `Pausable` for emergency stops
+- `ExecutionGuard` for serialized critical sections
+- `RecoveryGuard` for blocking sensitive paths during recovery windows
+- `BatchExecutor` for bounded multi-operation flows
+- `DelayedExecutionPolicy` for time-delayed operation queues
+
+Each standard instance is keyed by a caller-supplied `Symbol`, which keeps storage deterministic and avoids collisions when a contract composes multiple modules.
 
 ## Feature Flags
 

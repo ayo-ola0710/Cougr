@@ -96,6 +96,16 @@ Uses Cougr-Core ECS patterns:
 
 **Storage**: Soroban persistent storage keyed by player/device addresses. Recovery and device state managed through `RecoverableAccount` and `DeviceManager` from cougr-core.
 
+## Reference Role
+
+This example is the canonical reference for Cougr's account-oriented flows:
+
+- social recovery
+- multi-device authorization
+- gameplay permissions separated from full admin authority
+
+Unlike the arcade examples, this one is intentionally more account-centric than `GameApp`-centric.
+
 ## Prerequisites
 
 - Rust 1.89+

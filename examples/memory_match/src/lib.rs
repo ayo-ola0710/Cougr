@@ -59,35 +59,35 @@ impl ComponentTrait for CardComponent {
         if data.len() != 20 {
             return None;
         }
-        
+
         let entity_id = u32::from_be_bytes([
             data.get(0).unwrap(),
             data.get(1).unwrap(),
             data.get(2).unwrap(),
             data.get(3).unwrap(),
         ]);
-        
+
         let card_id = u32::from_be_bytes([
             data.get(4).unwrap(),
             data.get(5).unwrap(),
             data.get(6).unwrap(),
             data.get(7).unwrap(),
         ]);
-        
+
         let value = u32::from_be_bytes([
             data.get(8).unwrap(),
             data.get(9).unwrap(),
             data.get(10).unwrap(),
             data.get(11).unwrap(),
         ]);
-        
+
         let state = u32::from_be_bytes([
             data.get(12).unwrap(),
             data.get(13).unwrap(),
             data.get(14).unwrap(),
             data.get(15).unwrap(),
         ]);
-        
+
         let position = u32::from_be_bytes([
             data.get(16).unwrap(),
             data.get(17).unwrap(),
@@ -114,7 +114,7 @@ impl ComponentTrait for CardComponent {
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct BoardComponent {
-    pub cards: Vec<u32>, // Card entity IDs
+    pub cards: Vec<u32>,          // Card entity IDs
     pub revealed_cards: Vec<u32>, // Currently revealed card positions
     pub matched_pairs: u32,
     pub total_pairs: u32,
@@ -127,7 +127,7 @@ impl BoardComponent {
         for i in 0..16 {
             cards.push_back(i);
         }
-        
+
         Self {
             cards,
             revealed_cards: Vec::new(env),
@@ -148,21 +148,24 @@ impl ComponentTrait for BoardComponent {
         bytes.append(&Bytes::from_array(env, &self.entity_id.to_be_bytes()));
         bytes.append(&Bytes::from_array(env, &self.matched_pairs.to_be_bytes()));
         bytes.append(&Bytes::from_array(env, &self.total_pairs.to_be_bytes()));
-        
+
         // Serialize cards vector
-        bytes.append(&Bytes::from_array(env, &(self.cards.len() as u32).to_be_bytes()));
+        bytes.append(&Bytes::from_array(env, &self.cards.len().to_be_bytes()));
         for i in 0..self.cards.len() {
             let card_id = self.cards.get(i).unwrap();
             bytes.append(&Bytes::from_array(env, &card_id.to_be_bytes()));
         }
-        
+
         // Serialize revealed_cards vector
-        bytes.append(&Bytes::from_array(env, &(self.revealed_cards.len() as u32).to_be_bytes()));
+        bytes.append(&Bytes::from_array(
+            env,
+            &self.revealed_cards.len().to_be_bytes(),
+        ));
         for i in 0..self.revealed_cards.len() {
             let pos = self.revealed_cards.get(i).unwrap();
             bytes.append(&Bytes::from_array(env, &pos.to_be_bytes()));
         }
-        
+
         bytes
     }
 
@@ -177,14 +180,14 @@ impl ComponentTrait for BoardComponent {
             data.get(2).unwrap(),
             data.get(3).unwrap(),
         ]);
-        
+
         let matched_pairs = u32::from_be_bytes([
             data.get(4).unwrap(),
             data.get(5).unwrap(),
             data.get(6).unwrap(),
             data.get(7).unwrap(),
         ]);
-        
+
         let total_pairs = u32::from_be_bytes([
             data.get(8).unwrap(),
             data.get(9).unwrap(),
@@ -193,7 +196,7 @@ impl ComponentTrait for BoardComponent {
         ]);
 
         let mut offset = 12;
-        
+
         // Deserialize cards
         let cards_len = u32::from_be_bytes([
             data.get(offset).unwrap(),
@@ -202,7 +205,7 @@ impl ComponentTrait for BoardComponent {
             data.get(offset + 3).unwrap(),
         ]);
         offset += 4;
-        
+
         let mut cards = Vec::new(env);
         for _ in 0..cards_len {
             let card_id = u32::from_be_bytes([
@@ -214,7 +217,7 @@ impl ComponentTrait for BoardComponent {
             cards.push_back(card_id);
             offset += 4;
         }
-        
+
         // Deserialize revealed_cards
         let revealed_len = u32::from_be_bytes([
             data.get(offset).unwrap(),
@@ -223,7 +226,7 @@ impl ComponentTrait for BoardComponent {
             data.get(offset + 3).unwrap(),
         ]);
         offset += 4;
-        
+
         let mut revealed_cards = Vec::new(env);
         for _ in 0..revealed_len {
             let pos = u32::from_be_bytes([
@@ -279,8 +282,14 @@ impl ComponentTrait for GameStateComponent {
         bytes.append(&Bytes::from_array(env, &self.entity_id.to_be_bytes()));
         bytes.append(&self.player.to_string().to_bytes());
         bytes.append(&Bytes::from_array(env, &self.moves_count.to_be_bytes()));
-        bytes.append(&Bytes::from_array(env, &(if self.game_over { 1u32 } else { 0u32 }).to_be_bytes()));
-        bytes.append(&Bytes::from_array(env, &(if self.can_reveal { 1u32 } else { 0u32 }).to_be_bytes()));
+        bytes.append(&Bytes::from_array(
+            env,
+            &(if self.game_over { 1u32 } else { 0u32 }).to_be_bytes(),
+        ));
+        bytes.append(&Bytes::from_array(
+            env,
+            &(if self.can_reveal { 1u32 } else { 0u32 }).to_be_bytes(),
+        ));
         bytes
     }
 
@@ -295,24 +304,24 @@ impl ComponentTrait for GameStateComponent {
             data.get(2).unwrap(),
             data.get(3).unwrap(),
         ]);
-        
-        let player_bytes = &data.slice(4..36);
+
+        let player_bytes = data.slice(4..36);
         let player = Address::from_string_bytes(&player_bytes);
-        
+
         let moves_count = u32::from_be_bytes([
             data.get(36).unwrap(),
             data.get(37).unwrap(),
             data.get(38).unwrap(),
             data.get(39).unwrap(),
         ]);
-        
+
         let game_over = u32::from_be_bytes([
             data.get(40).unwrap(),
             data.get(41).unwrap(),
             data.get(42).unwrap(),
             data.get(43).unwrap(),
         ]) == 1;
-        
+
         let can_reveal = u32::from_be_bytes([
             data.get(44).unwrap(),
             data.get(45).unwrap(),
@@ -345,8 +354,22 @@ impl ECSWorldState {
         let mut cards = Vec::new(env);
         for i in 0..16 {
             let value = match i {
-                0 => 0, 1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 7,
-                8 => 0, 9 => 1, 10 => 2, 11 => 3, 12 => 4, 13 => 5, 14 => 6, 15 => 7,
+                0 => 0,
+                1 => 1,
+                2 => 2,
+                3 => 3,
+                4 => 4,
+                5 => 5,
+                6 => 6,
+                7 => 7,
+                8 => 0,
+                9 => 1,
+                10 => 2,
+                11 => 3,
+                12 => 4,
+                13 => 5,
+                14 => 6,
+                15 => 7,
                 _ => 0,
             };
             cards.push_back(CardComponent::new(i, value, i, i));
@@ -376,7 +399,7 @@ impl ECSWorldState {
     }
 
     pub fn update_card(&mut self, entity_id: u32, new_state: CardState) {
-        let mut new_cards = Vec::new(&self.cards.env());
+        let mut new_cards = Vec::new(self.cards.env());
         for i in 0..self.cards.len() {
             let mut card = self.cards.get(i).unwrap().clone();
             if card.entity_id == entity_id {
@@ -454,7 +477,7 @@ impl MemoryMatchContract {
             panic!("Cannot reveal more than 2 cards");
         }
 
-        if position >= world_state.board.cards.len() as u32 {
+        if position >= world_state.board.cards.len() {
             panic!("Invalid position");
         }
 
@@ -462,11 +485,11 @@ impl MemoryMatchContract {
         let card_entity_id = world_state.board.cards.get(position).unwrap();
         let card_value = {
             let card = world_state.get_card(card_entity_id).unwrap();
-            
+
             if matches!(card.state, CardState::Revealed | CardState::Matched) {
                 panic!("Card already revealed or matched");
             }
-            
+
             card.value
         };
 
@@ -478,7 +501,7 @@ impl MemoryMatchContract {
 
         // Update game state
         world_state.game_state.moves_count += 1;
-        
+
         // If 2 cards are revealed, disable further reveals
         if world_state.board.revealed_cards.len() == 2 {
             world_state.game_state.can_reveal = false;
@@ -514,7 +537,7 @@ impl MemoryMatchContract {
                 // Check for game over
                 if world_state.board.matched_pairs == world_state.board.total_pairs {
                     world_state.game_state.game_over = true;
-                    
+
                     RevealInfo {
                         result: RevealResult::GameOver,
                         position,
@@ -566,7 +589,7 @@ impl MemoryMatchContract {
             .instance()
             .get(&WORLD_KEY)
             .unwrap_or_else(|| panic!("Game not initialized"));
-        
+
         Self::to_game_state(&env, &world_state)
     }
 
@@ -623,7 +646,7 @@ impl MemoryMatchContract {
 
         GameState {
             board_state,
-            revealed_count: world.board.revealed_cards.len() as u32,
+            revealed_count: world.board.revealed_cards.len(),
             matched_pairs: world.board.matched_pairs,
             total_pairs: world.board.total_pairs,
             moves_count: world.game_state.moves_count,

@@ -2,6 +2,8 @@
 
 A two-player Battleship game demonstrating **hidden information** using commit-reveal pattern and Merkle proofs on Stellar Soroban. Players commit their board layouts cryptographically, then prove hit/miss results without revealing unattacked positions.
 
+This example is Cougr's canonical hidden-information reference. It intentionally leans on the stable privacy surface in `cougr_core::privacy::stable` instead of re-defining Merkle verification inside the example.
+
 ## The Hidden Information Problem
 
 Traditional on-chain games face a challenge: **all data is public**. In Battleship, if boards are stored directly on-chain, opponents can see ship positions and cheat.
@@ -88,7 +90,7 @@ Game ends when one player's ships are all sunk (17 hits total: 5+4+3+3+2).
 | `new_game` | `player_a: Address`<br>`player_b: Address` | Initialize game |
 | `commit_board` | `player: Address`<br>`commitment: BytesN<32>`<br>`merkle_root: BytesN<32>` | Commit board layout |
 | `attack` | `attacker: Address`<br>`x: u32, y: u32` | Attack coordinates (0-9) |
-| `reveal_cell` | `defender: Address`<br>`x: u32, y: u32`<br>`value: u32`<br>`proof: Vec<BytesN<32>>` | Reveal cell with Merkle proof |
+| `reveal_cell` | `defender: Address`<br>`x: u32, y: u32`<br>`value: u32`<br>`proof: OnChainMerkleProof` | Reveal cell with Merkle proof |
 | `get_state` | - | Get current game state |
 
 ## Data Structures
@@ -119,25 +121,18 @@ struct BoardCommitment {
 }
 ```
 
-## Merkle Proof Verification
+## Stable Merkle Verification
 
-The contract verifies proofs using SHA256:
+The contract uses Cougr's stable SHA256 Merkle proof contract:
 
 ```rust
-// Leaf hash
-leaf = SHA256(index || value)
+use cougr_core::privacy::stable::{MerkleProofVerifier, Sha256MerkleProofVerifier};
 
-// Climb tree
-for each sibling in proof:
-    if index is even:
-        current = SHA256(current || sibling)
-    else:
-        current = SHA256(sibling || current)
-    index /= 2
-
-// Verify
-assert(current == merkle_root)
+let verifier = Sha256MerkleProofVerifier;
+assert!(verifier.verify(&env, &proof, &merkle_root)?);
 ```
+
+The leaf payload still binds `index || value`, but the inclusion proof format and verification rules come from Cougr's stable privacy API.
 
 ## Building & Testing
 
@@ -172,17 +167,17 @@ cargo test
 
 ### Off-Chain (Player)
 ```rust
-// Build Merkle tree
+// Build Merkle tree from hashed cell payloads
 let mut leaves = Vec::new();
 for (idx, &value) in board.iter().enumerate() {
     let leaf = sha256(idx || value);
     leaves.push(leaf);
 }
-let tree = MerkleTree::new(leaves);
+let tree = MerkleTree::from_leaves(&env, &leaves)?;
 let root = tree.root();
 
 // Get proof for specific cell
-let proof = tree.get_proof(x * 10 + y);
+let proof = to_on_chain_proof(&tree.proof(x * 10 + y)?, &env);
 
 // Submit on-chain
 client.reveal_cell(&player, &x, &y, &value, &proof);
@@ -190,13 +185,8 @@ client.reveal_cell(&player, &x, &y, &value, &proof);
 
 ### On-Chain (Contract)
 ```rust
-// Verify proof
-let leaf = sha256(index || value);
-let mut current = leaf;
-for sibling in proof {
-    current = sha256(current || sibling); // or sibling || current
-}
-assert(current == stored_merkle_root);
+let verifier = Sha256MerkleProofVerifier;
+assert!(verifier.verify(&env, &proof, &stored_merkle_root)?);
 ```
 
 ## Security Considerations
@@ -243,7 +233,7 @@ if !verify_proof(root, index, value, proof) {
 |--------|---------------|
 | **CommitSystem** | Validates and stores commitments |
 | **AttackSystem** | Records attack coordinates |
-| **RevealSystem** | Verifies Merkle proofs, updates grid |
+| **RevealSystem** | Verifies stable `OnChainMerkleProof`, updates grid |
 | **WinConditionSystem** | Detects when all ships sunk |
 
 ## Why Merkle Proofs?

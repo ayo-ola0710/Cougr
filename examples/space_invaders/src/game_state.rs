@@ -10,7 +10,7 @@ use soroban_sdk::contracttype;
 
 // Import cougr-core Position component for entity position tracking
 // This demonstrates proper integration of cougr-core into game logic
-pub use cougr_core::components::Position as CougrPosition;
+pub use cougr_core::Position as CougrPosition;
 
 /// Direction for ship movement
 #[contracttype]
@@ -64,17 +64,14 @@ impl EntityPosition {
     /// Convert to cougr-core Position for ECS integration
     pub fn to_cougr_position(&self) -> CougrPosition {
         CougrPosition {
-            x: self.x as u32,
-            y: self.y as u32,
+            x: self.x,
+            y: self.y,
         }
     }
 
     /// Create from cougr-core Position
     pub fn from_cougr_position(pos: &CougrPosition) -> Self {
-        Self {
-            x: pos.x as i32,
-            y: pos.y as i32,
-        }
+        Self { x: pos.x, y: pos.y }
     }
 }
 
@@ -307,9 +304,6 @@ pub const INVADER_ROWS: u32 = 4;
 pub const SHIP_Y: i32 = GAME_HEIGHT - 2;
 /// Y position where invaders cause game over
 pub const INVADER_WIN_Y: i32 = SHIP_Y - 2;
-/// Points needed for extra life
-#[allow(dead_code)]
-pub const EXTRA_LIFE_SCORE: u32 = 1000;
 /// Shoot cooldown in ticks
 pub const SHOOT_COOLDOWN: u32 = 3;
 /// Bullet speed (positions per tick)

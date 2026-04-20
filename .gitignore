@@ -25,13 +25,16 @@ Thumbs.db
 
 # Test artifacts
 test_snapshots/
+examples/*/test_snapshots/
 
 # Build artifacts
 *.o
 *.so
 *.dylib
 *.dll
+examples/*/target/
 
 # Claude plans
 .claude/
 
+doocs/

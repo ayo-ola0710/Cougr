@@ -30,13 +30,16 @@ pub type ObserverFn = fn(event: &ComponentEvent, world: &SimpleWorld, env: &Env)
 /// trigger immediately on component changes rather than polling.
 ///
 /// # Example
-/// ```ignore
-/// fn on_position_added(event: &ComponentEvent, world: &SimpleWorld, env: &Env) {
-///     // React to a position component being added
-/// }
+/// ```
+/// use cougr_core::runtime::{ComponentEvent, ObserverRegistry};
+/// use cougr_core::SimpleWorld;
+/// use soroban_sdk::{symbol_short, Env};
+///
+/// fn on_position_added(_event: &ComponentEvent, _world: &SimpleWorld, _env: &Env) {}
 ///
 /// let mut registry = ObserverRegistry::new();
 /// registry.on_add(symbol_short!("pos"), on_position_added);
+/// assert_eq!(registry.observer_count(), 1);
 /// ```
 pub struct ObserverRegistry {
     observers: Vec<(Symbol, ComponentEventKind, ObserverFn)>,
@@ -89,12 +92,20 @@ impl Default for ObserverRegistry {
 /// allowing them to see the updated state.
 ///
 /// # Example
-/// ```ignore
+/// ```
+/// use cougr_core::runtime::{ComponentEvent, ObservedWorld};
+/// use cougr_core::SimpleWorld;
+/// use soroban_sdk::{symbol_short, Bytes, Env};
+///
+/// fn my_observer(_event: &ComponentEvent, _world: &SimpleWorld, _env: &Env) {}
+///
 /// let env = Env::default();
 /// let world = SimpleWorld::new(&env);
 /// let mut observed = ObservedWorld::new(world);
+/// let entity_id = observed.spawn_entity();
 /// observed.observers_mut().on_add(symbol_short!("pos"), my_observer);
-/// observed.add_component(entity_id, symbol_short!("pos"), data, &env);
+/// observed.add_component(entity_id, symbol_short!("pos"), Bytes::new(&env), &env);
+/// assert!(observed.world().has_component(entity_id, &symbol_short!("pos")));
 /// ```
 pub struct ObservedWorld {
     world: SimpleWorld,
