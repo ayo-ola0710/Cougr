@@ -1,4 +1,4 @@
-name: Guild Treasury Wars CI
+name: Guild Treasury Wars Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: Guild Treasury Wars CI
+      job_name: Guild Treasury Wars Example CI
       working_directory: examples/guild_treasury_wars

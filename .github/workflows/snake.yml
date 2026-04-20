@@ -1,4 +1,4 @@
-name: Snake CI
+name: Snake Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: Snake CI
+      job_name: Snake Example CI
       working_directory: examples/snake

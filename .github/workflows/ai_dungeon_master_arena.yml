@@ -1,4 +1,4 @@
-name: AI Dungeon Master Arena CI
+name: AI Dungeon Master Arena Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: AI Dungeon Master Arena CI
+      job_name: AI Dungeon Master Arena Example CI
       working_directory: examples/ai_dungeon_master_arena

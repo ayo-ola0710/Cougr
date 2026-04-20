@@ -1,4 +1,4 @@
-name: Guild Arena CI
+name: Guild Arena Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: Guild Arena CI
+      job_name: Guild Arena Example CI
       working_directory: examples/guild_arena

@@ -1,4 +1,4 @@
-name: Shadow Draft Card Game CI
+name: Shadow Draft Card Game Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: Shadow Draft Card Game CI
+      job_name: Shadow Draft Card Game Example CI
       working_directory: examples/shadow_draft_card_game

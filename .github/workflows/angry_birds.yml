@@ -1,4 +1,4 @@
-name: Angry Birds CI
+name: Angry Birds Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: Angry Birds CI
+      job_name: Angry Birds Example CI
       working_directory: examples/angry_birds

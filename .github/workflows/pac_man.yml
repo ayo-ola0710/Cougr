@@ -1,4 +1,4 @@
-name: Pac-Man CI
+name: Pac-Man Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: Pac-Man CI
+      job_name: Pac-Man Example CI
       working_directory: examples/pac_man

@@ -1,4 +1,4 @@
-name: Reversi CI
+name: Reversi Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: Reversi CI
+      job_name: Reversi Example CI
       working_directory: examples/reversi

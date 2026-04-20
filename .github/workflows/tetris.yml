@@ -1,4 +1,4 @@
-name: Tetris CI
+name: Tetris Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: Tetris CI
+      job_name: Tetris Example CI
       working_directory: examples/tetris

@@ -1,4 +1,4 @@
-name: Arkanoid CI
+name: Arkanoid Example CI
 
 on:
   push:
@@ -24,5 +24,5 @@ jobs:
   ci:
     uses: ./.github/workflows/example_reusable.yml
     with:
-      job_name: Arkanoid CI
+      job_name: Arkanoid Example CI
       working_directory: examples/arkanoid
