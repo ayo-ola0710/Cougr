@@ -77,7 +77,11 @@ impl SnakeContract {
                 let head = SnakeHead;
                 let direction = DirectionComponent::new(Direction::Right);
 
-                world.add_component(entity_id, symbol_short!("position"), head_pos.serialize(env));
+                world.add_component(
+                    entity_id,
+                    symbol_short!("position"),
+                    head_pos.serialize(env),
+                );
                 world.add_component(entity_id, symbol_short!("snkhead"), head.serialize(env));
                 world.add_component(
                     entity_id,

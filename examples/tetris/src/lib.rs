@@ -5,7 +5,7 @@ use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Env, Vec};
 // We aliasing cougr_core types to avoid confusion if we had local duplicates,
 // but here we just import them.
 // Note: In a real scenario, we'd ensure cougr_core is compatible with soroban-sdk v21.
-use cougr_core::prelude::*;
+use cougr_core::SimpleWorld;
 
 // --------------------------------------------------------------------------------
 // Data Structures
@@ -235,7 +235,7 @@ fn generate_piece(env: &Env) -> Piece {
 // This demonstrates usage of cougr-core even if we store state in a simplified struct.
 fn try_move(env: &Env, state: &mut GameState, dx: i32, dy: i32, d_rot: i32) -> bool {
     // 1. Create ECS World
-    let _world = World::new();
+    let _world = SimpleWorld::new(env);
 
     // 2. Define Components
     // In a full game, we'd have these registered.

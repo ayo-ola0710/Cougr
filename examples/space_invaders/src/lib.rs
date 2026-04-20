@@ -88,7 +88,7 @@ impl SpaceInvadersContract {
 
             for col in 0..INVADER_COLS {
                 // Spawn invader entity in cougr-core World
-                let _invader_entity = world.spawn_empty();
+                let _invader_entity = world.spawn_entity();
 
                 let x = (col as i32 * 4) + 4;
                 let y = (row as i32 * 3) + 2;

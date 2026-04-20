@@ -71,10 +71,7 @@ impl EntityPosition {
 
     /// Create from cougr-core Position
     pub fn from_cougr_position(pos: &CougrPosition) -> Self {
-        Self {
-            x: pos.x as i32,
-            y: pos.y as i32,
-        }
+        Self { x: pos.x, y: pos.y }
     }
 }
 
