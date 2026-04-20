@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cougr-core = { branch = "main", git = "https://github.com/salazarsebas/Cougr.git" }
+cougr-core = { path = "../.." }
 soroban-sdk = "25.1.0"
 
 [dev-dependencies]
