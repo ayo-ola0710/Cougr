@@ -108,8 +108,8 @@ Each commitment hash acts as a **nullifier** (following stellar-zk's verifier co
 
 ```rust
 // cougr-core ECS entity management
-let mut world = cougr_core::create_world();
-let _guild_entity = world.spawn_empty();
+let mut world = cougr_core::SimpleWorld::new(&env);
+let _guild_entity = world.spawn_entity();
 ```
 
 ---

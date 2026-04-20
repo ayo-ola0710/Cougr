@@ -35,6 +35,7 @@ mod types;
 #[cfg(test)]
 mod test;
 
+use cougr_core::SimpleWorld;
 use soroban_sdk::{contract, contractimpl, Address, Env};
 
 pub use types::*;
@@ -57,15 +58,15 @@ impl GuildTreasuryWarsContract {
     /// The guild ID assigned to the new guild
     pub fn init_guild(env: Env, guild_admin: Address) -> u32 {
         // Create cougr-core ECS World for entity management
-        let mut world = cougr_core::create_world();
-        let _guild_entity = world.spawn_empty();
+        let mut world = SimpleWorld::new(&env);
+        let _guild_entity = world.spawn_entity();
 
         let guild_id = governance::init_guild(&env, &guild_admin);
 
         // Store ECS entity count
         env.storage()
             .instance()
-            .set(&DataKey::EntityCount, &(world.entity_count() as u32));
+            .set(&DataKey::EntityCount, &(world.next_entity_id() - 1));
 
         guild_id
     }
