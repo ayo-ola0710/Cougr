@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="https://crates.io/crates/cougr-core"><img src="https://img.shields.io/crates/v/cougr-core.svg" alt="crates.io" /></a>
   <a href="https://stellar.org"><img src="https://img.shields.io/badge/Stellar-Soroban-blue?logo=stellar" alt="Stellar" /></a>
   <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Rust-1.70%2B-orange?logo=rust" alt="Rust" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="License" /></a>
@@ -18,14 +19,14 @@ Cougr is a Rust framework for building on-chain games on Stellar with an Entity 
 
 The repository includes the core library, a growing catalog of standalone game examples, and focused research notes for protocol and architecture work. The goal is to provide a practical foundation for teams building game logic that must remain structured, testable, and efficient under blockchain constraints.
 
-The publishable crate is intentionally narrower than the repository. The core
+The published crate is intentionally narrower than the repository. The core
 library is the release artifact; examples, research notes, and CI scaffolding
 exist to support development and adoption without enlarging the shipped crate
 surface.
 
 ## Project Status
 
-Cougr now defines a `1.0.0` stable contract with a deliberately scoped surface. The crate still contains Beta and Experimental namespaces, but they are explicitly separated from the stable guarantee.
+Cougr `1.0.0` is published as [`cougr-core` on crates.io](https://crates.io/crates/cougr-core). The stable contract is deliberately scoped: the crate still contains Beta and Experimental namespaces, but they are explicitly separated from the stable guarantee.
 
 Current maturity baseline:
 
@@ -60,11 +61,29 @@ Runtime backend guidance:
 | Contract standards | Ownable, Ownable2Step, AccessControl, Pausable, execution guards, recovery guards, delayed execution, and batch primitives |
 | Example contracts | A growing catalog of standalone game projects, each intended to show concrete patterns rather than isolated snippets |
 
+## Installation
+
+For released builds, depend on the published crate from crates.io:
+
+```toml
+[dependencies]
+cougr-core = "1.0.0"
+```
+
+Generate local API documentation with:
+
+```bash
+cargo doc --no-deps --all-features
+```
+
+The docs.rs badge and manifest `documentation` URL should only be added after a
+versioned docs.rs page exists and has been verified.
+
 ## Quick Start
 
 ```toml
 [dependencies]
-cougr-core = { git = "https://github.com/salazarsebas/Cougr.git", branch = "main" }
+cougr-core = "1.0.0"
 ```
 
 ```rust
@@ -192,7 +211,7 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 - [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for the current threat model and sensitive subsystem map
 - [docs/MATURITY_MODEL.md](docs/MATURITY_MODEL.md) for maturity tiers and promotion criteria
 - [docs/STATE_OF_REPO.md](docs/STATE_OF_REPO.md) for a concise snapshot of what is stable, Beta, and still open
-- [docs/RELEASE_STATUS.md](docs/RELEASE_STATUS.md) for the shortest release-facing summary of what is actually ship-ready
+- [docs/RELEASE_STATUS.md](docs/RELEASE_STATUS.md) for the shortest release-facing summary of what is published and guaranteed
 - [docs/API_CONTRACT.md](docs/API_CONTRACT.md) for the current public API contract and compatibility boundaries
 - [docs/API_FREEZE_1_0.md](docs/API_FREEZE_1_0.md) for the frozen `1.0` contract and exclusion list
 - [docs/COMPATIBILITY_PROMISES.md](docs/COMPATIBILITY_PROMISES.md) for the compatibility story by maturity tier
@@ -207,6 +226,7 @@ Some examples also include Soroban-specific build flows using `stellar contract 
 - [docs/ECS_CORE.md](docs/ECS_CORE.md) for the explicit core ECS runtime model and backend roles
 - [docs/PATTERNS.md](docs/PATTERNS.md) for recommended gameplay structuring patterns
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for query, scheduler, and storage performance guidance
+- [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md) for rustdoc quality gates and docs.rs linking policy
 - [docs/adr/0001-public-surface.md](docs/adr/0001-public-surface.md) for the public-surface curation decision record
 
 ## Compatibility

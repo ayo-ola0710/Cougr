@@ -4,15 +4,19 @@
 
 This document is the high-signal answer to one question:
 
-- if Cougr shipped `1.0.0` from the current tree, what would be true?
+- now that Cougr `1.0.0` is published, what is guaranteed?
 
 It is intentionally shorter than the full release checklist.
 
 ## Current Assessment
 
-Cougr is close to a defendable `1.0.0` for its curated product surface, but
-publication quality still depends on maintaining strict scope control between
-the stable contract and the broader public repository.
+Cougr `1.0.0` is published as `cougr-core` on crates.io:
+
+- https://crates.io/crates/cougr-core
+
+The published crate has a defendable stable contract for its curated product
+surface. That guarantee still depends on maintaining strict scope control
+between the stable contract and the broader public repository.
 
 That claim is intentionally narrow:
 
@@ -52,11 +56,10 @@ These remain public and supported, but they are not the product-learning path an
 
 ## Release Readout
 
-From a release perspective, the repo has moved from "promising but fuzzy" to
-"narrower and much more explicit," but it still needs disciplined final cleanup
-before publication.
+From a release perspective, the repo has moved from "promising but fuzzy" to a
+published `1.0.0` with an explicit stable contract.
 
-The remaining risk is mostly scope control:
+The remaining risk is mostly ongoing scope control:
 
 - keeping users on the curated path
 - resisting the temptation to overstate Beta or Experimental surfaces

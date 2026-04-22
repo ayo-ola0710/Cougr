@@ -2,7 +2,8 @@
 
 ## Purpose
 
-This document is a high-signal status snapshot of Cougr after the current cleanup phases.
+This document is a high-signal status snapshot of Cougr after the `1.0.0`
+publication.
 
 It is meant to answer:
 
@@ -11,6 +12,10 @@ It is meant to answer:
 - what is still an honest remaining gap
 
 ## Stable Product Story
+
+Published crate:
+
+- https://crates.io/crates/cougr-core
 
 The current defended product story is:
 

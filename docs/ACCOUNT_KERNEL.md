@@ -113,7 +113,6 @@ Current fields:
 The account kernel is now consumed through the curated `accounts` / `auth`
 surface directly.
 
-The previous `GameWorld` wrapper was removed so the crate does not freeze an
-extra orchestration layer before publication. Authorization should be composed
-explicitly at the application layer around `GameApp`, `SimpleWorld`, and the
-account primitives.
+The previous `GameWorld` wrapper was removed so `1.0.0` does not freeze an
+extra orchestration layer. Authorization should be composed explicitly at the
+application layer around `GameApp`, `SimpleWorld`, and the account primitives.

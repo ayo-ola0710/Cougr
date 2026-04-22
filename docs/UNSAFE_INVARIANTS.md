@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document records Cougr's current unsafe posture for the publishable crate.
+This document records Cougr's current unsafe posture for the published crate.
 
 ## Current State
 

@@ -35,21 +35,19 @@ Choose one dependency mode based on the user's situation:
 
 | Situation | Recommended dependency style |
 |---|---|
-| Building against the latest repository state | Git dependency to the Cougr repository |
-| Building against a known published release | Exact crate version if available |
+| Building a normal new project | Published crate version |
 | Working locally across two repos | Local path dependency during active development |
 
-If the user does not specify otherwise, prefer a git dependency to the main repository branch they expect to use.
+If the user does not specify otherwise, prefer the published `cougr-core`
+release from crates.io.
 
 Example:
 
 ```toml
 [dependencies]
 soroban-sdk = "25.1.0"
-cougr-core = { git = "https://github.com/salazarsebas/Cougr.git", branch = "main" }
+cougr-core = "1.0.0"
 ```
-
-Adjust the source if the user asks for a tag, version, fork, or local path.
 
 ## Build Target
 
@@ -127,4 +125,3 @@ impl GameContract {
 ```
 
 This is only a shell. Move actual gameplay rules into helper functions or systems quickly.
-
