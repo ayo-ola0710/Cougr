@@ -75,7 +75,10 @@ pub fn bls12_381_g1_msm(
 /// BLS12-381 multi-pairing check.
 ///
 /// Returns `true` if the pairing equation holds:
-///   e(g1[0], g2[0]) * e(g1[1], g2[1]) * ... == 1
+///
+/// ```text
+/// e(g1[0], g2[0]) * e(g1[1], g2[1]) * ... == 1
+/// ```
 pub fn bls12_381_pairing_check(
     env: &Env,
     g1_points: &[Bls12381G1Point],

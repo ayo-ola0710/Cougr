@@ -16,16 +16,24 @@ The public API is intentionally split into:
 # Golden Path
 
 ```rust
-use cougr_core::{ComponentTrait, Position, SimpleWorld};
+use cougr_core::app::{named_system, GameApp, ScheduleStage};
+use cougr_core::{Position, SystemConfig};
 use soroban_sdk::Env;
 
 let env = Env::default();
-let mut world = SimpleWorld::new(&env);
-let entity = world.spawn_entity();
-world.set_typed(&env, entity, &Position::new(1, 2));
+let mut app = GameApp::new(&env);
 
-let pos: Position = world.get_typed(&env, entity).unwrap();
-assert_eq!(pos.x, 1);
+app.add_systems((
+    named_system("spawn_player", |world, env| {
+        let player = world.spawn_entity();
+        world.set_typed(env, player, &Position::new(1, 2));
+    })
+    .in_stage(ScheduleStage::Startup),
+    named_system("tick", |_world, _env| {})
+        .with_config(SystemConfig::new().in_stage(ScheduleStage::Update)),
+));
+
+app.run(&env).unwrap();
 ```
 
 # Stability
