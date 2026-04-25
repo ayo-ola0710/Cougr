@@ -32,9 +32,7 @@ This example demonstrates how to build a fully functional game as a smart contra
 
 ### Build & Test
 ```bash
-# Clone the repository
-git clone https://github.com/salazarsebas/Cougr.git
-cd Cougr/examples/tetris
+cd examples/tetris
 
 # Build the contract
 cargo build --release
@@ -166,8 +164,8 @@ examples/tetris/
 **Cargo.toml**
 ```toml
 [dependencies]
-soroban-sdk = "23.0.2"
-cougr-core = { tag = "v0.0.1", git = "https://github.com/salazarsebas/Cougr.git" }
+soroban-sdk = "25.1.0"
+cougr-core = "1.0.0"
 ```
 
 ## 📚 Resources
