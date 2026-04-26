@@ -18,7 +18,9 @@ use systems::{
 };
 
 use cougr_core::auth::{BatchBuilder, GameAction, SessionBuilder};
-use soroban_sdk::{contract, contractimpl, panic_with_error, symbol_short, Address, Bytes, Env, Vec};
+use soroban_sdk::{
+    contract, contractimpl, panic_with_error, symbol_short, Address, Bytes, Env, Vec,
+};
 
 #[contract]
 pub struct TradingCardGame;

@@ -132,10 +132,8 @@ impl BombermanContract {
             world.get_entities_with_component(&ExplosionComponent::component_type(), &env);
         for e_id in explosion_entities.iter() {
             if let Some(explosion) = world.get_typed::<ExplosionComponent>(&env, e_id) {
-                if explosion.x == next_x && explosion.y == next_y {
-                    if player.lives > 0 {
-                        player.lives -= 1;
-                    }
+                if explosion.x == next_x && explosion.y == next_y && player.lives > 0 {
+                    player.lives -= 1;
                 }
             }
         }
