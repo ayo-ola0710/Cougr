@@ -3,11 +3,11 @@ use soroban_sdk::{contracttype, symbol_short, Bytes, Env, Symbol, Vec};
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-pub(crate) const GRID_WIDTH: usize = 15;
-pub(crate) const GRID_HEIGHT: usize = 13;
-pub(crate) const INITIAL_LIVES: u32 = 3;
-pub(crate) const BOMB_TIMER: u32 = 3;
-pub(crate) const EXPLOSION_DURATION: u32 = 1;
+pub const GRID_WIDTH: usize = 15;
+pub const GRID_HEIGHT: usize = 13;
+pub const INITIAL_LIVES: u32 = 3;
+pub const BOMB_TIMER: u32 = 3;
+pub const EXPLOSION_DURATION: u32 = 1;
 
 // ── PlayerComponent ──────────────────────────────────────────────────────────
 

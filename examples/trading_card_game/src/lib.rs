@@ -5,22 +5,6 @@ mod systems;
 #[cfg(test)]
 mod test;
 
-use components::{
-    Action, Card, ECSWorldState, FieldState, GameError, MatchState, PlayerField, PlayerHand,
-    PlayerStats, TurnResult, PHASE_DRAW, STARTING_HAND_SIZE, STATUS_CONCEDED, STATUS_IN_PROGRESS,
-    SYM_ATTACK, SYM_PLAY, SYM_SPELL, WORLD_KEY,
-};
-use systems::{
-    card_definition, cast_spell_system, combat_system, draw_system, mana_system, play_card_system,
-    win_condition_system,
-};
-
-use cougr_core::auth::{BatchBuilder, GameAction, SessionBuilder};
-use soroban_sdk::{
-    contract, contractimpl, panic_with_error, symbol_short, Address, Bytes, Env, Vec,
-};
-
-// Re-export public API types for tests and external consumers
 pub use components::{
     Action, Card, CreatureState, ECSWorldState, FieldState, GameError, MatchState, PlayerField,
     PlayerHand, PlayerStats, TurnResult, KIND_CREATURE, KIND_SPELL, MAX_FIELD, MAX_HAND, MAX_MANA,
@@ -28,6 +12,13 @@ pub use components::{
     STATUS_A_WINS, STATUS_B_WINS, STATUS_CONCEDED, STATUS_IN_PROGRESS, SYM_ATTACK, SYM_CONCEDE,
     SYM_PLAY, SYM_SPELL, WORLD_KEY,
 };
+use systems::{
+    card_definition, cast_spell_system, combat_system, draw_system, mana_system, play_card_system,
+    win_condition_system,
+};
+
+use cougr_core::auth::{BatchBuilder, GameAction, SessionBuilder};
+use soroban_sdk::{contract, contractimpl, panic_with_error, symbol_short, Address, Bytes, Env, Vec};
 
 #[contract]
 pub struct TradingCardGame;

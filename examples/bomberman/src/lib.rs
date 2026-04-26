@@ -8,7 +8,7 @@ mod systems;
 #[cfg(test)]
 mod test;
 
-use components::{
+pub use components::{
     BombComponent, CellType, ExplosionComponent, GameStateComponent, GridComponent,
     PlayerComponent, PowerUpComponent, PowerUpType, BOMB_TIMER, GRID_HEIGHT, GRID_WIDTH,
     INITIAL_LIVES,
@@ -16,13 +16,6 @@ use components::{
 use systems::{
     bomb_timer_and_chain_system, direction_delta, explosion_timer_system, pickup_system,
     player_death_system, win_condition_system,
-};
-
-// Re-export types needed by tests and external consumers
-pub use components::{
-    BombComponent, CellType, ExplosionComponent, GameStateComponent, GridComponent,
-    PlayerComponent, PowerUpComponent, PowerUpType, BOMB_TIMER, GRID_HEIGHT, GRID_WIDTH,
-    INITIAL_LIVES,
 };
 
 #[contracttype]

@@ -1,3 +1,4 @@
+use cougr_core::component::ComponentTrait;
 use cougr_core::SimpleWorld;
 use soroban_sdk::{Env, Vec};
 
