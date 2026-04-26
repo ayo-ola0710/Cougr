@@ -12,10 +12,10 @@ use crate::components::{
 /// Returns `None` for invalid direction codes.
 pub(crate) fn direction_delta(direction: u32) -> Option<(i32, i32)> {
     match direction {
-        0 => Some((0, -1)),  // Up
-        1 => Some((1, 0)),   // Right
-        2 => Some((0, 1)),   // Down
-        3 => Some((-1, 0)),  // Left
+        0 => Some((0, -1)), // Up
+        1 => Some((1, 0)),  // Right
+        2 => Some((0, 1)),  // Down
+        3 => Some((-1, 0)), // Left
         _ => None,
     }
 }

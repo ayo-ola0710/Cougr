@@ -6,7 +6,7 @@ mod systems;
 mod test;
 
 use components::{
-    Action, Card, ECSWorldState, FieldState, GameError, MatchState, PlayerHand, PlayerField,
+    Action, Card, ECSWorldState, FieldState, GameError, MatchState, PlayerField, PlayerHand,
     PlayerStats, TurnResult, PHASE_DRAW, STARTING_HAND_SIZE, STATUS_CONCEDED, STATUS_IN_PROGRESS,
     SYM_ATTACK, SYM_PLAY, SYM_SPELL, WORLD_KEY,
 };
